@@ -15,6 +15,7 @@ import Batches from './pages/admin/modules/Batches'
 import RulesAndRegulations from './pages/admin/modules/RulesAndRegulations'
 import BeltExams from './pages/admin/modules/BeltExams'
 import FeeManagement from './pages/admin/modules/FeeManagement'
+import FeeSetup from './pages/admin/modules/FeeSetup'
 import Attendance from './pages/admin/modules/Attendance'
 import Achievements from './pages/admin/modules/Achievements'
 import StudentPerformance from './pages/admin/modules/StudentPerformance'
@@ -58,6 +59,7 @@ export default function App() {
           <Route path="/admin/rules" element={<Admin allowedRoles={['super_admin', 'coach']}><RulesAndRegulations /></Admin>} />
           <Route path="/admin/belt-exams" element={<Admin allowedRoles={['super_admin', 'coach']}><BeltExams /></Admin>} />
           <Route path="/admin/fees" element={<Admin allowedRoles={['super_admin', 'coach']}><FeeManagement /></Admin>} />
+          <Route path="/admin/fee-setup" element={<Admin allowedRoles={['super_admin']}><FeeSetup /></Admin>} />
           <Route path="/admin/attendance" element={<Admin allowedRoles={['super_admin', 'coach']}><Attendance /></Admin>} />
           <Route path="/admin/achievements" element={<Admin allowedRoles={['super_admin', 'coach']}><Achievements /></Admin>} />
           <Route path="/admin/performance" element={<Admin allowedRoles={['super_admin', 'coach']}><StudentPerformance /></Admin>} />

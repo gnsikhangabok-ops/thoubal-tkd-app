@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { label: 'Achievements', path: '/admin/achievements' },
   { label: 'Equipment Record', path: '/admin/equipment' },
   { label: 'Fee Management', path: '/admin/fees' },
+  { label: 'Fee Setup', path: '/admin/fee-setup', superAdminOnly: true },
   { label: 'Accounts', path: '/admin/accounts' },
   { label: 'Events', path: '/admin/events' },
   { label: 'Enquiries', path: '/admin/enquiries' },

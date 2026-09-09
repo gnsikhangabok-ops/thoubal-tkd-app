@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 
 function currentMonthFirst() {
@@ -11,7 +12,6 @@ function formatMonth(dateStr) {
   return d.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
 }
 
-const emptyGenForm = { period_month: currentMonthFirst(), amount_due: '' }
 const emptyPayForm = { amount_paid: '', payment_method: 'Cash', receipt_no: '', notes: '' }
 
 const inputCls = "px-2.5 py-2.5 border border-black/10"
@@ -20,38 +20,23 @@ const btnOutline = "inline-block px-6 py-3 font-display font-semibold text-sm up
 const btnSm = "text-[0.75rem] px-3 py-1.5"
 
 export default function FeeManagement() {
-  const [students, setStudents] = useState([])
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [monthFilter, setMonthFilter] = useState(currentMonthFirst())
 
   const [showGenForm, setShowGenForm] = useState(false)
-  const [genForm, setGenForm] = useState(emptyGenForm)
+  const [genMonth, setGenMonth] = useState(currentMonthFirst())
   const [generating, setGenerating] = useState(false)
+  const [genPreview, setGenPreview] = useState(null) // { toCreate: [...], skippedNoRate: [...] }
 
   const [payingFor, setPayingFor] = useState(null)
   const [payForm, setPayForm] = useState(emptyPayForm)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    loadStudents()
-  }, [])
-
-  useEffect(() => {
     loadPayments()
   }, [monthFilter])
-
-  async function loadStudents() {
-    const { data, error } = await supabase
-      .from('students')
-      .select('id, full_name')
-      .eq('active', true)
-      .order('full_name')
-
-    if (error) setError(error.message)
-    else setStudents(data)
-  }
 
   async function loadPayments() {
     setLoading(true)
@@ -66,40 +51,74 @@ export default function FeeManagement() {
     setLoading(false)
   }
 
-  function openGenForm() {
-    setGenForm({ period_month: monthFilter, amount_due: '' })
+  async function openGenForm() {
+    setGenMonth(monthFilter)
     setShowGenForm(true)
+    await buildPreview(monthFilter)
   }
 
-  async function handleGenerate(e) {
-    e.preventDefault()
-    setGenerating(true)
+  // Builds the list of students to bill, using their batch's current monthly rate.
+  async function buildPreview(periodMonth) {
     setError('')
 
-    const existingIds = new Set(payments.map((p) => p.student_id))
-    const toCreate = students
-      .filter((s) => !existingIds.has(s.id))
-      .map((s) => ({
-        student_id: s.id,
-        period_month: genForm.period_month,
-        amount_due: parseFloat(genForm.amount_due),
-        status: 'pending',
-      }))
+    const [studentRes, existingRes, structRes] = await Promise.all([
+      supabase.from('students').select('id, full_name, batch_id').eq('active', true).order('full_name'),
+      supabase.from('fee_payments').select('student_id').eq('period_month', periodMonth),
+      supabase.from('fee_structures').select('*').order('effective_from', { ascending: false }),
+    ])
 
-    if (toCreate.length === 0) {
-      setError('All active students already have a fee record for this month.')
-      setGenerating(false)
+    if (studentRes.error || existingRes.error || structRes.error) {
+      setError(studentRes.error?.message || existingRes.error?.message || structRes.error?.message)
       return
     }
 
-    const { error } = await supabase.from('fee_payments').insert(toCreate)
+    const existingIds = new Set(existingRes.data.map((p) => p.student_id))
+    // latest rate per batch
+    const rateByBatch = {}
+    structRes.data.forEach((row) => {
+      if (!(row.batch_id in rateByBatch)) rateByBatch[row.batch_id] = row.monthly_amount
+    })
+
+    const toCreate = []
+    const skippedNoRate = []
+    const skippedNoBatch = []
+
+    studentRes.data
+      .filter((s) => !existingIds.has(s.id))
+      .forEach((s) => {
+        if (!s.batch_id) {
+          skippedNoBatch.push(s)
+          return
+        }
+        const rate = rateByBatch[s.batch_id]
+        if (rate === undefined) {
+          skippedNoRate.push(s)
+          return
+        }
+        toCreate.push({
+          student_id: s.id,
+          period_month: periodMonth,
+          amount_due: rate,
+          status: 'pending',
+        })
+      })
+
+    setGenPreview({ toCreate, skippedNoRate, skippedNoBatch, allDone: toCreate.length === 0 && skippedNoRate.length === 0 && skippedNoBatch.length === 0 })
+  }
+
+  async function handleGenerate() {
+    if (!genPreview || genPreview.toCreate.length === 0) return
+    setGenerating(true)
+    setError('')
+
+    const { error } = await supabase.from('fee_payments').insert(genPreview.toCreate)
 
     setGenerating(false)
     if (error) {
       setError(error.message)
     } else {
       setShowGenForm(false)
-      setMonthFilter(genForm.period_month)
+      setMonthFilter(genMonth)
     }
   }
 
@@ -164,7 +183,10 @@ export default function FeeManagement() {
         <h1 className="font-display text-ink uppercase text-3xl">Fee Management</h1>
         <button className={btnPrimary} onClick={openGenForm}>+ Generate Month's Fees</button>
       </div>
-      <p className="text-charcoal mb-9">Track monthly dues, payments, and receipts.</p>
+      <p className="text-charcoal mb-9">
+        Track monthly dues, payments, and receipts. Rates come from{' '}
+        <Link to="/admin/fee-setup" className="underline">Fee Setup</Link>.
+      </p>
 
       <div className="mb-6">
         <label className="text-[0.85rem] font-semibold mr-2.5">Month:</label>
@@ -194,34 +216,55 @@ export default function FeeManagement() {
       </div>
 
       {showGenForm && (
-        <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[420px]">
+        <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[460px]">
           <h3 className="font-semibold text-base text-ink mb-4">Generate Fee Records</h3>
-          <p className="text-[0.85rem] mb-3 text-charcoal">
-            Creates a pending fee row for every active student who doesn't already have one for the selected month.
-          </p>
-          <form onSubmit={handleGenerate} className="flex flex-col gap-3">
-            <input
-              type="month"
-              value={genForm.period_month.slice(0, 7)}
-              onChange={(e) => setGenForm({ ...genForm, period_month: `${e.target.value}-01` })}
-              required
-              className={inputCls}
-            />
-            <input
-              type="number" placeholder="Monthly amount (₹)" required step="0.01"
-              value={genForm.amount_due}
-              onChange={(e) => setGenForm({ ...genForm, amount_due: e.target.value })}
-              className={inputCls}
-            />
-            <div className="flex gap-2.5">
-              <button type="submit" className={btnPrimary} disabled={generating}>
-                {generating ? 'Generating…' : 'Generate'}
-              </button>
-              <button type="button" className={btnOutline} onClick={() => setShowGenForm(false)}>
-                Cancel
-              </button>
+
+          <label className="text-[0.85rem] font-semibold block mb-1.5">Month</label>
+          <input
+            type="month"
+            value={genMonth.slice(0, 7)}
+            onChange={(e) => {
+              const m = `${e.target.value}-01`
+              setGenMonth(m)
+              buildPreview(m)
+            }}
+            className={`${inputCls} mb-4`}
+          />
+
+          {genPreview && (
+            <div className="mb-4 text-sm">
+              <p className="text-charcoal">
+                <strong className="text-ink">{genPreview.toCreate.length}</strong> student{genPreview.toCreate.length === 1 ? '' : 's'} will be billed using their batch's rate.
+              </p>
+              {genPreview.skippedNoRate.length > 0 && (
+                <p className="text-brand-red mt-2">
+                  {genPreview.skippedNoRate.length} student(s) skipped — their batch has no rate set in{' '}
+                  <Link to="/admin/fee-setup" className="underline">Fee Setup</Link>.
+                </p>
+              )}
+              {genPreview.skippedNoBatch.length > 0 && (
+                <p className="text-brand-red mt-2">
+                  {genPreview.skippedNoBatch.length} student(s) skipped — not assigned to a batch yet.
+                </p>
+              )}
+              {genPreview.allDone && (
+                <p className="text-charcoal mt-2">All active students already have a fee record for this month.</p>
+              )}
             </div>
-          </form>
+          )}
+
+          <div className="flex gap-2.5">
+            <button
+              className={btnPrimary}
+              onClick={handleGenerate}
+              disabled={generating || !genPreview || genPreview.toCreate.length === 0}
+            >
+              {generating ? 'Generating…' : 'Generate'}
+            </button>
+            <button className={btnOutline} onClick={() => setShowGenForm(false)}>
+              Cancel
+            </button>
+          </div>
         </div>
       )}
 

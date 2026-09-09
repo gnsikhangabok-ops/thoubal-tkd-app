@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import {
   Users, Building2, UserCog, CalendarCheck, Award, TrendingUp,
   Medal, Package, Wallet, PiggyBank, Trophy, Inbox,
-  ScrollText, ShieldCheck, Bell, ArrowRight, AlertCircle, LayoutTemplate,
+  ScrollText, ShieldCheck, Bell, ArrowRight, AlertCircle, LayoutTemplate, Settings2,
 } from 'lucide-react'
 
 const SECTIONS = [
@@ -32,6 +32,7 @@ const SECTIONS = [
     label: 'Operations',
     items: [
       { title: 'Fee Management', desc: 'Monthly dues, payments, receipts', path: '/admin/fees', icon: Wallet },
+      { title: 'Fee Setup', desc: 'Per-batch rates, admission & form fees', path: '/admin/fee-setup', icon: Settings2 },
       { title: 'Accounts', desc: 'Income vs expenses, profit & loss', path: '/admin/accounts', icon: PiggyBank },
       { title: 'Equipment Record', desc: 'Uniforms, gear, stock & issuance', path: '/admin/equipment', icon: Package },
       { title: 'Enquiries', desc: 'Leads from the public website form', path: '/admin/enquiries', icon: Inbox },
