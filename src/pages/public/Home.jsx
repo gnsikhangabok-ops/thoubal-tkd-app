@@ -15,9 +15,9 @@ const WHY_FEATURES = [
   { icon: Target, title: 'Competition Exposure', desc: 'Regular access to district, state, and national tournaments.' },
   { icon: HeartPulse, title: 'Fitness & Self-Defense', desc: 'Practical skills alongside conditioning for all fitness levels.' },
   { icon: GraduationCap, title: 'Regular Gradings', desc: 'Scheduled belt exams to track and reward real progress.' },
-  { icon: Flag, title: 'Govt. Registered Academy', desc: 'Officially registered under Thoubal District Taekwondo Association.' },
-  { icon: Globe2, title: 'Affiliated Nationally', desc: 'Recognized by AMTA, Taekwondo Federation of India, and Asian Taekwondo Union.' },
-  { icon: Trophy, title: 'Olympic Sport Pathway', desc: 'Taekwondo is an Olympic discipline — train with a pathway to the highest stage.' },
+  { icon: Flag, title: 'Govt. Registered Academy', desc: 'Officially registered under Thoubal District Taekwondo Association.', national: true },
+  { icon: Globe2, title: 'Affiliated Nationally', desc: 'Recognized by AMTA, Taekwondo Federation of India, and Asian Taekwondo Union.', national: true },
+  { icon: Trophy, title: 'Olympic Sport Pathway', desc: 'Taekwondo is an Olympic discipline — train with a pathway to the highest stage.', national: true },
 ]
 
 const MEDAL_COLOR = { gold: '#D4A537', silver: '#A8A8A8', bronze: '#B08D57' }
@@ -147,6 +147,14 @@ export default function Home() {
           <div className="w-14 h-full bg-brand-red"></div>
         </div>
         <div className="relative z-10 max-w-[1180px] mx-auto px-7">
+          <div className="inline-flex items-center gap-2 bg-white/5 border border-white/15 px-3 py-1.5 mb-5">
+            <span className="flex flex-col w-4 h-3 overflow-hidden rounded-[1px]">
+              <span className="flex-1 bg-[#FF9933]"></span>
+              <span className="flex-1 bg-white"></span>
+              <span className="flex-1 bg-[#138808]"></span>
+            </span>
+            <span className="text-[0.68rem] font-display uppercase tracking-wide text-[#C9C7C0]">Recognized National Sport · Olympic Discipline</span>
+          </div>
           <div className="text-gold font-display font-medium text-sm tracking-wide mb-4">{c('hero_kicker')}</div>
           <h1 className="font-display font-bold text-chalk uppercase tracking-wide leading-[1.02] max-w-[11ch] text-5xl md:text-7xl">
             {c('hero_headline')}
@@ -262,7 +270,14 @@ export default function Home() {
             {WHY_FEATURES.map((f) => {
               const Icon = f.icon
               return (
-                <div key={f.title} className="bg-[#EFEBE1] p-6 flex flex-col gap-3">
+                <div key={f.title} className="relative bg-[#EFEBE1] p-6 pt-7 flex flex-col gap-3">
+                  {f.national && (
+                    <span className="absolute top-0 left-0 right-0 flex h-1">
+                      <span className="flex-1 bg-[#FF9933]"></span>
+                      <span className="flex-1 bg-white"></span>
+                      <span className="flex-1 bg-[#138808]"></span>
+                    </span>
+                  )}
                   <Icon size={22} className="text-brand-red" strokeWidth={1.75} />
                   <h3 className="font-semibold text-[0.95rem] text-ink leading-snug">{f.title}</h3>
                   <p className="text-[0.8rem] text-charcoal leading-relaxed">{f.desc}</p>
