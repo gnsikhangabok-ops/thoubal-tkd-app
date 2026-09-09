@@ -21,7 +21,9 @@ import EquipmentRecord from './pages/admin/modules/EquipmentRecord'
 import Accounts from './pages/admin/modules/Accounts'
 import Enquiries from './pages/admin/modules/Enquiries'
 import Events from './pages/admin/modules/Events'
+import Users from './pages/admin/modules/Users'
 import PublicRules from './pages/public/PublicRules'
+import Signup from './pages/public/Signup'
 import StudentPortal from './pages/portal/StudentPortal'
 
 export default function App() {
@@ -35,6 +37,7 @@ export default function App() {
           <Route path="/redirect" element={<RoleRedirect />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/rules" element={<PublicRules />} />
+          <Route path="/signup" element={<Signup />} />
 
           {/* Admin / Coach area */}
           <Route
@@ -154,6 +157,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['super_admin', 'coach']}>
                 <Events />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute allowedRoles={['super_admin']}>
+                <Users />
               </ProtectedRoute>
             }
           />

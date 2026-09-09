@@ -22,6 +22,7 @@ const MODULES = [
   { title: 'Notices', desc: 'Announcements to students & parents', path: null },
   { title: 'Enquiries', desc: 'Leads from the public website form', path: '/admin/enquiries' },
   { title: 'Rules & Regulations', desc: 'Academy policies shown at registration', path: '/admin/rules' },
+  { title: 'Users', desc: 'Assign roles and link student logins', path: '/admin/users' },
 ]
 
 export default function AdminDashboard() {

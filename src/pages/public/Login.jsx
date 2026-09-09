@@ -61,6 +61,7 @@ export default function Login() {
             {submitting ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+        <Link to="/signup" className="auth-back">Don't have an account? Sign up</Link>
         <Link to="/" className="auth-back">← Back to homepage</Link>
       </div>
     </div>
