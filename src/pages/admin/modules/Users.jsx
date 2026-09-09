@@ -37,13 +37,20 @@ export default function Users() {
   }
 
   async function updateRole(profile, role) {
-    const { error } = await supabase
+    setError('')
+    const { data, error } = await supabase
       .from('profiles')
       .update({ role })
       .eq('id', profile.id)
+      .select()
 
-    if (error) setError(error.message)
-    else loadData()
+    if (error) {
+      setError(error.message)
+    } else if (!data || data.length === 0) {
+      setError('Role not updated — this account is not permitted to write to profiles (likely a Supabase RLS policy on the "profiles" table blocking the anon role).')
+    } else {
+      loadData()
+    }
   }
 
   function openLinkForm(profile) {
