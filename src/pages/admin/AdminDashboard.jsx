@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabaseClient'
-import logo from '../../assets/logo.png'
 
-// path: null = not built yet (shows as plain card, not clickable)
 const MODULES = [
   { title: 'Students / Registration', desc: 'Profiles, batches, belt rank, religion, documents', path: '/admin/students' },
   { title: 'Batches', desc: 'Class groups, timing, coach & center assignment', path: '/admin/batches' },
@@ -25,7 +22,6 @@ const MODULES = [
 ]
 
 export default function AdminDashboard() {
-  const { profile, signOut } = useAuth()
   const [stats, setStats] = useState({
     total_athletes: null,
     total_coaches: null,
@@ -56,57 +52,45 @@ export default function AdminDashboard() {
   ]
 
   return (
-    <div className="dash-shell">
-      <div className="dash-topbar">
-        <div className="brand">
-          <img src={logo} alt="Thoubal Taekwondo Academy" className="brand-logo" />
-          <div className="brand-text">
-            <div className="logo">THOUBAL <span>TKD</span></div>
-            <div className="brand-sub">Thoubal District Taekwondo Association</div>
+    <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
+      <h1 className="font-display text-ink uppercase text-3xl mb-2">Admin Dashboard</h1>
+      <p className="text-charcoal mb-9">Manage students, centers, fees, and everything else from here.</p>
+
+      {statsError && (
+        <p className="text-brand-red mb-4 text-sm">Couldn't load stats: {statsError}</p>
+      )}
+
+      <div className="grid gap-4 mb-9" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+        {STAT_CARDS.map((s) => (
+          <div key={s.label} className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
+            <strong className="block font-display text-4xl text-chalk">{s.value === null ? '…' : s.value}</strong>
+            <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">{s.label}</span>
           </div>
-        </div>
-        <div className="dash-user">
-          <span>{profile?.full_name}</span>
-          <span className="role-tag">{profile?.role?.replace('_', ' ')}</span>
-          <button className="dash-signout" onClick={signOut}>Sign out</button>
-        </div>
+        ))}
       </div>
 
-      <div className="dash-body">
-        <h1>Admin Dashboard</h1>
-        <p className="dash-lede">Manage students, centers, fees, and everything else from here.</p>
-
-        {statsError && (
-          <p style={{ color: 'var(--red)', marginBottom: 16, fontSize: '0.9rem' }}>
-            Couldn't load stats: {statsError}
-          </p>
-        )}
-
-        <div className="stat-grid">
-          {STAT_CARDS.map((s) => (
-            <div className="stat-card" key={s.label}>
-              <strong>{s.value === null ? '…' : s.value}</strong>
-              <span>{s.label}</span>
+      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+        {MODULES.map((m) =>
+          m.path ? (
+            <Link
+              to={m.path}
+              key={m.title}
+              className="block bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 hover:border-t-gold transition-colors"
+            >
+              <h3 className="font-semibold text-base text-ink normal-case mb-1.5">{m.title}</h3>
+              <p className="text-sm text-charcoal">{m.desc}</p>
+            </Link>
+          ) : (
+            <div
+              key={m.title}
+              className="relative bg-white border border-black/10 border-t-[3px] border-t-[#ccc] p-6 opacity-55"
+            >
+              <h3 className="font-semibold text-base text-ink normal-case mb-1.5">{m.title}</h3>
+              <p className="text-sm text-charcoal">{m.desc}</p>
+              <span className="absolute top-3 right-4 text-[0.65rem] uppercase tracking-wide text-charcoal font-display">Coming soon</span>
             </div>
-          ))}
-        </div>
-
-        <div className="module-grid">
-          {MODULES.map((m) =>
-            m.path ? (
-              <Link to={m.path} className="module-card" key={m.title} style={{ cursor: 'pointer' }}>
-                <h3>{m.title}</h3>
-                <p>{m.desc}</p>
-              </Link>
-            ) : (
-              <div className="module-card module-card-disabled" key={m.title}>
-                <h3>{m.title}</h3>
-                <p>{m.desc}</p>
-                <span className="module-soon">Coming soon</span>
-              </div>
-            )
-          )}
-        </div>
+          )
+        )}
       </div>
     </div>
   )
