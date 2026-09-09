@@ -23,6 +23,7 @@ import Accounts from './pages/admin/modules/Accounts'
 import Enquiries from './pages/admin/modules/Enquiries'
 import Events from './pages/admin/modules/Events'
 import Users from './pages/admin/modules/Users'
+import WebsiteContent from './pages/admin/modules/WebsiteContent'
 import PublicRules from './pages/public/PublicRules'
 import Signup from './pages/public/Signup'
 import StudentPortal from './pages/portal/StudentPortal'
@@ -65,6 +66,7 @@ export default function App() {
           <Route path="/admin/enquiries" element={<Admin allowedRoles={['super_admin', 'coach']}><Enquiries /></Admin>} />
           <Route path="/admin/events" element={<Admin allowedRoles={['super_admin', 'coach']}><Events /></Admin>} />
           <Route path="/admin/users" element={<Admin allowedRoles={['super_admin']}><Users /></Admin>} />
+          <Route path="/admin/website" element={<Admin allowedRoles={['super_admin']}><WebsiteContent /></Admin>} />
 
           {/* Student / Parent portal */}
           <Route

@@ -5,13 +5,38 @@ import logo from '../../assets/logo.png'
 
 const MEDAL_COLOR = { gold: '#D4A537', silver: '#A8A8A8', bronze: '#B08D57' }
 
+// Fallbacks used until an admin sets real content via Website Content module
+const DEFAULTS = {
+  hero_kicker: 'Khangabok, Thoubal · Manipur',
+  hero_headline: 'Discipline earns the black belt.',
+  hero_body: 'Thoubal Taekwondo Academy trains students of all ages in technique, sparring, and self-discipline — from white belt to black belt, from the dojang to the national stage.',
+  about_heading: 'Built on respect, discipline, and hard work',
+  about_paragraph_1: 'Founded to bring quality Taekwondo training to Khangabok and the wider Thoubal district, the academy trains students in Poomsae, Kyorugi (sparring), and self-defense under certified instruction.',
+  about_paragraph_2: 'Every student progresses through a structured belt-grading system, with regular gradings, competitive exposure, and a focus on discipline both on and off the mat.',
+  stat_students: '200+',
+  stat_medals: '15+',
+  stat_belts: '8',
+  coach_1_name: 'Ranbir Moirangthem',
+  coach_1_role: 'Head Coach · NIS Certified (SAI Bangalore)',
+  coach_2_name: 'Jemsh Saikhom',
+  coach_2_role: 'Assistant Coach · State Taekwondo Referee',
+  contact_address: 'Khangabok, Thoubal, Manipur',
+  contact_phone: '+91 XXXXX XXXXX',
+  contact_email: 'info@thoubaltkd.in',
+}
+
 export default function Home() {
+  const [content, setContent] = useState({})
   const [recentAchievements, setRecentAchievements] = useState([])
   const [enquiryForm, setEnquiryForm] = useState({
     child_name: '', age: '', guardian_phone: '', program_interested: 'Little Dragons (5–8)', message: '',
   })
   const [enquirySubmitting, setEnquirySubmitting] = useState(false)
   const [enquiryStatus, setEnquiryStatus] = useState('')
+
+  function c(key) {
+    return content[key] || DEFAULTS[key] || ''
+  }
 
   async function handleEnquirySubmit(e) {
     e.preventDefault()
@@ -36,6 +61,14 @@ export default function Home() {
   }
 
   useEffect(() => {
+    async function loadContent() {
+      const { data } = await supabase.from('site_content').select('*')
+      if (data) {
+        const map = {}
+        data.forEach((row) => { map[row.key] = row.value })
+        setContent(map)
+      }
+    }
     async function loadAchievements() {
       const { data } = await supabase
         .from('achievements')
@@ -44,10 +77,14 @@ export default function Home() {
         .limit(6)
       if (data) setRecentAchievements(data)
     }
+    loadContent()
     loadAchievements()
   }, [])
 
   const inputClass = "px-4 py-3 border border-black/10 bg-chalk font-body text-[0.95rem] text-ink focus:outline-2 focus:outline-brand-red focus:outline-offset-1"
+
+  const galleryKeys = ['gallery_1', 'gallery_2', 'gallery_3', 'gallery_4', 'gallery_5', 'gallery_6']
+  const hasGalleryImages = galleryKeys.some((k) => content[k])
 
   return (
     <div className="font-body text-charcoal bg-chalk">
@@ -93,12 +130,12 @@ export default function Home() {
           <div className="w-14 h-full bg-brand-red"></div>
         </div>
         <div className="relative z-10 max-w-[1180px] mx-auto px-7">
-          <div className="text-gold font-display font-medium text-sm tracking-wide mb-4">Khangabok, Thoubal · Manipur</div>
+          <div className="text-gold font-display font-medium text-sm tracking-wide mb-4">{c('hero_kicker')}</div>
           <h1 className="font-display font-bold text-chalk uppercase tracking-wide leading-[1.02] max-w-[11ch] text-5xl md:text-7xl">
-            Discipline earns the black belt.
+            {c('hero_headline')}
           </h1>
           <p className="text-[#C9C7C0] text-lg max-w-[44ch] my-6">
-            Thoubal Taekwondo Academy trains students of all ages in technique, sparring, and self-discipline — from white belt to black belt, from the dojang to the national stage.
+            {c('hero_body')}
           </p>
           <div className="flex gap-4 flex-wrap">
             <a href="#enquiry" className="inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark">Enroll Now</a>
@@ -110,20 +147,24 @@ export default function Home() {
       {/* ABOUT */}
       <section id="about" className="py-20">
         <div className="max-w-[1180px] mx-auto px-7 grid md:grid-cols-2 gap-16 items-center">
-          <div className="aspect-[4/5] bg-gradient-to-br from-[#1c1c1a] to-charcoal flex items-center justify-center text-[#8a8a86] font-display text-sm uppercase">
-            Academy photo
-          </div>
+          {content.about_image ? (
+            <img src={content.about_image} alt="Academy" className="aspect-[4/5] w-full object-cover" />
+          ) : (
+            <div className="aspect-[4/5] bg-gradient-to-br from-[#1c1c1a] to-charcoal flex items-center justify-center text-[#8a8a86] font-display text-sm uppercase">
+              Academy photo
+            </div>
+          )}
           <div>
             <div className="mb-6">
               <div className="text-brand-red font-display font-semibold text-sm mb-2">About the academy</div>
-              <h2 className="font-display text-ink uppercase text-3xl md:text-4xl">Built on respect, discipline, and hard work</h2>
+              <h2 className="font-display text-ink uppercase text-3xl md:text-4xl">{c('about_heading')}</h2>
             </div>
-            <p className="mb-4 text-[1.05rem]">Founded to bring quality Taekwondo training to Khangabok and the wider Thoubal district, the academy trains students in Poomsae, Kyorugi (sparring), and self-defense under certified instruction.</p>
-            <p className="mb-4 text-[1.05rem]">Every student progresses through a structured belt-grading system, with regular gradings, competitive exposure, and a focus on discipline both on and off the mat.</p>
+            <p className="mb-4 text-[1.05rem]">{c('about_paragraph_1')}</p>
+            <p className="mb-4 text-[1.05rem]">{c('about_paragraph_2')}</p>
             <div className="flex gap-10 mt-8 flex-wrap">
-              <div><strong className="block font-display text-3xl text-brand-red">200+</strong><span className="text-sm">Students trained</span></div>
-              <div><strong className="block font-display text-3xl text-brand-red">15+</strong><span className="text-sm">State &amp; national medals</span></div>
-              <div><strong className="block font-display text-3xl text-brand-red">8</strong><span className="text-sm">Belt ranks taught</span></div>
+              <div><strong className="block font-display text-3xl text-brand-red">{c('stat_students')}</strong><span className="text-sm">Students trained</span></div>
+              <div><strong className="block font-display text-3xl text-brand-red">{c('stat_medals')}</strong><span className="text-sm">State &amp; national medals</span></div>
+              <div><strong className="block font-display text-3xl text-brand-red">{c('stat_belts')}</strong><span className="text-sm">Belt ranks taught</span></div>
             </div>
           </div>
         </div>
@@ -202,14 +243,22 @@ export default function Home() {
           </div>
           <div className="grid gap-8 max-w-[640px]" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
             <div>
-              <div className="aspect-square bg-gradient-to-br from-[#e7e4db] to-[#cfccc2] mb-4 flex items-center justify-center text-[#8a8a86] font-display text-sm">Photo</div>
-              <h3 className="text-lg font-semibold mb-1">Ranbir Moirangthem</h3>
-              <span className="text-brand-red text-sm font-display">Head Coach · NIS Certified (SAI Bangalore)</span>
+              {content.coach_1_photo ? (
+                <img src={content.coach_1_photo} alt={c('coach_1_name')} className="aspect-square w-full object-cover mb-4" />
+              ) : (
+                <div className="aspect-square bg-gradient-to-br from-[#e7e4db] to-[#cfccc2] mb-4 flex items-center justify-center text-[#8a8a86] font-display text-sm">Photo</div>
+              )}
+              <h3 className="text-lg font-semibold mb-1">{c('coach_1_name')}</h3>
+              <span className="text-brand-red text-sm font-display">{c('coach_1_role')}</span>
             </div>
             <div>
-              <div className="aspect-square bg-gradient-to-br from-[#e7e4db] to-[#cfccc2] mb-4 flex items-center justify-center text-[#8a8a86] font-display text-sm">Photo</div>
-              <h3 className="text-lg font-semibold mb-1">Jemsh Saikhom</h3>
-              <span className="text-brand-red text-sm font-display">Assistant Coach · State Taekwondo Referee</span>
+              {content.coach_2_photo ? (
+                <img src={content.coach_2_photo} alt={c('coach_2_name')} className="aspect-square w-full object-cover mb-4" />
+              ) : (
+                <div className="aspect-square bg-gradient-to-br from-[#e7e4db] to-[#cfccc2] mb-4 flex items-center justify-center text-[#8a8a86] font-display text-sm">Photo</div>
+              )}
+              <h3 className="text-lg font-semibold mb-1">{c('coach_2_name')}</h3>
+              <span className="text-brand-red text-sm font-display">{c('coach_2_role')}</span>
             </div>
           </div>
         </div>
@@ -223,12 +272,23 @@ export default function Home() {
             <h2 className="font-display text-ink uppercase text-3xl md:text-4xl">From the dojang and the podium</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5" style={{ gridAutoRows: 140 }}>
-            <div className="bg-gradient-to-br from-[#1c1c1a] to-[#4a4a46] col-span-2 row-span-2"></div>
-            <div className="bg-gradient-to-br from-[#1c1c1a] to-[#4a4a46]"></div>
-            <div className="bg-gradient-to-br from-[#1c1c1a] to-[#4a4a46]"></div>
-            <div className="bg-gradient-to-br from-[#1c1c1a] to-[#4a4a46]"></div>
-            <div className="bg-gradient-to-br from-[#1c1c1a] to-[#4a4a46]"></div>
-            <div className="bg-gradient-to-br from-[#1c1c1a] to-[#4a4a46] col-span-2"></div>
+            {galleryKeys.map((key, i) => {
+              const isLarge = i === 0
+              const isWide = i === 5
+              return content[key] ? (
+                <img
+                  key={key}
+                  src={content[key]}
+                  alt="Gallery"
+                  className={`object-cover w-full h-full ${isLarge ? 'col-span-2 row-span-2' : ''} ${isWide ? 'col-span-2' : ''}`}
+                />
+              ) : !hasGalleryImages ? (
+                <div
+                  key={key}
+                  className={`bg-gradient-to-br from-[#1c1c1a] to-[#4a4a46] ${isLarge ? 'col-span-2 row-span-2' : ''} ${isWide ? 'col-span-2' : ''}`}
+                />
+              ) : null
+            })}
           </div>
         </div>
       </section>
@@ -320,9 +380,9 @@ export default function Home() {
             </div>
             <div>
               <h4 className="text-chalk font-display text-base mb-4">Contact</h4>
-              <a href="#" className="block text-sm mb-2 hover:text-gold">Khangabok, Thoubal, Manipur</a>
-              <a href="#" className="block text-sm mb-2 hover:text-gold">+91 XXXXX XXXXX</a>
-              <a href="#" className="block text-sm mb-2 hover:text-gold">info@thoubaltkd.in</a>
+              <a href="#" className="block text-sm mb-2 hover:text-gold">{c('contact_address')}</a>
+              <a href="#" className="block text-sm mb-2 hover:text-gold">{c('contact_phone')}</a>
+              <a href="#" className="block text-sm mb-2 hover:text-gold">{c('contact_email')}</a>
             </div>
           </div>
           <div className="border-t border-white/10 pt-6 text-sm text-[#8a8a86] flex justify-between flex-wrap gap-3">

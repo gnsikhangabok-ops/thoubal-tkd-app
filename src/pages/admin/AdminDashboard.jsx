@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import {
   Users, Building2, UserCog, CalendarCheck, Award, TrendingUp,
   Medal, Package, Wallet, PiggyBank, Trophy, Inbox,
-  ScrollText, ShieldCheck, Bell, ArrowRight, AlertCircle,
+  ScrollText, ShieldCheck, Bell, ArrowRight, AlertCircle, LayoutTemplate,
 } from 'lucide-react'
 
 const SECTIONS = [
@@ -42,6 +42,7 @@ const SECTIONS = [
     items: [
       { title: 'Rules & Regulations', desc: 'Academy policies at registration', path: '/admin/rules', icon: ScrollText },
       { title: 'Users', desc: 'Assign roles and link student logins', path: '/admin/users', icon: ShieldCheck },
+      { title: 'Website Content', desc: 'Edit homepage text, photos, and gallery', path: '/admin/website', icon: LayoutTemplate },
       { title: 'Notices', desc: 'Announcements to students & parents', path: null, icon: Bell },
     ],
   },

@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { label: 'Events', path: '/admin/events' },
   { label: 'Enquiries', path: '/admin/enquiries' },
   { label: 'Rules & Regulations', path: '/admin/rules' },
+  { label: 'Website Content', path: '/admin/website', superAdminOnly: true },
   { label: 'Users', path: '/admin/users', superAdminOnly: true },
 ]
 
