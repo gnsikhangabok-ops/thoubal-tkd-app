@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabaseClient'
-import '../../styles/site.css'
 import logo from '../../assets/logo.png'
 
 const BELT_LABELS = {

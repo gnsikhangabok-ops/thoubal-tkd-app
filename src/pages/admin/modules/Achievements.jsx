@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
-import '../../../styles/site.css'
 
 const LEVELS = ['district', 'state', 'national', 'international']
 const MEDALS = ['gold', 'silver', 'bronze', 'none']

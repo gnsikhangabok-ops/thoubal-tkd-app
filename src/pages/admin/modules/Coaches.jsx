@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
-import '../../../styles/site.css'
 
 const emptyForm = {
   id: null,
@@ -32,7 +31,7 @@ export default function Coaches() {
     const [coachRes, centerRes] = await Promise.all([
       supabase
         .from('coaches')
-        .select('*, training_centers!coaches_training_center_id_fkey(name)')
+        .select('*, training_centers(name)')
         .order('created_at', { ascending: true }),
       supabase
         .from('training_centers')

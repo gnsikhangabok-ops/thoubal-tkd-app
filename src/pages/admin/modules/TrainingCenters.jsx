@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
-import '../../../styles/site.css'
 
 const emptyForm = { id: null, name: '', location: '', active: true }
 

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
-import '../../../styles/site.css'
 
 const INCOME_CATEGORIES = ['student_fee', 'donation', 'sponsorship', 'other']
 const EXPENSE_CATEGORIES = ['salary', 'equipment', 'rent', 'event', 'maintenance', 'other']

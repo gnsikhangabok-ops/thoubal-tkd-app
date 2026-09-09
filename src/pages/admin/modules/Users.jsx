@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
-import '../../../styles/site.css'
 
 const ROLES = ['student', 'coach', 'super_admin']
 const ROLE_COLOR = { student: '#999', coach: 'var(--gold)', super_admin: 'var(--red)' }
@@ -37,20 +36,13 @@ export default function Users() {
   }
 
   async function updateRole(profile, role) {
-    setError('')
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('profiles')
       .update({ role })
       .eq('id', profile.id)
-      .select()
 
-    if (error) {
-      setError(error.message)
-    } else if (!data || data.length === 0) {
-      setError('Role not updated — this account is not permitted to write to profiles (likely a Supabase RLS policy on the "profiles" table blocking the anon role).')
-    } else {
-      loadData()
-    }
+    if (error) setError(error.message)
+    else loadData()
   }
 
   function openLinkForm(profile) {

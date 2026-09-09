@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #0F0F0E;
+  --color-chalk: #F7F5F0;
+  --color-brand-red: #B3282D;
+  --color-brand-red-dark: #8f2024;
+  --color-gold: #D4A537;
+  --color-charcoal: #3A3A38;
+  --color-line: rgba(15, 15, 14, 0.12);
+
+  --font-display: 'Oswald', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply font-body text-charcoal bg-chalk;
+    line-height: 1.55;
+  }
+  h1, h2, h3 {
+    @apply font-display text-ink uppercase tracking-wide;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide cursor-pointer border-none;
+  }
+  .btn-primary {
+    @apply bg-brand-red text-chalk hover:bg-brand-red-dark;
+  }
+  .btn-outline {
+    @apply border border-ink text-ink bg-transparent hover:bg-ink hover:text-chalk;
+  }
+
+  .belt-strip {
+    @apply flex h-2 w-full;
+  }
+  .belt-strip span { @apply flex-1; }
+
+  .section-head { @apply max-w-[60ch] mb-12; }
+  .section-head .kicker-line { @apply text-brand-red font-display font-semibold text-sm mb-2; }
+  .section-head h2 { @apply text-3xl md:text-4xl; }
+
+  .module-card {
+    @apply block bg-white border border-line border-t-[3px] border-t-brand-red p-6 transition-colors;
+  }
+  .module-card:hover:not(.module-card-disabled) { @apply border-t-gold; }
+  .module-card-disabled { @apply opacity-55 border-t-[#ccc] relative cursor-default; }
+  .module-card h3 { @apply text-base mb-1.5 normal-case font-body font-semibold text-ink tracking-normal; }
+  .module-card p { @apply text-sm text-charcoal; }
+
+  .module-grid { @apply grid gap-4; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+
+  .stat-grid { @apply grid gap-4 mb-9; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+  .stat-card { @apply bg-ink px-5 py-6 border-b-[3px] border-b-gold; }
+  .stat-card strong { @apply block font-display text-4xl text-chalk; }
+  .stat-card span { @apply text-sm text-[#B8B6B0] uppercase tracking-wide; }
+
+  .auth-page { @apply min-h-screen flex items-center justify-center bg-ink p-5; }
+  .auth-card { @apply w-full max-w-sm bg-chalk px-9 py-10 border-t-4 border-t-brand-red; }
+  .auth-card h2 { @apply text-2xl mb-1.5; }
+  .auth-card .auth-sub { @apply text-charcoal text-sm mb-7; }
+  .auth-card form { @apply flex flex-col gap-3.5; }
+  .auth-card input { @apply px-3.5 py-3 border border-line bg-white text-[0.95rem] focus:outline-2 focus:outline-brand-red focus:outline-offset-1; }
+  .auth-card .auth-error { @apply text-brand-red text-sm; }
+  .auth-card button[type="submit"] { @apply mt-1 w-full; }
+  .auth-back { @apply block text-center mt-5 text-sm text-charcoal hover:text-brand-red; }
+
+  .brand { @apply flex items-center gap-3; }
+  .brand-logo { @apply w-11 h-11 object-contain; }
+  .brand-text { @apply flex flex-col leading-tight; }
+  .brand-sub { @apply text-[0.62rem] tracking-wide text-charcoal uppercase font-body mt-0.5; }
+  .logo { @apply font-display font-bold text-lg text-ink; }
+  .logo span { @apply text-brand-red; }
+
+  .dash-user { @apply flex items-center gap-4 text-chalk text-sm flex-wrap; }
+  .role-tag { @apply bg-brand-red text-chalk font-display text-[0.7rem] tracking-wide px-2.5 py-0.5 uppercase; }
+  .dash-signout { @apply bg-transparent border border-chalk text-chalk font-display text-sm px-4 py-2 cursor-pointer uppercase tracking-wide hover:bg-chalk hover:text-ink; }
+  .dash-shell { @apply min-h-screen bg-chalk; }
+  .dash-body { @apply p-12 max-w-[1100px] mx-auto; }
+  .dash-body h1 { @apply text-3xl mb-2; }
+  .dash-body .dash-lede { @apply text-charcoal mb-9; }
+
+  /* Admin sidebar layout */
+  .admin-shell { @apply flex min-h-screen bg-chalk; }
+  .admin-sidebar { @apply w-60 shrink-0 bg-ink flex flex-col border-r-[3px] border-r-gold sticky top-0 h-screen overflow-y-auto; }
+  .admin-sidebar-brand { @apply flex items-center gap-2.5 px-4 py-5 border-b border-white/10; }
+  .admin-sidebar-brand .brand-logo { @apply w-8 h-8; }
+  .admin-sidebar-brand .logo { @apply text-sm text-chalk; }
+  .admin-nav { @apply flex flex-col py-3 flex-1; }
+  .admin-nav-link { @apply px-4.5 py-2.5 text-sm text-[#C9C7C0] border-l-[3px] border-l-transparent font-body font-medium hover:bg-white/5 hover:text-chalk; }
+  .admin-nav-link.active { @apply bg-gold/10 border-l-gold text-chalk font-semibold; }
+  .admin-sidebar-footer { @apply px-4.5 py-4 border-t border-white/10; }
+  .admin-main { @apply flex-1 min-w-0; }
+  .admin-main .dash-body { @apply max-w-[1000px]; }
+
+  @media (max-width: 640px) {
+    .admin-sidebar { width: 170px; }
+  }
+}
