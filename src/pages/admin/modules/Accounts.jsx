@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
+import { Link2 } from 'lucide-react'
 
 const INCOME_CATEGORIES = ['student_fee', 'donation', 'sponsorship', 'other']
 const EXPENSE_CATEGORIES = ['salary', 'equipment', 'rent', 'event', 'maintenance', 'other']
@@ -38,6 +40,7 @@ export default function Accounts() {
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [typeFilter, setTypeFilter] = useState('')
+  const [sourceFilter, setSourceFilter] = useState('') // '', 'auto', 'manual'
 
   useEffect(() => {
     loadData()
@@ -46,7 +49,7 @@ export default function Accounts() {
   async function loadData() {
     setLoading(true)
     const [txRes, centerRes, summaryRes] = await Promise.all([
-      supabase.from('accounts_transactions').select('*, training_centers(name)').order('transaction_date', { ascending: false }),
+      supabase.from('accounts_transactions').select('*, training_centers(name), students(full_name)').order('transaction_date', { ascending: false }),
       supabase.from('training_centers').select('id, name').eq('active', true).order('name'),
       supabase.from('accounts_summary').select('*').single(),
     ])
@@ -94,13 +97,20 @@ export default function Accounts() {
   }
 
   async function handleDelete(tx) {
-    if (!confirm('Delete this transaction?')) return
+    if (tx.related_fee_payment_id || (tx.related_student_id && tx.category === 'student_fee')) {
+      if (!confirm('This entry was auto-posted from a fee collection. Deleting it here will NOT undo the payment record in Fee Management/Fee Setup. Delete anyway?')) return
+    } else if (!confirm('Delete this transaction?')) {
+      return
+    }
     const { error } = await supabase.from('accounts_transactions').delete().eq('id', tx.id)
     if (error) setError(error.message)
     else loadData()
   }
 
-  const filtered = typeFilter ? transactions.filter((t) => t.type === typeFilter) : transactions
+  let filtered = typeFilter ? transactions.filter((t) => t.type === typeFilter) : transactions
+  if (sourceFilter === 'auto') filtered = filtered.filter((t) => t.related_student_id)
+  if (sourceFilter === 'manual') filtered = filtered.filter((t) => !t.related_student_id)
+
   const categoryOptions = form.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
 
   return (
@@ -112,7 +122,11 @@ export default function Accounts() {
           <button className={btnOutline} onClick={() => openAddForm('expense')}>+ Add Expense</button>
         </div>
       </div>
-      <p className="text-charcoal mb-9">Income vs expenses — profit &amp; loss overview.</p>
+      <p className="text-charcoal mb-9">
+        Income vs expenses — profit &amp; loss overview. Fee collections from{' '}
+        <Link to="/admin/fees" className="underline">Fee Management</Link> and{' '}
+        <Link to="/admin/fee-setup" className="underline">Fee Setup</Link> post here automatically.
+      </p>
 
       {error && <p className="text-brand-red mb-4">{error}</p>}
 
@@ -133,7 +147,7 @@ export default function Accounts() {
         </div>
       </div>
 
-      <div className="my-6">
+      <div className="my-6 flex gap-3 flex-wrap">
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
@@ -142,6 +156,15 @@ export default function Accounts() {
           <option value="">All transactions</option>
           <option value="income">Income only</option>
           <option value="expense">Expenses only</option>
+        </select>
+        <select
+          value={sourceFilter}
+          onChange={(e) => setSourceFilter(e.target.value)}
+          className={inputCls}
+        >
+          <option value="">All sources</option>
+          <option value="auto">Auto-posted from fees</option>
+          <option value="manual">Manually entered</option>
         </select>
       </div>
 
@@ -205,22 +228,32 @@ export default function Accounts() {
         <p className="text-charcoal">No transactions recorded yet.</p>
       ) : (
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {filtered.map((tx) => (
-            <div
-              key={tx.id}
-              className="bg-white border border-black/10 p-6"
-              style={{ borderTopWidth: 3, borderTopColor: tx.type === 'income' ? '#B3282D' : '#8B0000' }}
-            >
-              <h3 className="font-semibold text-base text-ink capitalize mb-1.5">{tx.type} · {CATEGORY_LABELS[tx.category] || tx.category}</h3>
-              <p className="text-xl font-display" style={{ color: tx.type === 'income' ? '#B3282D' : '#8B0000' }}>
-                {tx.type === 'income' ? '+' : '−'}₹{Number(tx.amount).toLocaleString('en-IN')}
-              </p>
-              <p className="text-[0.85rem] mt-1">{tx.transaction_date}</p>
-              {tx.training_centers?.name && <p className="text-[0.8rem]">{tx.training_centers.name}</p>}
-              {tx.description && <p className="text-[0.85rem] mt-1.5">{tx.description}</p>}
-              <button className={`${btnOutline} ${btnSm} mt-3`} onClick={() => handleDelete(tx)}>Delete</button>
-            </div>
-          ))}
+          {filtered.map((tx) => {
+            const isAuto = !!tx.related_student_id
+            return (
+              <div
+                key={tx.id}
+                className="bg-white border border-black/10 p-6"
+                style={{ borderTopWidth: 3, borderTopColor: tx.type === 'income' ? '#B3282D' : '#8B0000' }}
+              >
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <h3 className="font-semibold text-base text-ink capitalize">{tx.type} · {CATEGORY_LABELS[tx.category] || tx.category}</h3>
+                  {isAuto && <Link2 size={14} className="text-charcoal/50 shrink-0" title="Auto-posted from fee collection" />}
+                </div>
+                <p className="text-xl font-display" style={{ color: tx.type === 'income' ? '#B3282D' : '#8B0000' }}>
+                  {tx.type === 'income' ? '+' : '−'}₹{Number(tx.amount).toLocaleString('en-IN')}
+                </p>
+                <p className="text-[0.85rem] mt-1">{tx.transaction_date}</p>
+                {tx.students?.full_name && <p className="text-[0.8rem]">{tx.students.full_name}</p>}
+                {tx.training_centers?.name && <p className="text-[0.8rem]">{tx.training_centers.name}</p>}
+                {tx.description && <p className="text-[0.85rem] mt-1.5">{tx.description}</p>}
+                {isAuto && (
+                  <p className="text-[0.7rem] mt-2 text-charcoal/60 uppercase tracking-wide">Auto-posted</p>
+                )}
+                <button className={`${btnOutline} ${btnSm} mt-3`} onClick={() => handleDelete(tx)}>Delete</button>
+              </div>
+            )
+          })}
         </div>
       )}
     </div>

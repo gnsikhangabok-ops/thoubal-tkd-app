@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
-import { Wallet, Repeat, CircleDollarSign } from 'lucide-react'
+import { Wallet, Repeat, CircleDollarSign, Check } from 'lucide-react'
 
 const inputCls = "px-2.5 py-2.5 border border-black/10"
 const btnPrimary = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
@@ -9,11 +10,14 @@ const btnSm = "text-[0.75rem] px-3 py-1.5"
 
 const emptyMonthlyForm = { batch_id: '', monthly_amount: '' }
 const emptyOneTimeForm = { id: null, name: '', amount: '' }
+const emptyCollectForm = { student_id: '', amount_paid: '', payment_method: 'Cash', receipt_no: '' }
 
 export default function FeeSetup() {
   const [batches, setBatches] = useState([])
   const [feeStructures, setFeeStructures] = useState([])
   const [oneTimeFees, setOneTimeFees] = useState([])
+  const [students, setStudents] = useState([])
+  const [payments, setPayments] = useState([]) // one_time_fee_payments
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -25,16 +29,23 @@ export default function FeeSetup() {
   const [showOneTimeForm, setShowOneTimeForm] = useState(false)
   const [savingOneTime, setSavingOneTime] = useState(false)
 
+  const [collectingFor, setCollectingFor] = useState(null) // fee type being collected
+  const [collectForm, setCollectForm] = useState(emptyCollectForm)
+  const [savingCollect, setSavingCollect] = useState(false)
+  const [viewingPaidFor, setViewingPaidFor] = useState(null) // fee type whose paid-list is shown
+
   useEffect(() => {
     loadData()
   }, [])
 
   async function loadData() {
     setLoading(true)
-    const [batchRes, structRes, oneTimeRes] = await Promise.all([
+    const [batchRes, structRes, oneTimeRes, studentRes, paymentRes] = await Promise.all([
       supabase.from('batches').select('id, name, training_centers(name)').eq('active', true).order('name'),
       supabase.from('fee_structures').select('*, batches(name)').order('effective_from', { ascending: false }),
       supabase.from('one_time_fee_types').select('*').order('created_at', { ascending: true }),
+      supabase.from('students').select('id, full_name, training_center_id').eq('active', true).order('full_name'),
+      supabase.from('one_time_fee_payments').select('*, students(full_name)'),
     ])
 
     if (batchRes.error) setError(batchRes.error.message)
@@ -46,14 +57,19 @@ export default function FeeSetup() {
     if (oneTimeRes.error) setError((prev) => prev || oneTimeRes.error.message)
     else setOneTimeFees(oneTimeRes.data)
 
+    if (studentRes.error) setError((prev) => prev || studentRes.error.message)
+    else setStudents(studentRes.data)
+
+    if (paymentRes.error) setError((prev) => prev || paymentRes.error.message)
+    else setPayments(paymentRes.data)
+
     setLoading(false)
   }
 
-  // Latest fee structure per batch (most recent effective_from wins)
   function currentRateForBatch(batchId) {
     const rows = feeStructures.filter((f) => f.batch_id === batchId)
     if (rows.length === 0) return null
-    return rows[0] // already sorted desc by effective_from
+    return rows[0]
   }
 
   function openAddMonthly(batchId) {
@@ -121,11 +137,68 @@ export default function FeeSetup() {
     else loadData()
   }
 
+  function studentsPaidFor(feeTypeId) {
+    return new Set(payments.filter((p) => p.fee_type_id === feeTypeId).map((p) => p.student_id))
+  }
+
+  function openCollectForm(feeType) {
+    setCollectingFor(feeType)
+    setCollectForm({ student_id: '', amount_paid: feeType.amount, payment_method: 'Cash', receipt_no: '' })
+  }
+
+  async function handleCollectSubmit(e) {
+    e.preventDefault()
+    setSavingCollect(true)
+    setError('')
+
+    const student = students.find((s) => s.id === collectForm.student_id)
+    const amount = parseFloat(collectForm.amount_paid)
+
+    const { error: payError } = await supabase.from('one_time_fee_payments').insert({
+      fee_type_id: collectingFor.id,
+      student_id: collectForm.student_id,
+      amount_paid: amount,
+      payment_method: collectForm.payment_method,
+      receipt_no: collectForm.receipt_no || null,
+    })
+
+    if (payError) {
+      setError(payError.message)
+      setSavingCollect(false)
+      return
+    }
+
+    // Post to Accounts as income, same pattern as monthly fee collection.
+    const { error: acctError } = await supabase.from('accounts_transactions').insert({
+      type: 'income',
+      category: 'student_fee',
+      amount,
+      transaction_date: new Date().toISOString().slice(0, 10),
+      training_center_id: student?.training_center_id || null,
+      related_student_id: collectForm.student_id,
+      description: `${collectingFor.name} — ${student?.full_name}`,
+    })
+
+    setSavingCollect(false)
+    if (acctError) {
+      setError(`Payment recorded, but failed to post to Accounts: ${acctError.message}`)
+    }
+    setCollectingFor(null)
+    loadData()
+  }
+
+  const unpaidStudentsFor = (feeTypeId) => {
+    const paidIds = studentsPaidFor(feeTypeId)
+    return students.filter((s) => !paidIds.has(s.id))
+  }
+
   return (
     <div className="p-12 max-md:p-6 max-w-[1000px] mx-auto">
       <h1 className="font-display text-ink uppercase text-3xl mb-2">Fee Setup</h1>
       <p className="text-charcoal mb-9">
-        Define monthly rates per batch and one-time fees (admission, form). These feed into Fee Management.
+        Define monthly rates per batch and one-time fees (admission, form). Monthly rates feed{' '}
+        <Link to="/admin/fees" className="underline">Fee Management</Link>; collected payments post to{' '}
+        <Link to="/admin/accounts" className="underline">Accounts</Link>.
       </p>
 
       {error && <p className="text-brand-red mb-6">{error}</p>}
@@ -236,32 +309,116 @@ export default function FeeSetup() {
               </div>
             )}
 
+            {collectingFor && (
+              <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-6 max-w-[420px]">
+                <h3 className="font-semibold text-base text-ink mb-1.5">Collect: {collectingFor.name}</h3>
+                <p className="text-[0.85rem] mb-4 text-charcoal">Standard amount: ₹{Number(collectingFor.amount).toLocaleString('en-IN')}</p>
+                <form onSubmit={handleCollectSubmit} className="flex flex-col gap-3">
+                  <select
+                    required
+                    value={collectForm.student_id}
+                    onChange={(e) => setCollectForm({ ...collectForm, student_id: e.target.value })}
+                    className={inputCls}
+                  >
+                    <option value="">— Select student —</option>
+                    {unpaidStudentsFor(collectingFor.id).map((s) => (
+                      <option key={s.id} value={s.id}>{s.full_name}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="number" placeholder="Amount paid (₹)" required step="0.01"
+                    value={collectForm.amount_paid}
+                    onChange={(e) => setCollectForm({ ...collectForm, amount_paid: e.target.value })}
+                    className={inputCls}
+                  />
+                  <select
+                    value={collectForm.payment_method}
+                    onChange={(e) => setCollectForm({ ...collectForm, payment_method: e.target.value })}
+                    className={inputCls}
+                  >
+                    <option>Cash</option>
+                    <option>UPI</option>
+                    <option>Bank Transfer</option>
+                    <option>Other</option>
+                  </select>
+                  <input
+                    type="text" placeholder="Receipt number (optional)"
+                    value={collectForm.receipt_no}
+                    onChange={(e) => setCollectForm({ ...collectForm, receipt_no: e.target.value })}
+                    className={inputCls}
+                  />
+                  <p className="text-[0.75rem] text-charcoal">This will also be recorded as income in Accounts.</p>
+                  <div className="flex gap-2.5">
+                    <button type="submit" className={btnPrimary} disabled={savingCollect}>
+                      {savingCollect ? 'Saving…' : 'Record Collection'}
+                    </button>
+                    <button type="button" className={btnOutline} onClick={() => setCollectingFor(null)}>
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {viewingPaidFor && (
+              <div className="bg-white border border-black/10 border-t-[3px] border-t-gold p-6 mb-6 max-w-[420px]">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-semibold text-base text-ink">Paid: {viewingPaidFor.name}</h3>
+                  <button className="text-[0.75rem] underline text-charcoal" onClick={() => setViewingPaidFor(null)}>Close</button>
+                </div>
+                {payments.filter((p) => p.fee_type_id === viewingPaidFor.id).length === 0 ? (
+                  <p className="text-sm text-charcoal">No one has paid this yet.</p>
+                ) : (
+                  <ul className="flex flex-col gap-2">
+                    {payments.filter((p) => p.fee_type_id === viewingPaidFor.id).map((p) => (
+                      <li key={p.id} className="text-sm flex justify-between items-center border-b border-black/5 pb-2">
+                        <span className="flex items-center gap-1.5"><Check size={14} className="text-brand-red" />{p.students?.full_name}</span>
+                        <span className="text-charcoal">₹{Number(p.amount_paid).toLocaleString('en-IN')}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
             {oneTimeFees.length === 0 ? (
               <p className="text-charcoal text-sm">No one-time fees set up yet. Add "Admission Fee" and "Form Fee" to match your registration form.</p>
             ) : (
               <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-                {oneTimeFees.map((fee) => (
-                  <div
-                    key={fee.id}
-                    className="bg-white border border-black/10 p-6"
-                    style={{ borderTopWidth: 3, borderTopColor: fee.active ? '#B3282D' : '#ccc' }}
-                  >
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <Wallet size={16} className="text-brand-red" />
-                      <h3 className="font-semibold text-base text-ink">{fee.name}</h3>
-                    </div>
-                    <p className="text-2xl font-display text-brand-red">₹{Number(fee.amount).toLocaleString('en-IN')}</p>
-                    <p className="text-[0.8rem] mt-1.5" style={{ color: fee.active ? '#B3282D' : '#999' }}>
-                      {fee.active ? 'Active' : 'Inactive'}
-                    </p>
-                    <div className="flex gap-2 mt-3">
-                      <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditOneTime(fee)}>Edit</button>
-                      <button className={`${btnOutline} ${btnSm}`} onClick={() => toggleOneTimeActive(fee)}>
-                        {fee.active ? 'Deactivate' : 'Activate'}
+                {oneTimeFees.map((fee) => {
+                  const paidCount = studentsPaidFor(fee.id).size
+                  return (
+                    <div
+                      key={fee.id}
+                      className="bg-white border border-black/10 p-6"
+                      style={{ borderTopWidth: 3, borderTopColor: fee.active ? '#B3282D' : '#ccc' }}
+                    >
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <Wallet size={16} className="text-brand-red" />
+                        <h3 className="font-semibold text-base text-ink">{fee.name}</h3>
+                      </div>
+                      <p className="text-2xl font-display text-brand-red">₹{Number(fee.amount).toLocaleString('en-IN')}</p>
+                      <button
+                        className="text-[0.8rem] text-charcoal underline mt-1 block"
+                        onClick={() => setViewingPaidFor(fee)}
+                      >
+                        {paidCount} student{paidCount === 1 ? '' : 's'} paid
                       </button>
+                      <p className="text-[0.8rem] mt-1.5" style={{ color: fee.active ? '#B3282D' : '#999' }}>
+                        {fee.active ? 'Active' : 'Inactive'}
+                      </p>
+                      <div className="flex gap-2 mt-3 flex-wrap">
+                        {fee.active && (
+                          <button className={`${btnPrimary} ${btnSm}`} onClick={() => openCollectForm(fee)}>Collect</button>
+                        )}
+                        <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditOneTime(fee)}>Edit</button>
+                        <button className={`${btnOutline} ${btnSm}`} onClick={() => toggleOneTimeActive(fee)}>
+                          {fee.active ? 'Deactivate' : 'Activate'}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>

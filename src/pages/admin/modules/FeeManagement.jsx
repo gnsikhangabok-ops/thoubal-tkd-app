@@ -28,7 +28,7 @@ export default function FeeManagement() {
   const [showGenForm, setShowGenForm] = useState(false)
   const [genMonth, setGenMonth] = useState(currentMonthFirst())
   const [generating, setGenerating] = useState(false)
-  const [genPreview, setGenPreview] = useState(null) // { toCreate: [...], skippedNoRate: [...] }
+  const [genPreview, setGenPreview] = useState(null)
 
   const [payingFor, setPayingFor] = useState(null)
   const [payForm, setPayForm] = useState(emptyPayForm)
@@ -42,7 +42,7 @@ export default function FeeManagement() {
     setLoading(true)
     const { data, error } = await supabase
       .from('fee_payments')
-      .select('*, students(full_name)')
+      .select('*, students(full_name, training_center_id)')
       .eq('period_month', monthFilter)
       .order('created_at', { ascending: true })
 
@@ -57,7 +57,6 @@ export default function FeeManagement() {
     await buildPreview(monthFilter)
   }
 
-  // Builds the list of students to bill, using their batch's current monthly rate.
   async function buildPreview(periodMonth) {
     setError('')
 
@@ -73,7 +72,6 @@ export default function FeeManagement() {
     }
 
     const existingIds = new Set(existingRes.data.map((p) => p.student_id))
-    // latest rate per batch
     const rateByBatch = {}
     structRes.data.forEach((row) => {
       if (!(row.batch_id in rateByBatch)) rateByBatch[row.batch_id] = row.monthly_amount
@@ -137,7 +135,8 @@ export default function FeeManagement() {
     setSaving(true)
     setError('')
 
-    const newPaid = (payingFor.amount_paid || 0) + parseFloat(payForm.amount_paid || 0)
+    const paidNow = parseFloat(payForm.amount_paid || 0)
+    const newPaid = (payingFor.amount_paid || 0) + paidNow
     const newStatus = newPaid >= payingFor.amount_due ? 'paid' : 'pending'
 
     const { error } = await supabase
@@ -152,13 +151,32 @@ export default function FeeManagement() {
       })
       .eq('id', payingFor.id)
 
-    setSaving(false)
     if (error) {
       setError(error.message)
-    } else {
-      setPayingFor(null)
-      loadPayments()
+      setSaving(false)
+      return
     }
+
+    // Post this collection to Accounts as income — keeps the ledger in sync
+    // without the admin having to re-enter it manually.
+    const { error: acctError } = await supabase.from('accounts_transactions').insert({
+      type: 'income',
+      category: 'student_fee',
+      amount: paidNow,
+      transaction_date: new Date().toISOString().slice(0, 10),
+      training_center_id: payingFor.students?.training_center_id || null,
+      related_student_id: payingFor.student_id,
+      related_fee_payment_id: payingFor.id,
+      description: `Monthly fee — ${payingFor.students?.full_name} — ${formatMonth(payingFor.period_month)}`,
+    })
+
+    setSaving(false)
+    if (acctError) {
+      // Payment itself succeeded; surface the accounts sync issue separately.
+      setError(`Payment recorded, but failed to post to Accounts: ${acctError.message}`)
+    }
+    setPayingFor(null)
+    loadPayments()
   }
 
   async function markWaived(payment) {
@@ -185,7 +203,8 @@ export default function FeeManagement() {
       </div>
       <p className="text-charcoal mb-9">
         Track monthly dues, payments, and receipts. Rates come from{' '}
-        <Link to="/admin/fee-setup" className="underline">Fee Setup</Link>.
+        <Link to="/admin/fee-setup" className="underline">Fee Setup</Link>. Payments post automatically to{' '}
+        <Link to="/admin/accounts" className="underline">Accounts</Link>.
       </p>
 
       <div className="mb-6">
@@ -304,6 +323,7 @@ export default function FeeManagement() {
               onChange={(e) => setPayForm({ ...payForm, notes: e.target.value })}
               className={`${inputCls} font-body`}
             />
+            <p className="text-[0.75rem] text-charcoal">This will also be recorded as income in Accounts.</p>
             <div className="flex gap-2.5">
               <button type="submit" className={btnPrimary} disabled={saving}>
                 {saving ? 'Saving…' : 'Record Payment'}
