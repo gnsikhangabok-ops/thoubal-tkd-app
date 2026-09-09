@@ -2,6 +2,23 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
 import logo from '../../assets/logo.png'
+import {
+  ShieldCheck, Users2, Medal, Sparkles, Target, HeartPulse,
+  GraduationCap, Globe2, Trophy, Flag,
+} from 'lucide-react'
+
+const WHY_FEATURES = [
+  { icon: ShieldCheck, title: 'Certified Coaches', desc: 'Trained under NIS and SAI-certified instructors with national referee experience.' },
+  { icon: Users2, title: 'Small Batch Sizes', desc: 'Focused attention per student across every age group and skill level.' },
+  { icon: Medal, title: 'Structured Belt System', desc: 'A clear, disciplined path from white belt to black belt.' },
+  { icon: Sparkles, title: 'Discipline First', desc: 'Respect, punctuality, and self-control are built into every session.' },
+  { icon: Target, title: 'Competition Exposure', desc: 'Regular access to district, state, and national tournaments.' },
+  { icon: HeartPulse, title: 'Fitness & Self-Defense', desc: 'Practical skills alongside conditioning for all fitness levels.' },
+  { icon: GraduationCap, title: 'Regular Gradings', desc: 'Scheduled belt exams to track and reward real progress.' },
+  { icon: Flag, title: 'Govt. Registered Academy', desc: 'Officially registered under Thoubal District Taekwondo Association.' },
+  { icon: Globe2, title: 'Affiliated Nationally', desc: 'Recognized by AMTA, Taekwondo Federation of India, and Asian Taekwondo Union.' },
+  { icon: Trophy, title: 'Olympic Sport Pathway', desc: 'Taekwondo is an Olympic discipline — train with a pathway to the highest stage.' },
+]
 
 const MEDAL_COLOR = { gold: '#D4A537', silver: '#A8A8A8', bronze: '#B08D57' }
 
@@ -231,6 +248,28 @@ export default function Home() {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* WHY TRAIN WITH US */}
+      <section id="why-us" className="bg-[#EFEBE1] py-20">
+        <div className="max-w-[1180px] mx-auto px-7">
+          <div className="mb-12">
+            <div className="text-brand-red font-display font-semibold text-sm mb-2">Why train with us</div>
+            <h2 className="font-display text-ink uppercase text-3xl md:text-4xl">Built for serious training, backed by real recognition</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-black/10 border border-black/10">
+            {WHY_FEATURES.map((f) => {
+              const Icon = f.icon
+              return (
+                <div key={f.title} className="bg-[#EFEBE1] p-6 flex flex-col gap-3">
+                  <Icon size={22} className="text-brand-red" strokeWidth={1.75} />
+                  <h3 className="font-semibold text-[0.95rem] text-ink leading-snug">{f.title}</h3>
+                  <p className="text-[0.8rem] text-charcoal leading-relaxed">{f.desc}</p>
+                </div>
+              )
+            })}
+          </div>
         </div>
       </section>
 
