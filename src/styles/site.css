@@ -218,12 +218,12 @@ form.enq label { font-size: 0.85rem; font-weight: 600; margin-bottom: -8px; colo
 .dash-shell { min-height: 100vh; background: var(--chalk); }
 .dash-topbar {
   display: flex; align-items: center; justify-content: space-between;
-  background: var(--ink); padding: 18px 32px;
+  background: var(--ink); padding: 18px 32px; gap: 16px; flex-wrap: wrap;
   border-bottom: 3px solid var(--gold);
 }
 .dash-topbar .logo { color: var(--chalk); }
 .dash-topbar .logo span { color: var(--gold); }
-.dash-user { display: flex; align-items: center; gap: 16px; color: var(--chalk); font-size: 0.9rem; }
+.dash-user { display: flex; align-items: center; gap: 16px; color: var(--chalk); font-size: 0.9rem; flex-wrap: wrap; }
 .dash-user .role-tag {
   background: var(--red); color: var(--chalk);
   font-family: 'Oswald'; font-size: 0.7rem; letter-spacing: 0.05em;
@@ -242,6 +242,20 @@ form.enq label { font-size: 0.85rem; font-weight: 600; margin-bottom: -8px; colo
 .stat-card { background: var(--ink); padding: 24px 22px; border-bottom: 3px solid var(--gold); }
 .stat-card strong { display: block; font-family: 'Oswald'; font-size: 2.2rem; color: var(--chalk); }
 .stat-card span { font-size: 0.85rem; color: #B8B6B0; text-transform: uppercase; letter-spacing: 0.03em; }
+
+@media (max-width: 640px) {
+  .dash-topbar { padding: 14px 18px; gap: 10px; }
+  .dash-topbar .brand-sub { display: none; }
+  .dash-topbar .brand-logo { width: 34px; height: 34px; }
+  .dash-topbar .logo { font-size: 1rem; }
+  .dash-user { gap: 8px; font-size: 0.8rem; width: 100%; justify-content: space-between; }
+  .dash-user > span { display: none; }
+  .dash-user .role-tag { font-size: 0.65rem; padding: 3px 8px; }
+  .dash-signout { font-size: 0.7rem; padding: 6px 12px; }
+  .dash-body { padding: 32px 18px; }
+  .dash-body h1 { font-size: 1.5rem; }
+}
+
 
 .module-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
 .module-card {
