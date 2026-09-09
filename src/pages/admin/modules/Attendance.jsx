@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
-import { useAuth } from '../../../context/AuthContext'
 
 function today() {
   return new Date().toISOString().slice(0, 10)
@@ -9,20 +7,22 @@ function today() {
 
 const STATUS_OPTIONS = ['present', 'absent', 'late', 'excused']
 const STATUS_COLOR = {
-  present: 'var(--red)',
+  present: '#B3282D',
   absent: '#8B0000',
   late: '#B8860B',
   excused: '#999',
 }
 
+const btnPrimary = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
+const btnOutline = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk"
+
 export default function Attendance() {
-  const { profile } = useAuth()
   const [batches, setBatches] = useState([])
   const [selectedBatch, setSelectedBatch] = useState('')
   const [sessionDate, setSessionDate] = useState(today())
   const [students, setStudents] = useState([])
-  const [attendance, setAttendance] = useState({}) // student_id -> status
-  const [existingRecords, setExistingRecords] = useState({}) // student_id -> record id
+  const [attendance, setAttendance] = useState({})
+  const [existingRecords, setExistingRecords] = useState({})
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -78,7 +78,6 @@ export default function Attendance() {
         statusMap[r.student_id] = r.status
         recordMap[r.student_id] = r.id
       })
-      // default any student without a record yet to 'present'
       const defaulted = { ...statusMap }
       studentRes.data?.forEach((s) => {
         if (!(s.id in defaulted)) defaulted[s.id] = 'present'
@@ -105,7 +104,6 @@ export default function Attendance() {
     setError('')
     setMessage('')
 
-    // Upsert: update existing records, insert new ones
     const toUpdate = []
     const toInsert = []
 
@@ -119,7 +117,7 @@ export default function Attendance() {
           batch_id: selectedBatch,
           session_date: sessionDate,
           status,
-          marked_by: null, // could link to coaches table via profile lookup later
+          marked_by: null,
         })
       }
     })
@@ -146,90 +144,90 @@ export default function Attendance() {
   const presentCount = Object.values(attendance).filter((s) => s === 'present').length
 
   return (
-    <div className="dash-shell">
-      <div className="dash-topbar">
-        <Link to="/admin" className="logo" style={{ color: 'var(--chalk)' }}>THOUBAL <span>TKD</span></Link>
-        <Link to="/admin" className="dash-signout">← Back to Dashboard</Link>
-      </div>
+    <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
+      <h1 className="font-display text-ink uppercase text-3xl mb-2">Attendance</h1>
+      <p className="text-charcoal mb-9">Mark daily attendance for a batch.</p>
 
-      <div className="dash-body">
-        <h1>Attendance</h1>
-        <p className="dash-lede">Mark daily attendance for a batch.</p>
+      {error && <p className="text-brand-red mb-4">{error}</p>}
+      {message && <p className="text-brand-red mb-4">{message}</p>}
 
-        {error && <p style={{ color: 'var(--red)', marginBottom: 16 }}>{error}</p>}
-        {message && <p style={{ color: 'var(--red)', marginBottom: 16 }}>{message}</p>}
-
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 28 }}>
-          <div>
-            <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: 6 }}>Batch</label>
-            <select
-              value={selectedBatch}
-              onChange={(e) => setSelectedBatch(e.target.value)}
-              style={{ padding: 10, border: '1px solid var(--line)', minWidth: 260 }}
-            >
-              <option value="">— Select a batch —</option>
-              {batches.map((b) => (
-                <option key={b.id} value={b.id}>{b.name} ({b.training_centers?.name})</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: 6 }}>Date</label>
-            <input
-              type="date"
-              value={sessionDate}
-              onChange={(e) => setSessionDate(e.target.value)}
-              style={{ padding: 10, border: '1px solid var(--line)' }}
-            />
-          </div>
+      <div className="flex gap-4 flex-wrap mb-7">
+        <div>
+          <label className="text-[0.85rem] font-semibold block mb-1.5">Batch</label>
+          <select
+            value={selectedBatch}
+            onChange={(e) => setSelectedBatch(e.target.value)}
+            className="px-2.5 py-2.5 border border-black/10 min-w-[260px]"
+          >
+            <option value="">— Select a batch —</option>
+            {batches.map((b) => (
+              <option key={b.id} value={b.id}>{b.name} ({b.training_centers?.name})</option>
+            ))}
+          </select>
         </div>
-
-        {!selectedBatch ? (
-          <p style={{ color: 'var(--charcoal)' }}>Select a batch to mark attendance.</p>
-        ) : loading ? (
-          <p>Loading…</p>
-        ) : students.length === 0 ? (
-          <p style={{ color: 'var(--charcoal)' }}>No active students in this batch.</p>
-        ) : (
-          <>
-            <div className="stat-grid" style={{ marginBottom: 20 }}>
-              <div className="stat-card">
-                <strong>{presentCount} / {students.length}</strong>
-                <span>Present today</span>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-              <button className="btn btn-outline" style={{ fontSize: '0.8rem' }} onClick={() => markAll('present')}>Mark all Present</button>
-              <button className="btn btn-outline" style={{ fontSize: '0.8rem' }} onClick={() => markAll('absent')}>Mark all Absent</button>
-            </div>
-
-            <div className="module-grid" style={{ marginBottom: 24 }}>
-              {students.map((s) => (
-                <div className="module-card" key={s.id} style={{ borderTopColor: STATUS_COLOR[attendance[s.id]] }}>
-                  <h3>{s.full_name}</h3>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
-                    {STATUS_OPTIONS.map((opt) => (
-                      <button
-                        key={opt}
-                        onClick={() => setStatus(s.id, opt)}
-                        className={attendance[s.id] === opt ? 'btn btn-primary' : 'btn btn-outline'}
-                        style={{ fontSize: '0.72rem', padding: '5px 10px', textTransform: 'capitalize' }}
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <button className="btn btn-primary" onClick={handleSaveAll} disabled={saving}>
-              {saving ? 'Saving…' : 'Save Attendance'}
-            </button>
-          </>
-        )}
+        <div>
+          <label className="text-[0.85rem] font-semibold block mb-1.5">Date</label>
+          <input
+            type="date"
+            value={sessionDate}
+            onChange={(e) => setSessionDate(e.target.value)}
+            className="px-2.5 py-2.5 border border-black/10"
+          />
+        </div>
       </div>
+
+      {!selectedBatch ? (
+        <p className="text-charcoal">Select a batch to mark attendance.</p>
+      ) : loading ? (
+        <p>Loading…</p>
+      ) : students.length === 0 ? (
+        <p className="text-charcoal">No active students in this batch.</p>
+      ) : (
+        <>
+          <div className="grid gap-4 mb-5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+            <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
+              <strong className="block font-display text-4xl text-chalk">{presentCount} / {students.length}</strong>
+              <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">Present today</span>
+            </div>
+          </div>
+
+          <div className="flex gap-2.5 mb-5">
+            <button className={`${btnOutline} text-[0.8rem]`} onClick={() => markAll('present')}>Mark all Present</button>
+            <button className={`${btnOutline} text-[0.8rem]`} onClick={() => markAll('absent')}>Mark all Absent</button>
+          </div>
+
+          <div className="grid gap-4 mb-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+            {students.map((s) => (
+              <div
+                key={s.id}
+                className="bg-white border border-black/10 p-6"
+                style={{ borderTopWidth: 3, borderTopColor: STATUS_COLOR[attendance[s.id]] }}
+              >
+                <h3 className="font-semibold text-base text-ink">{s.full_name}</h3>
+                <div className="flex gap-1.5 flex-wrap mt-2.5">
+                  {STATUS_OPTIONS.map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={() => setStatus(s.id, opt)}
+                      className={`text-[0.72rem] px-2.5 py-1.5 capitalize font-display font-semibold uppercase tracking-wide ${
+                        attendance[s.id] === opt
+                          ? 'bg-brand-red text-chalk'
+                          : 'border border-ink text-ink hover:bg-ink hover:text-chalk'
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button className={btnPrimary} onClick={handleSaveAll} disabled={saving}>
+            {saving ? 'Saving…' : 'Save Attendance'}
+          </button>
+        </>
+      )}
     </div>
   )
 }

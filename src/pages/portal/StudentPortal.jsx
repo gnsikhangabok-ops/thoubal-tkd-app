@@ -11,6 +11,9 @@ const BELT_LABELS = {
 
 const TABS = ['Overview', 'Attendance', 'Fees', 'Belt Progress', 'Certificates', 'Notices', 'Events']
 
+const btnPrimary = "inline-block px-4 py-2 font-display font-semibold text-[0.8rem] uppercase tracking-wide bg-brand-red text-chalk"
+const btnOutline = "inline-block px-4 py-2 font-display font-semibold text-[0.8rem] uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk"
+
 export default function StudentPortal() {
   const { profile, signOut } = useAuth()
   const [student, setStudent] = useState(null)
@@ -73,41 +76,45 @@ export default function StudentPortal() {
   const registeredEventIds = new Set(myRegistrations.map((r) => r.event_id))
 
   return (
-    <div className="dash-shell">
-      <div className="dash-topbar">
-        <div className="brand">
-          <img src={logo} alt="Thoubal Taekwondo Academy" className="brand-logo" />
-          <div className="brand-text">
-            <div className="logo">THOUBAL <span>TKD</span></div>
-            <div className="brand-sub">Thoubal District Taekwondo Association</div>
+    <div className="min-h-screen bg-chalk font-body">
+      <div className="flex items-center justify-between gap-4 flex-wrap bg-ink px-8 max-md:px-4 py-4 border-b-[3px] border-b-gold">
+        <div className="flex items-center gap-3">
+          <img src={logo} alt="Thoubal Taekwondo Academy" className="w-11 h-11 max-md:w-8 max-md:h-8 object-contain" />
+          <div className="flex flex-col leading-tight">
+            <div className="font-display font-bold text-lg max-md:text-sm text-chalk">THOUBAL <span className="text-brand-red">TKD</span></div>
+            <div className="hidden md:block text-[0.62rem] tracking-wide text-[#B8B6B0] uppercase mt-0.5">Thoubal District Taekwondo Association</div>
           </div>
         </div>
-        <div className="dash-user">
-          <span>{profile?.full_name}</span>
-          <span className="role-tag">Student</span>
-          <button className="dash-signout" onClick={signOut}>Sign out</button>
+        <div className="flex items-center gap-4 text-chalk text-sm flex-wrap">
+          <span className="max-md:hidden">{profile?.full_name}</span>
+          <span className="bg-brand-red text-chalk font-display text-[0.7rem] tracking-wide px-2.5 py-0.5 uppercase">Student</span>
+          <button
+            onClick={signOut}
+            className="bg-transparent border border-chalk text-chalk font-display text-sm px-4 py-2 cursor-pointer uppercase tracking-wide hover:bg-chalk hover:text-ink"
+          >
+            Sign out
+          </button>
         </div>
       </div>
 
-      <div className="dash-body">
+      <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
         {loading ? (
           <p>Loading…</p>
         ) : error ? (
-          <p style={{ color: 'var(--red)' }}>{error}</p>
+          <p className="text-brand-red">{error}</p>
         ) : (
           <>
-            <h1>{student.full_name}</h1>
-            <p className="dash-lede">
+            <h1 className="font-display text-ink uppercase text-3xl mb-2">{student.full_name}</h1>
+            <p className="text-charcoal mb-9">
               {student.training_centers?.name || 'No center'} {student.batches?.name ? `· ${student.batches.name}` : ''} · {BELT_LABELS[student.current_belt]}
             </p>
 
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 28, borderBottom: '1px solid var(--line)', paddingBottom: 4 }}>
+            <div className="flex gap-2 flex-wrap mb-7 border-b border-black/10 pb-1">
               {TABS.map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={activeTab === tab ? 'btn btn-primary' : 'btn btn-outline'}
-                  style={{ fontSize: '0.8rem', padding: '8px 16px' }}
+                  className={activeTab === tab ? btnPrimary : btnOutline}
                 >
                   {tab}
                 </button>
@@ -115,38 +122,42 @@ export default function StudentPortal() {
             </div>
 
             {activeTab === 'Overview' && (
-              <div className="stat-grid">
-                <div className="stat-card">
-                  <strong>{attendanceRate !== null ? `${attendanceRate}%` : '—'}</strong>
-                  <span>Attendance (last 30 sessions)</span>
+              <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+                <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
+                  <strong className="block font-display text-4xl text-chalk">{attendanceRate !== null ? `${attendanceRate}%` : '—'}</strong>
+                  <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">Attendance (last 30 sessions)</span>
                 </div>
-                <div className="stat-card">
-                  <strong>{BELT_LABELS[student.current_belt]}</strong>
-                  <span>Current Belt</span>
+                <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
+                  <strong className="block font-display text-2xl text-chalk">{BELT_LABELS[student.current_belt]}</strong>
+                  <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">Current Belt</span>
                 </div>
-                <div className="stat-card" style={{ borderBottomColor: pendingFees.length > 0 ? 'var(--red)' : 'var(--gold)' }}>
-                  <strong>{pendingFees.length}</strong>
-                  <span>Pending Fee Payments</span>
+                <div className="bg-ink px-5 py-6 border-b-[3px]" style={{ borderBottomColor: pendingFees.length > 0 ? '#B3282D' : '#D4A537' }}>
+                  <strong className="block font-display text-4xl text-chalk">{pendingFees.length}</strong>
+                  <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">Pending Fee Payments</span>
                 </div>
               </div>
             )}
 
             {activeTab === 'Attendance' && (
               <>
-                <div className="stat-grid" style={{ marginBottom: 20 }}>
-                  <div className="stat-card">
-                    <strong>{presentCount} / {attendance.length}</strong>
-                    <span>Present (last 30 sessions)</span>
+                <div className="grid gap-4 mb-5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+                  <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
+                    <strong className="block font-display text-4xl text-chalk">{presentCount} / {attendance.length}</strong>
+                    <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">Present (last 30 sessions)</span>
                   </div>
                 </div>
                 {attendance.length === 0 ? (
-                  <p style={{ color: 'var(--charcoal)' }}>No attendance records yet.</p>
+                  <p className="text-charcoal">No attendance records yet.</p>
                 ) : (
-                  <div className="module-grid">
+                  <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
                     {attendance.map((a) => (
-                      <div className="module-card" key={a.id} style={{ borderTopColor: a.status === 'present' ? 'var(--red)' : '#999' }}>
-                        <h3 style={{ textTransform: 'capitalize', fontSize: '0.95rem' }}>{a.status}</h3>
-                        <p style={{ fontSize: '0.85rem' }}>{a.session_date}</p>
+                      <div
+                        key={a.id}
+                        className="bg-white border border-black/10 p-6"
+                        style={{ borderTopWidth: 3, borderTopColor: a.status === 'present' ? '#B3282D' : '#999' }}
+                      >
+                        <h3 className="capitalize font-semibold text-[0.95rem] text-ink">{a.status}</h3>
+                        <p className="text-[0.85rem] mt-1">{a.session_date}</p>
                       </div>
                     ))}
                   </div>
@@ -156,17 +167,21 @@ export default function StudentPortal() {
 
             {activeTab === 'Fees' && (
               fees.length === 0 ? (
-                <p style={{ color: 'var(--charcoal)' }}>No fee records yet.</p>
+                <p className="text-charcoal">No fee records yet.</p>
               ) : (
-                <div className="module-grid">
+                <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
                   {fees.map((f) => (
-                    <div className="module-card" key={f.id} style={{ borderTopColor: f.status === 'paid' ? 'var(--red)' : f.status === 'waived' ? '#999' : '#B8860B' }}>
-                      <h3>{new Date(f.period_month).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}</h3>
-                      <p>Due: ₹{f.amount_due} · Paid: ₹{f.amount_paid || 0}</p>
-                      <p style={{ fontSize: '0.8rem', textTransform: 'uppercase', fontFamily: 'Oswald', marginTop: 6, color: f.status === 'paid' ? 'var(--red)' : '#B8860B' }}>
+                    <div
+                      key={f.id}
+                      className="bg-white border border-black/10 p-6"
+                      style={{ borderTopWidth: 3, borderTopColor: f.status === 'paid' ? '#B3282D' : f.status === 'waived' ? '#999' : '#B8860B' }}
+                    >
+                      <h3 className="font-semibold text-base text-ink mb-1.5">{new Date(f.period_month).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}</h3>
+                      <p className="text-sm text-charcoal">Due: ₹{f.amount_due} · Paid: ₹{f.amount_paid || 0}</p>
+                      <p className="text-[0.8rem] uppercase font-display mt-1.5" style={{ color: f.status === 'paid' ? '#B3282D' : '#B8860B' }}>
                         {f.status}
                       </p>
-                      {f.receipt_no && <p style={{ fontSize: '0.8rem', marginTop: 4 }}>Receipt: {f.receipt_no}</p>}
+                      {f.receipt_no && <p className="text-[0.8rem] mt-1">Receipt: {f.receipt_no}</p>}
                     </div>
                   ))}
                 </div>
@@ -175,25 +190,27 @@ export default function StudentPortal() {
 
             {activeTab === 'Belt Progress' && (
               <>
-                <div className="module-card" style={{ marginBottom: 24, maxWidth: 400 }}>
-                  <h3>Current Belt</h3>
-                  <p style={{ fontSize: '1.3rem', fontFamily: 'Oswald', color: 'var(--red)', marginTop: 8 }}>
-                    {BELT_LABELS[student.current_belt]}
-                  </p>
+                <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-6 max-w-[400px]">
+                  <h3 className="font-semibold text-base text-ink">Current Belt</h3>
+                  <p className="text-2xl font-display text-brand-red mt-2">{BELT_LABELS[student.current_belt]}</p>
                 </div>
                 {gradingResults.length === 0 ? (
-                  <p style={{ color: 'var(--charcoal)' }}>No grading history yet.</p>
+                  <p className="text-charcoal">No grading history yet.</p>
                 ) : (
-                  <div className="module-grid">
+                  <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
                     {gradingResults.map((g) => (
-                      <div className="module-card" key={g.id} style={{ borderTopColor: g.passed ? 'var(--red)' : '#ccc' }}>
-                        <h3>{g.grading_events?.title}</h3>
-                        <p>{BELT_LABELS[g.from_belt]} → {BELT_LABELS[g.to_belt]}</p>
-                        <p style={{ fontSize: '0.8rem', marginTop: 6, color: g.passed ? 'var(--red)' : '#999' }}>
+                      <div
+                        key={g.id}
+                        className="bg-white border border-black/10 p-6"
+                        style={{ borderTopWidth: 3, borderTopColor: g.passed ? '#B3282D' : '#ccc' }}
+                      >
+                        <h3 className="font-semibold text-base text-ink mb-1.5">{g.grading_events?.title}</h3>
+                        <p className="text-sm text-charcoal">{BELT_LABELS[g.from_belt]} → {BELT_LABELS[g.to_belt]}</p>
+                        <p className="text-[0.8rem] mt-1.5" style={{ color: g.passed ? '#B3282D' : '#999' }}>
                           {g.passed ? 'Passed' : 'Did not pass'}
                         </p>
                         {g.certificate_url && (
-                          <a href={g.certificate_url} target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', textDecoration: 'underline', display: 'block', marginTop: 6 }}>
+                          <a href={g.certificate_url} target="_blank" rel="noreferrer" className="text-[0.8rem] underline block mt-1.5">
                             View Certificate
                           </a>
                         )}
@@ -206,14 +223,17 @@ export default function StudentPortal() {
 
             {activeTab === 'Certificates' && (
               gradingResults.filter((g) => g.certificate_url).length === 0 ? (
-                <p style={{ color: 'var(--charcoal)' }}>No certificates uploaded yet.</p>
+                <p className="text-charcoal">No certificates uploaded yet.</p>
               ) : (
-                <div className="module-grid">
+                <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
                   {gradingResults.filter((g) => g.certificate_url).map((g) => (
-                    <div className="module-card" key={g.id}>
-                      <h3>{g.grading_events?.title}</h3>
-                      <p>{BELT_LABELS[g.to_belt]}</p>
-                      <a href={g.certificate_url} target="_blank" rel="noreferrer" className="btn btn-outline" style={{ fontSize: '0.75rem', padding: '6px 12px', marginTop: 10, display: 'inline-block' }}>
+                    <div key={g.id} className="bg-white border border-black/10 p-6">
+                      <h3 className="font-semibold text-base text-ink mb-1.5">{g.grading_events?.title}</h3>
+                      <p className="text-sm text-charcoal">{BELT_LABELS[g.to_belt]}</p>
+                      <a
+                        href={g.certificate_url} target="_blank" rel="noreferrer"
+                        className="inline-block mt-2.5 text-[0.75rem] px-3 py-1.5 border border-ink text-ink hover:bg-ink hover:text-chalk"
+                      >
                         View / Download
                       </a>
                     </div>
@@ -224,14 +244,18 @@ export default function StudentPortal() {
 
             {activeTab === 'Notices' && (
               notices.length === 0 ? (
-                <p style={{ color: 'var(--charcoal)' }}>No notices yet.</p>
+                <p className="text-charcoal">No notices yet.</p>
               ) : (
-                <div className="module-grid">
+                <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
                   {notices.map((n) => (
-                    <div className="module-card" key={n.id} style={{ borderTopColor: n.pinned ? 'var(--gold)' : 'var(--red)' }}>
-                      <h3>{n.title}</h3>
-                      <p style={{ marginTop: 6 }}>{n.body}</p>
-                      <p style={{ fontSize: '0.8rem', marginTop: 8, color: 'var(--charcoal)' }}>
+                    <div
+                      key={n.id}
+                      className="bg-white border border-black/10 p-6"
+                      style={{ borderTopWidth: 3, borderTopColor: n.pinned ? '#D4A537' : '#B3282D' }}
+                    >
+                      <h3 className="font-semibold text-base text-ink mb-1.5">{n.title}</h3>
+                      <p className="text-sm text-charcoal mt-1.5">{n.body}</p>
+                      <p className="text-[0.8rem] mt-2 text-charcoal">
                         {new Date(n.created_at).toLocaleDateString()}
                       </p>
                     </div>
@@ -242,18 +266,18 @@ export default function StudentPortal() {
 
             {activeTab === 'Events' && (
               events.length === 0 ? (
-                <p style={{ color: 'var(--charcoal)' }}>No upcoming events.</p>
+                <p className="text-charcoal">No upcoming events.</p>
               ) : (
-                <div className="module-grid">
+                <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
                   {events.map((ev) => (
-                    <div className="module-card" key={ev.id}>
-                      <h3>{ev.title}</h3>
-                      <p style={{ textTransform: 'capitalize' }}>{ev.event_type}</p>
-                      <p style={{ fontSize: '0.85rem', marginTop: 6 }}>{ev.event_date} {ev.location ? `· ${ev.location}` : ''}</p>
+                    <div key={ev.id} className="bg-white border border-black/10 p-6">
+                      <h3 className="font-semibold text-base text-ink mb-1.5">{ev.title}</h3>
+                      <p className="text-sm text-charcoal capitalize">{ev.event_type}</p>
+                      <p className="text-[0.85rem] mt-1.5">{ev.event_date} {ev.location ? `· ${ev.location}` : ''}</p>
                       {registeredEventIds.has(ev.id) ? (
-                        <p style={{ fontSize: '0.8rem', color: 'var(--red)', marginTop: 8 }}>✓ You're registered</p>
+                        <p className="text-[0.8rem] mt-2 text-brand-red">✓ You're registered</p>
                       ) : (
-                        <p style={{ fontSize: '0.8rem', color: 'var(--charcoal)', marginTop: 8 }}>Contact your coach to register</p>
+                        <p className="text-[0.8rem] mt-2 text-charcoal">Contact your coach to register</p>
                       )}
                     </div>
                   ))}

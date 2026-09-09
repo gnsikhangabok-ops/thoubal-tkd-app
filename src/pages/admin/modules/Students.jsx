@@ -36,6 +36,11 @@ const emptyForm = {
   rules_acknowledged: false,
 }
 
+const inputCls = "px-2.5 py-2.5 border border-black/10"
+const btnPrimary = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
+const btnOutline = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk"
+const btnSm = "text-[0.75rem] px-3 py-1.5"
+
 export default function Students() {
   const [students, setStudents] = useState([])
   const [centers, setCenters] = useState([])
@@ -161,205 +166,192 @@ export default function Students() {
   )
 
   return (
-    <div className="dash-shell">
-      <div className="dash-topbar">
-        <Link to="/admin" className="logo" style={{ color: 'var(--chalk)' }}>THOUBAL <span>TKD</span></Link>
-        <Link to="/admin" className="dash-signout">← Back to Dashboard</Link>
+    <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
+      <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
+        <h1 className="font-display text-ink uppercase text-3xl">Students / Registration</h1>
+        <button className={btnPrimary} onClick={openAddForm}>+ Register Student</button>
       </div>
+      <p className="text-charcoal mb-9">All enrolled athletes across every training center.</p>
 
-      <div className="dash-body">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 12 }}>
-          <h1>Students / Registration</h1>
-          <button className="btn btn-primary" onClick={openAddForm}>+ Register Student</button>
+      {error && <p className="text-brand-red mb-4">{error}</p>}
+
+      {centers.length === 0 && !loading && (
+        <p className="text-brand-red mb-4 text-sm">
+          No active training centers found. <Link to="/admin/training-centers" className="underline">Add a training center first</Link>.
+        </p>
+      )}
+
+      {showForm && (
+        <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[560px]">
+          <h3 className="font-semibold text-base text-ink mb-4">{form.id ? 'Edit Student' : 'New Student Registration'}</h3>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <input
+              type="text" placeholder="Full name" required
+              value={form.full_name}
+              onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+              className={inputCls}
+            />
+
+            <div className="flex gap-3">
+              <input
+                type="date" placeholder="Date of birth"
+                value={form.dob}
+                onChange={(e) => setForm({ ...form, dob: e.target.value })}
+                className={`${inputCls} flex-1`}
+              />
+              <select
+                value={form.gender}
+                onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                className={`${inputCls} flex-1`}
+              >
+                <option value="">Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <input
+              type="text" placeholder="Religion"
+              value={form.religion}
+              onChange={(e) => setForm({ ...form, religion: e.target.value })}
+              className={inputCls}
+            />
+
+            <input
+              type="text" placeholder="Guardian name"
+              value={form.guardian_name}
+              onChange={(e) => setForm({ ...form, guardian_name: e.target.value })}
+              className={inputCls}
+            />
+            <input
+              type="tel" placeholder="Guardian phone"
+              value={form.guardian_phone}
+              onChange={(e) => setForm({ ...form, guardian_phone: e.target.value })}
+              className={inputCls}
+            />
+            <textarea
+              placeholder="Address" rows={2}
+              value={form.address}
+              onChange={(e) => setForm({ ...form, address: e.target.value })}
+              className={`${inputCls} font-body`}
+            />
+
+            <select
+              value={form.training_center_id}
+              onChange={(e) => setForm({ ...form, training_center_id: e.target.value, batch_id: '' })}
+              className={inputCls}
+            >
+              <option value="">— Select training center —</option>
+              {centers.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+
+            <select
+              value={form.batch_id}
+              onChange={(e) => setForm({ ...form, batch_id: e.target.value })}
+              className={inputCls}
+            >
+              <option value="">— No batch assigned —</option>
+              {batchesForSelectedCenter.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+
+            <select
+              value={form.current_belt}
+              onChange={(e) => setForm({ ...form, current_belt: e.target.value })}
+              className={inputCls}
+            >
+              {BELT_RANKS.map((b) => (
+                <option key={b} value={b}>{BELT_LABELS[b]}</option>
+              ))}
+            </select>
+
+            <textarea
+              placeholder="Medical notes (allergies, conditions coach should know)"
+              rows={2}
+              value={form.medical_notes}
+              onChange={(e) => setForm({ ...form, medical_notes: e.target.value })}
+              className={`${inputCls} font-body`}
+            />
+
+            <label className="text-sm flex items-start gap-2">
+              <input
+                type="checkbox"
+                checked={form.rules_acknowledged}
+                onChange={(e) => setForm({ ...form, rules_acknowledged: e.target.checked })}
+                className="mt-0.5"
+              />
+              <span>Guardian/student has read and agreed to the academy's rules & regulations</span>
+            </label>
+
+            <label className="text-sm flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.active}
+                onChange={(e) => setForm({ ...form, active: e.target.checked })}
+              />
+              Active
+            </label>
+
+            <div className="flex gap-2.5">
+              <button type="submit" className={btnPrimary} disabled={saving}>
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+              <button type="button" className={btnOutline} onClick={() => setShowForm(false)}>
+                Cancel
+              </button>
+            </div>
+          </form>
         </div>
-        <p className="dash-lede">All enrolled athletes across every training center.</p>
+      )}
 
-        {error && <p style={{ color: 'var(--red)', marginBottom: 16 }}>{error}</p>}
+      {!showForm && (
+        <input
+          type="text"
+          placeholder="Search by name…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className={`${inputCls} mb-5 w-full max-w-[320px]`}
+        />
+      )}
 
-        {centers.length === 0 && !loading && (
-          <p style={{ color: 'var(--red)', marginBottom: 16, fontSize: '0.9rem' }}>
-            No active training centers found. <Link to="/admin/training-centers" style={{ textDecoration: 'underline' }}>Add a training center first</Link>.
-          </p>
-        )}
-
-        {showForm && (
-          <div className="module-card" style={{ marginBottom: 28, maxWidth: 560 }}>
-            <h3 style={{ marginBottom: 16 }}>{form.id ? 'Edit Student' : 'New Student Registration'}</h3>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <input
-                type="text" placeholder="Full name" required
-                value={form.full_name}
-                onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              />
-
-              <div style={{ display: 'flex', gap: 12 }}>
-                <input
-                  type="date" placeholder="Date of birth"
-                  value={form.dob}
-                  onChange={(e) => setForm({ ...form, dob: e.target.value })}
-                  style={{ padding: 10, border: '1px solid var(--line)', flex: 1 }}
-                />
-                <select
-                  value={form.gender}
-                  onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                  style={{ padding: 10, border: '1px solid var(--line)', flex: 1 }}
-                >
-                  <option value="">Gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              <input
-                type="text" placeholder="Religion"
-                value={form.religion}
-                onChange={(e) => setForm({ ...form, religion: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              />
-
-              <input
-                type="text" placeholder="Guardian name"
-                value={form.guardian_name}
-                onChange={(e) => setForm({ ...form, guardian_name: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              />
-              <input
-                type="tel" placeholder="Guardian phone"
-                value={form.guardian_phone}
-                onChange={(e) => setForm({ ...form, guardian_phone: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              />
-              <textarea
-                placeholder="Address" rows={2}
-                value={form.address}
-                onChange={(e) => setForm({ ...form, address: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)', fontFamily: 'inherit' }}
-              />
-
-              <select
-                value={form.training_center_id}
-                onChange={(e) => setForm({ ...form, training_center_id: e.target.value, batch_id: '' })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              >
-                <option value="">— Select training center —</option>
-                {centers.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-
-              <select
-                value={form.batch_id}
-                onChange={(e) => setForm({ ...form, batch_id: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              >
-                <option value="">— No batch assigned —</option>
-                {batchesForSelectedCenter.map((b) => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
-                ))}
-              </select>
-
-              <select
-                value={form.current_belt}
-                onChange={(e) => setForm({ ...form, current_belt: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              >
-                {BELT_RANKS.map((b) => (
-                  <option key={b} value={b}>{BELT_LABELS[b]}</option>
-                ))}
-              </select>
-
-              <textarea
-                placeholder="Medical notes (allergies, conditions coach should know)"
-                rows={2}
-                value={form.medical_notes}
-                onChange={(e) => setForm({ ...form, medical_notes: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)', fontFamily: 'inherit' }}
-              />
-
-              <label style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                <input
-                  type="checkbox"
-                  checked={form.rules_acknowledged}
-                  onChange={(e) => setForm({ ...form, rules_acknowledged: e.target.checked })}
-                  style={{ marginTop: 3 }}
-                />
-                <span>Guardian/student has read and agreed to the academy's rules & regulations</span>
-              </label>
-
-              <label style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <input
-                  type="checkbox"
-                  checked={form.active}
-                  onChange={(e) => setForm({ ...form, active: e.target.checked })}
-                />
-                Active
-              </label>
-
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'Saving…' : 'Save'}
-                </button>
-                <button type="button" className="btn btn-outline" onClick={() => setShowForm(false)}>
-                  Cancel
+      {loading ? (
+        <p>Loading…</p>
+      ) : filteredStudents.length === 0 ? (
+        <p className="text-charcoal">No students found.</p>
+      ) : (
+        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+          {filteredStudents.map((s) => (
+            <div
+              key={s.id}
+              className="bg-white border border-black/10 p-6"
+              style={{ borderTopWidth: 3, borderTopColor: s.active ? '#B3282D' : '#ccc' }}
+            >
+              <h3 className="font-semibold text-base text-ink mb-1.5">{s.full_name}</h3>
+              <p className="text-sm text-charcoal">{BELT_LABELS[s.current_belt] || s.current_belt}</p>
+              <p className="text-[0.85rem] mt-1.5">
+                {s.training_centers?.name || 'No center'} {s.batches?.name ? `· ${s.batches.name}` : ''}
+              </p>
+              {s.guardian_phone && <p className="text-[0.85rem]">{s.guardian_phone}</p>}
+              <p className="text-[0.8rem] mt-1.5" style={{ color: s.rules_acknowledged ? '#3A3A38' : '#B3282D' }}>
+                {s.rules_acknowledged ? '✓ Rules acknowledged' : '⚠ Rules not acknowledged'}
+              </p>
+              <p className="text-[0.8rem] mt-1" style={{ color: s.active ? '#B3282D' : '#999' }}>
+                {s.active ? 'Active' : 'Inactive'}
+              </p>
+              <div className="flex gap-2 mt-3">
+                <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(s)}>Edit</button>
+                <button className={`${btnOutline} ${btnSm}`} onClick={() => toggleActive(s)}>
+                  {s.active ? 'Deactivate' : 'Activate'}
                 </button>
               </div>
-            </form>
-          </div>
-        )}
-
-        {!showForm && (
-          <input
-            type="text"
-            placeholder="Search by name…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ padding: 10, border: '1px solid var(--line)', marginBottom: 20, width: '100%', maxWidth: 320 }}
-          />
-        )}
-
-        {loading ? (
-          <p>Loading…</p>
-        ) : filteredStudents.length === 0 ? (
-          <p style={{ color: 'var(--charcoal)' }}>No students found.</p>
-        ) : (
-          <div className="module-grid">
-            {filteredStudents.map((s) => (
-              <div className="module-card" key={s.id} style={{ borderTopColor: s.active ? 'var(--red)' : '#ccc' }}>
-                <h3>{s.full_name}</h3>
-                <p>{BELT_LABELS[s.current_belt] || s.current_belt}</p>
-                <p style={{ fontSize: '0.85rem', marginTop: 6 }}>
-                  {s.training_centers?.name || 'No center'} {s.batches?.name ? `· ${s.batches.name}` : ''}
-                </p>
-                {s.guardian_phone && <p style={{ fontSize: '0.85rem' }}>{s.guardian_phone}</p>}
-                <p style={{ fontSize: '0.8rem', color: s.rules_acknowledged ? 'var(--charcoal)' : 'var(--red)', marginTop: 6 }}>
-                  {s.rules_acknowledged ? '✓ Rules acknowledged' : '⚠ Rules not acknowledged'}
-                </p>
-                <p style={{ fontSize: '0.8rem', color: s.active ? 'var(--red)' : '#999', marginTop: 4 }}>
-                  {s.active ? 'Active' : 'Inactive'}
-                </p>
-                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                  <button
-                    className="btn btn-outline"
-                    style={{ fontSize: '0.75rem', padding: '6px 12px' }}
-                    onClick={() => openEditForm(s)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="btn btn-outline"
-                    style={{ fontSize: '0.75rem', padding: '6px 12px' }}
-                    onClick={() => toggleActive(s)}
-                  >
-                    {s.active ? 'Deactivate' : 'Activate'}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

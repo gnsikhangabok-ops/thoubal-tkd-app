@@ -17,6 +17,11 @@ const emptyForm = {
   active: true,
 }
 
+const inputCls = "px-2.5 py-2.5 border border-black/10"
+const btnPrimary = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
+const btnOutline = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk"
+const btnSm = "text-[0.75rem] px-3 py-1.5"
+
 export default function Batches() {
   const [batches, setBatches] = useState([])
   const [centers, setCenters] = useState([])
@@ -137,179 +142,165 @@ export default function Batches() {
     : coaches
 
   return (
-    <div className="dash-shell">
-      <div className="dash-topbar">
-        <Link to="/admin" className="logo" style={{ color: 'var(--chalk)' }}>THOUBAL <span>TKD</span></Link>
-        <Link to="/admin" className="dash-signout">← Back to Dashboard</Link>
+    <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
+      <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
+        <h1 className="font-display text-ink uppercase text-3xl">Batches</h1>
+        <button className={btnPrimary} onClick={openAddForm}>+ Add Batch</button>
       </div>
+      <p className="text-charcoal mb-9">Class groups with timing, coach, and center assignment.</p>
 
-      <div className="dash-body">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 12 }}>
-          <h1>Batches</h1>
-          <button className="btn btn-primary" onClick={openAddForm}>+ Add Batch</button>
-        </div>
-        <p className="dash-lede">Class groups with timing, coach, and center assignment.</p>
+      {error && <p className="text-brand-red mb-4">{error}</p>}
 
-        {error && <p style={{ color: 'var(--red)', marginBottom: 16 }}>{error}</p>}
+      {centers.length === 0 && !loading && (
+        <p className="text-brand-red mb-4 text-sm">
+          No active training centers found. <Link to="/admin/training-centers" className="underline">Add a training center first</Link>.
+        </p>
+      )}
 
-        {centers.length === 0 && !loading && (
-          <p style={{ color: 'var(--red)', marginBottom: 16, fontSize: '0.9rem' }}>
-            No active training centers found. <Link to="/admin/training-centers" style={{ textDecoration: 'underline' }}>Add a training center first</Link>.
-          </p>
-        )}
+      {showForm && (
+        <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[520px]">
+          <h3 className="font-semibold text-base text-ink mb-4">{form.id ? 'Edit Batch' : 'New Batch'}</h3>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <input
+              type="text" placeholder="Batch name (e.g. Little Dragons - Morning)" required
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className={inputCls}
+            />
+            <input
+              type="text" placeholder="Age group (e.g. 5-8)"
+              value={form.age_group}
+              onChange={(e) => setForm({ ...form, age_group: e.target.value })}
+              className={inputCls}
+            />
 
-        {showForm && (
-          <div className="module-card" style={{ marginBottom: 28, maxWidth: 520 }}>
-            <h3 style={{ marginBottom: 16 }}>{form.id ? 'Edit Batch' : 'New Batch'}</h3>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <input
-                type="text" placeholder="Batch name (e.g. Little Dragons - Morning)" required
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              />
-              <input
-                type="text" placeholder="Age group (e.g. 5-8)"
-                value={form.age_group}
-                onChange={(e) => setForm({ ...form, age_group: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              />
+            <select
+              value={form.training_center_id}
+              onChange={(e) => setForm({ ...form, training_center_id: e.target.value, coach_id: '' })}
+              className={inputCls}
+            >
+              <option value="">— Select training center —</option>
+              {centers.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
 
-              <select
-                value={form.training_center_id}
-                onChange={(e) => setForm({ ...form, training_center_id: e.target.value, coach_id: '' })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              >
-                <option value="">— Select training center —</option>
-                {centers.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+            <select
+              value={form.coach_id}
+              onChange={(e) => setForm({ ...form, coach_id: e.target.value })}
+              className={inputCls}
+            >
+              <option value="">— No coach assigned —</option>
+              {coachesForSelectedCenter.map((c) => (
+                <option key={c.id} value={c.id}>{c.full_name}</option>
+              ))}
+            </select>
+
+            <div>
+              <p className="text-[0.85rem] font-semibold mb-2">Schedule days</p>
+              <div className="flex gap-2 flex-wrap">
+                {DAYS.map((day) => (
+                  <button
+                    type="button"
+                    key={day}
+                    onClick={() => toggleDay(day)}
+                    className={`text-[0.8rem] px-3.5 py-1.5 font-display font-semibold uppercase tracking-wide ${
+                      form.schedule_days.includes(day)
+                        ? 'bg-brand-red text-chalk'
+                        : 'border border-ink text-ink hover:bg-ink hover:text-chalk'
+                    }`}
+                  >
+                    {day}
+                  </button>
                 ))}
-              </select>
-
-              <select
-                value={form.coach_id}
-                onChange={(e) => setForm({ ...form, coach_id: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              >
-                <option value="">— No coach assigned —</option>
-                {coachesForSelectedCenter.map((c) => (
-                  <option key={c.id} value={c.id}>{c.full_name}</option>
-                ))}
-              </select>
-
-              <div>
-                <p style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: 8 }}>Schedule days</p>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {DAYS.map((day) => (
-                    <button
-                      type="button"
-                      key={day}
-                      onClick={() => toggleDay(day)}
-                      className={form.schedule_days.includes(day) ? 'btn btn-primary' : 'btn btn-outline'}
-                      style={{ padding: '6px 14px', fontSize: '0.8rem' }}
-                    >
-                      {day}
-                    </button>
-                  ))}
-                </div>
               </div>
+            </div>
 
-              <div style={{ display: 'flex', gap: 12 }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: 4 }}>Start time</label>
-                  <input
-                    type="time"
-                    value={form.start_time}
-                    onChange={(e) => setForm({ ...form, start_time: e.target.value })}
-                    style={{ padding: 10, border: '1px solid var(--line)', width: '100%' }}
-                  />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: 4 }}>End time</label>
-                  <input
-                    type="time"
-                    value={form.end_time}
-                    onChange={(e) => setForm({ ...form, end_time: e.target.value })}
-                    style={{ padding: 10, border: '1px solid var(--line)', width: '100%' }}
-                  />
-                </div>
-              </div>
-
-              <input
-                type="number" placeholder="Capacity (max students)"
-                value={form.capacity}
-                onChange={(e) => setForm({ ...form, capacity: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              />
-
-              <label style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="text-[0.8rem] block mb-1">Start time</label>
                 <input
-                  type="checkbox"
-                  checked={form.active}
-                  onChange={(e) => setForm({ ...form, active: e.target.checked })}
+                  type="time"
+                  value={form.start_time}
+                  onChange={(e) => setForm({ ...form, start_time: e.target.value })}
+                  className={`${inputCls} w-full`}
                 />
-                Active
-              </label>
+              </div>
+              <div className="flex-1">
+                <label className="text-[0.8rem] block mb-1">End time</label>
+                <input
+                  type="time"
+                  value={form.end_time}
+                  onChange={(e) => setForm({ ...form, end_time: e.target.value })}
+                  className={`${inputCls} w-full`}
+                />
+              </div>
+            </div>
 
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'Saving…' : 'Save'}
-                </button>
-                <button type="button" className="btn btn-outline" onClick={() => setShowForm(false)}>
-                  Cancel
+            <input
+              type="number" placeholder="Capacity (max students)"
+              value={form.capacity}
+              onChange={(e) => setForm({ ...form, capacity: e.target.value })}
+              className={inputCls}
+            />
+
+            <label className="text-sm flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.active}
+                onChange={(e) => setForm({ ...form, active: e.target.checked })}
+              />
+              Active
+            </label>
+
+            <div className="flex gap-2.5">
+              <button type="submit" className={btnPrimary} disabled={saving}>
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+              <button type="button" className={btnOutline} onClick={() => setShowForm(false)}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {loading ? (
+        <p>Loading…</p>
+      ) : batches.length === 0 ? (
+        <p className="text-charcoal">No batches yet. Add your first one above.</p>
+      ) : (
+        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+          {batches.map((b) => (
+            <div
+              key={b.id}
+              className="bg-white border border-black/10 p-6"
+              style={{ borderTopWidth: 3, borderTopColor: b.active ? '#B3282D' : '#ccc' }}
+            >
+              <h3 className="font-semibold text-base text-ink mb-1.5">{b.name}</h3>
+              <p className="text-sm text-charcoal">{b.age_group ? `Ages ${b.age_group}` : 'All ages'}</p>
+              <p className="text-[0.85rem] mt-1.5">{b.training_centers?.name || 'No center'}</p>
+              <p className="text-[0.85rem]">{b.coaches?.full_name || 'No coach assigned'}</p>
+              {b.schedule_days?.length > 0 && (
+                <p className="text-[0.8rem] mt-1">{b.schedule_days.join(', ')}</p>
+              )}
+              {(b.start_time || b.end_time) && (
+                <p className="text-[0.8rem]">{b.start_time?.slice(0,5)} – {b.end_time?.slice(0,5)}</p>
+              )}
+              {b.capacity && <p className="text-[0.8rem]">Capacity: {b.capacity}</p>}
+              <p className="text-[0.8rem] mt-1.5" style={{ color: b.active ? '#B3282D' : '#999' }}>
+                {b.active ? 'Active' : 'Inactive'}
+              </p>
+              <div className="flex gap-2 mt-3">
+                <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(b)}>Edit</button>
+                <button className={`${btnOutline} ${btnSm}`} onClick={() => toggleActive(b)}>
+                  {b.active ? 'Deactivate' : 'Activate'}
                 </button>
               </div>
-            </form>
-          </div>
-        )}
-
-        {loading ? (
-          <p>Loading…</p>
-        ) : batches.length === 0 ? (
-          <p style={{ color: 'var(--charcoal)' }}>No batches yet. Add your first one above.</p>
-        ) : (
-          <div className="module-grid">
-            {batches.map((b) => (
-              <div className="module-card" key={b.id} style={{ borderTopColor: b.active ? 'var(--red)' : '#ccc' }}>
-                <h3>{b.name}</h3>
-                <p>{b.age_group ? `Ages ${b.age_group}` : 'All ages'}</p>
-                <p style={{ fontSize: '0.85rem', marginTop: 6 }}>
-                  {b.training_centers?.name || 'No center'}
-                </p>
-                <p style={{ fontSize: '0.85rem' }}>
-                  {b.coaches?.full_name || 'No coach assigned'}
-                </p>
-                {b.schedule_days?.length > 0 && (
-                  <p style={{ fontSize: '0.8rem', marginTop: 4 }}>{b.schedule_days.join(', ')}</p>
-                )}
-                {(b.start_time || b.end_time) && (
-                  <p style={{ fontSize: '0.8rem' }}>{b.start_time?.slice(0,5)} – {b.end_time?.slice(0,5)}</p>
-                )}
-                {b.capacity && <p style={{ fontSize: '0.8rem' }}>Capacity: {b.capacity}</p>}
-                <p style={{ fontSize: '0.8rem', color: b.active ? 'var(--red)' : '#999', marginTop: 6 }}>
-                  {b.active ? 'Active' : 'Inactive'}
-                </p>
-                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                  <button
-                    className="btn btn-outline"
-                    style={{ fontSize: '0.75rem', padding: '6px 12px' }}
-                    onClick={() => openEditForm(b)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="btn btn-outline"
-                    style={{ fontSize: '0.75rem', padding: '6px 12px' }}
-                    onClick={() => toggleActive(b)}
-                  >
-                    {b.active ? 'Deactivate' : 'Activate'}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

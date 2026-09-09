@@ -12,6 +12,10 @@ const emptyForm = {
   training_center_id: '',
   active: true,
 }
+const inputCls = "px-2.5 py-2.5 border border-black/10"
+const btnPrimary = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
+const btnOutline = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk"
+const btnSm = "text-[0.75rem] px-3 py-1.5"
 
 export default function Coaches() {
   const [coaches, setCoaches] = useState([])
@@ -115,135 +119,120 @@ export default function Coaches() {
   }
 
   return (
-    <div className="dash-shell">
-      <div className="dash-topbar">
-        <Link to="/admin" className="logo" style={{ color: 'var(--chalk)' }}>THOUBAL <span>TKD</span></Link>
-        <Link to="/admin" className="dash-signout">← Back to Dashboard</Link>
+    <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
+      <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
+        <h1 className="font-display text-ink uppercase text-3xl">Coaches</h1>
+        <button className={btnPrimary} onClick={openAddForm}>+ Add Coach</button>
       </div>
+      <p className="text-charcoal mb-9">Instructors are added by admin only. No self-registration.</p>
 
-      <div className="dash-body">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <h1>Coaches</h1>
-          <button className="btn btn-primary" onClick={openAddForm}>+ Add Coach</button>
+      {error && <p className="text-brand-red mb-4">{error}</p>}
+
+      {centers.length === 0 && !loading && (
+        <p className="text-brand-red mb-4 text-sm">
+          No active training centers found. <Link to="/admin/training-centers" className="underline">Add a training center first</Link> so you can assign coaches to it.
+        </p>
+      )}
+
+      {showForm && (
+        <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[520px]">
+          <h3 className="font-semibold text-base text-ink mb-4">{form.id ? 'Edit Coach' : 'New Coach'}</h3>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <input
+              type="text"
+              placeholder="Full name"
+              value={form.full_name}
+              onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+              required
+              className={inputCls}
+            />
+            <input
+              type="text"
+              placeholder="Dan grade (e.g. 4th Dan)"
+              value={form.dan_grade}
+              onChange={(e) => setForm({ ...form, dan_grade: e.target.value })}
+              className={inputCls}
+            />
+            <input
+              type="text"
+              placeholder="Designation (e.g. Chief Instructor)"
+              value={form.designation}
+              onChange={(e) => setForm({ ...form, designation: e.target.value })}
+              className={inputCls}
+            />
+            <input
+              type="tel"
+              placeholder="Phone number"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              className={inputCls}
+            />
+            <select
+              value={form.training_center_id}
+              onChange={(e) => setForm({ ...form, training_center_id: e.target.value })}
+              className={inputCls}
+            >
+              <option value="">— No center assigned —</option>
+              {centers.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            <textarea
+              placeholder="Short bio"
+              rows={3}
+              value={form.bio}
+              onChange={(e) => setForm({ ...form, bio: e.target.value })}
+              className={`${inputCls} font-body`}
+            />
+            <label className="text-sm flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.active}
+                onChange={(e) => setForm({ ...form, active: e.target.checked })}
+              />
+              Active
+            </label>
+            <div className="flex gap-2.5">
+              <button type="submit" className={btnPrimary} disabled={saving}>
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+              <button type="button" className={btnOutline} onClick={() => setShowForm(false)}>
+                Cancel
+              </button>
+            </div>
+          </form>
         </div>
-        <p className="dash-lede">Instructors are added by admin only. No self-registration.</p>
+      )}
 
-        {error && <p style={{ color: 'var(--red)', marginBottom: 16 }}>{error}</p>}
-
-        {centers.length === 0 && !loading && (
-          <p style={{ color: 'var(--red)', marginBottom: 16, fontSize: '0.9rem' }}>
-            No active training centers found. <Link to="/admin/training-centers" style={{ textDecoration: 'underline' }}>Add a training center first</Link> so you can assign coaches to it.
-          </p>
-        )}
-
-        {showForm && (
-          <div className="module-card" style={{ marginBottom: 28, maxWidth: 520 }}>
-            <h3 style={{ marginBottom: 16 }}>{form.id ? 'Edit Coach' : 'New Coach'}</h3>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <input
-                type="text"
-                placeholder="Full name"
-                value={form.full_name}
-                onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                required
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              />
-              <input
-                type="text"
-                placeholder="Dan grade (e.g. 4th Dan)"
-                value={form.dan_grade}
-                onChange={(e) => setForm({ ...form, dan_grade: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              />
-              <input
-                type="text"
-                placeholder="Designation (e.g. Chief Instructor)"
-                value={form.designation}
-                onChange={(e) => setForm({ ...form, designation: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              />
-              <input
-                type="tel"
-                placeholder="Phone number"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              />
-              <select
-                value={form.training_center_id}
-                onChange={(e) => setForm({ ...form, training_center_id: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              >
-                <option value="">— No center assigned —</option>
-                {centers.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-              <textarea
-                placeholder="Short bio"
-                rows={3}
-                value={form.bio}
-                onChange={(e) => setForm({ ...form, bio: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)', fontFamily: 'inherit' }}
-              />
-              <label style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <input
-                  type="checkbox"
-                  checked={form.active}
-                  onChange={(e) => setForm({ ...form, active: e.target.checked })}
-                />
-                Active
-              </label>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'Saving…' : 'Save'}
-                </button>
-                <button type="button" className="btn btn-outline" onClick={() => setShowForm(false)}>
-                  Cancel
+      {loading ? (
+        <p>Loading…</p>
+      ) : coaches.length === 0 ? (
+        <p className="text-charcoal">No coaches yet. Add your first one above.</p>
+      ) : (
+        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+          {coaches.map((c) => (
+            <div
+              key={c.id}
+              className="bg-white border border-black/10 p-6"
+              style={{ borderTopWidth: 3, borderTopColor: c.active ? '#B3282D' : '#ccc' }}
+            >
+              <h3 className="font-semibold text-base text-ink mb-1.5">{c.full_name}</h3>
+              <p className="text-sm text-charcoal">{c.designation || 'Instructor'}{c.dan_grade ? ` · ${c.dan_grade}` : ''}</p>
+              <p className="text-[0.85rem] mt-1.5">{c.training_centers?.name || 'No center assigned'}</p>
+              {c.phone && <p className="text-[0.85rem]">{c.phone}</p>}
+              <p className="text-[0.8rem] mt-2" style={{ color: c.active ? '#B3282D' : '#999' }}>
+                {c.active ? 'Active' : 'Inactive'}
+              </p>
+              <div className="flex gap-2 mt-3">
+                <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(c)}>Edit</button>
+                <button className={`${btnOutline} ${btnSm}`} onClick={() => toggleActive(c)}>
+                  {c.active ? 'Deactivate' : 'Activate'}
                 </button>
               </div>
-            </form>
-          </div>
-        )}
-
-        {loading ? (
-          <p>Loading…</p>
-        ) : coaches.length === 0 ? (
-          <p style={{ color: 'var(--charcoal)' }}>No coaches yet. Add your first one above.</p>
-        ) : (
-          <div className="module-grid">
-            {coaches.map((c) => (
-              <div className="module-card" key={c.id} style={{ borderTopColor: c.active ? 'var(--red)' : '#ccc' }}>
-                <h3>{c.full_name}</h3>
-                <p>{c.designation || 'Instructor'}{c.dan_grade ? ` · ${c.dan_grade}` : ''}</p>
-                <p style={{ fontSize: '0.85rem', marginTop: 6 }}>
-                  {c.training_centers?.name || 'No center assigned'}
-                </p>
-                {c.phone && <p style={{ fontSize: '0.85rem' }}>{c.phone}</p>}
-                <p style={{ fontSize: '0.8rem', color: c.active ? 'var(--red)' : '#999', marginTop: 8 }}>
-                  {c.active ? 'Active' : 'Inactive'}
-                </p>
-                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                  <button
-                    className="btn btn-outline"
-                    style={{ fontSize: '0.75rem', padding: '6px 12px' }}
-                    onClick={() => openEditForm(c)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="btn btn-outline"
-                    style={{ fontSize: '0.75rem', padding: '6px 12px' }}
-                    onClick={() => toggleActive(c)}
-                  >
-                    {c.active ? 'Deactivate' : 'Activate'}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

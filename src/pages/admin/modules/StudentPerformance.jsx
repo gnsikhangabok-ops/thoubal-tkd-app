@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 
 const CATEGORIES = ['Sparring', 'Poomsae', 'Fitness', 'Discipline', 'Technique', 'Other']
 const RATINGS = ['Excellent', 'Good', 'Satisfactory', 'Needs Improvement']
 const RATING_COLOR = {
-  Excellent: 'var(--red)',
-  Good: 'var(--gold)',
+  Excellent: '#B3282D',
+  Good: '#D4A537',
   Satisfactory: '#B8860B',
   'Needs Improvement': '#999',
 }
@@ -19,6 +18,11 @@ const emptyForm = {
   rating: 'Good',
   remarks: '',
 }
+
+const inputCls = "px-2.5 py-2.5 border border-black/10"
+const btnPrimary = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
+const btnOutline = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk"
+const btnSm = "text-[0.75rem] px-3 py-1.5"
 
 export default function StudentPerformance() {
   const [records, setRecords] = useState([])
@@ -112,127 +116,112 @@ export default function StudentPerformance() {
     : records
 
   return (
-    <div className="dash-shell">
-      <div className="dash-topbar">
-        <Link to="/admin" className="logo" style={{ color: 'var(--chalk)' }}>THOUBAL <span>TKD</span></Link>
-        <Link to="/admin" className="dash-signout">← Back to Dashboard</Link>
+    <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
+      <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
+        <h1 className="font-display text-ink uppercase text-3xl">Student Performance</h1>
+        <button className={btnPrimary} onClick={openAddForm}>+ Add Assessment</button>
+      </div>
+      <p className="text-charcoal mb-9">Ongoing coach evaluations — sparring, poomsae, fitness, discipline.</p>
+
+      {error && <p className="text-brand-red mb-4">{error}</p>}
+
+      <div className="mb-6">
+        <select
+          value={studentFilter}
+          onChange={(e) => setStudentFilter(e.target.value)}
+          className={`${inputCls} min-w-[240px]`}
+        >
+          <option value="">All students</option>
+          {students.map((s) => (
+            <option key={s.id} value={s.id}>{s.full_name}</option>
+          ))}
+        </select>
       </div>
 
-      <div className="dash-body">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 12 }}>
-          <h1>Student Performance</h1>
-          <button className="btn btn-primary" onClick={openAddForm}>+ Add Assessment</button>
-        </div>
-        <p className="dash-lede">Ongoing coach evaluations — sparring, poomsae, fitness, discipline.</p>
+      {showForm && (
+        <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[480px]">
+          <h3 className="font-semibold text-base text-ink mb-4">{form.id ? 'Edit Assessment' : 'New Assessment'}</h3>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <select
+              required
+              value={form.student_id}
+              onChange={(e) => setForm({ ...form, student_id: e.target.value })}
+              className={inputCls}
+            >
+              <option value="">— Select student —</option>
+              {students.map((s) => (
+                <option key={s.id} value={s.id}>{s.full_name}</option>
+              ))}
+            </select>
 
-        {error && <p style={{ color: 'var(--red)', marginBottom: 16 }}>{error}</p>}
+            <input
+              type="date" required
+              value={form.recorded_on}
+              onChange={(e) => setForm({ ...form, recorded_on: e.target.value })}
+              className={inputCls}
+            />
 
-        <div style={{ marginBottom: 24 }}>
-          <select
-            value={studentFilter}
-            onChange={(e) => setStudentFilter(e.target.value)}
-            style={{ padding: 10, border: '1px solid var(--line)', minWidth: 240 }}
-          >
-            <option value="">All students</option>
-            {students.map((s) => (
-              <option key={s.id} value={s.id}>{s.full_name}</option>
-            ))}
-          </select>
-        </div>
-
-        {showForm && (
-          <div className="module-card" style={{ marginBottom: 28, maxWidth: 480 }}>
-            <h3 style={{ marginBottom: 16 }}>{form.id ? 'Edit Assessment' : 'New Assessment'}</h3>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="flex gap-3">
               <select
-                required
-                value={form.student_id}
-                onChange={(e) => setForm({ ...form, student_id: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                className={`${inputCls} flex-1`}
               >
-                <option value="">— Select student —</option>
-                {students.map((s) => (
-                  <option key={s.id} value={s.id}>{s.full_name}</option>
-                ))}
+                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
+              <select
+                value={form.rating}
+                onChange={(e) => setForm({ ...form, rating: e.target.value })}
+                className={`${inputCls} flex-1`}
+              >
+                {RATINGS.map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
 
-              <input
-                type="date" required
-                value={form.recorded_on}
-                onChange={(e) => setForm({ ...form, recorded_on: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              />
+            <textarea
+              placeholder="Remarks"
+              rows={3}
+              value={form.remarks}
+              onChange={(e) => setForm({ ...form, remarks: e.target.value })}
+              className={`${inputCls} font-body`}
+            />
 
-              <div style={{ display: 'flex', gap: 12 }}>
-                <select
-                  value={form.category}
-                  onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  style={{ padding: 10, border: '1px solid var(--line)', flex: 1 }}
-                >
-                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-                <select
-                  value={form.rating}
-                  onChange={(e) => setForm({ ...form, rating: e.target.value })}
-                  style={{ padding: 10, border: '1px solid var(--line)', flex: 1 }}
-                >
-                  {RATINGS.map((r) => <option key={r} value={r}>{r}</option>)}
-                </select>
+            <div className="flex gap-2.5">
+              <button type="submit" className={btnPrimary} disabled={saving}>
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+              <button type="button" className={btnOutline} onClick={() => setShowForm(false)}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {loading ? (
+        <p>Loading…</p>
+      ) : filtered.length === 0 ? (
+        <p className="text-charcoal">No performance records yet.</p>
+      ) : (
+        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+          {filtered.map((r) => (
+            <div
+              key={r.id}
+              className="bg-white border border-black/10 p-6"
+              style={{ borderTopWidth: 3, borderTopColor: RATING_COLOR[r.rating] || '#B3282D' }}
+            >
+              <h3 className="font-semibold text-base text-ink mb-1.5">{r.students?.full_name}</h3>
+              <p className="text-sm text-charcoal">{r.category} · {r.rating}</p>
+              <p className="text-[0.8rem] mt-1">{r.recorded_on}</p>
+              {r.remarks && <p className="text-[0.85rem] mt-1.5">{r.remarks}</p>}
+              <div className="flex gap-2 mt-3">
+                <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(r)}>Edit</button>
+                <button className={`${btnOutline} ${btnSm}`} onClick={() => handleDelete(r)}>Delete</button>
               </div>
-
-              <textarea
-                placeholder="Remarks"
-                rows={3}
-                value={form.remarks}
-                onChange={(e) => setForm({ ...form, remarks: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)', fontFamily: 'inherit' }}
-              />
-
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'Saving…' : 'Save'}
-                </button>
-                <button type="button" className="btn btn-outline" onClick={() => setShowForm(false)}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {loading ? (
-          <p>Loading…</p>
-        ) : filtered.length === 0 ? (
-          <p style={{ color: 'var(--charcoal)' }}>No performance records yet.</p>
-        ) : (
-          <div className="module-grid">
-            {filtered.map((r) => (
-              <div className="module-card" key={r.id} style={{ borderTopColor: RATING_COLOR[r.rating] || 'var(--red)' }}>
-                <h3>{r.students?.full_name}</h3>
-                <p>{r.category} · {r.rating}</p>
-                <p style={{ fontSize: '0.8rem', marginTop: 4 }}>{r.recorded_on}</p>
-                {r.remarks && <p style={{ fontSize: '0.85rem', marginTop: 6 }}>{r.remarks}</p>}
-                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                  <button
-                    className="btn btn-outline"
-                    style={{ fontSize: '0.75rem', padding: '6px 12px' }}
-                    onClick={() => openEditForm(r)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="btn btn-outline"
-                    style={{ fontSize: '0.75rem', padding: '6px 12px' }}
-                    onClick={() => handleDelete(r)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

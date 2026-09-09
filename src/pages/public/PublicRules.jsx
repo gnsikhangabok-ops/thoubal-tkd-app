@@ -25,49 +25,47 @@ export default function PublicRules() {
   }, [])
 
   return (
-    <>
-      <header className="nav">
-        <div className="nav-inner">
-          <Link to="/" className="brand">
-            <img src={logo} alt="Thoubal Taekwondo Academy" className="brand-logo" />
-            <div className="brand-text">
-              <div className="logo">THOUBAL <span>TKD</span></div>
-              <div className="brand-sub">Thoubal District Taekwondo Association</div>
+    <div className="font-body text-charcoal bg-chalk min-h-screen">
+      <header className="sticky top-0 z-50 bg-chalk border-b border-black/10">
+        <div className="max-w-[1180px] mx-auto px-7 py-4 flex items-center justify-between gap-4 flex-wrap">
+          <Link to="/" className="flex items-center gap-3">
+            <img src={logo} alt="Thoubal Taekwondo Academy" className="w-11 h-11 object-contain" />
+            <div className="flex flex-col leading-tight">
+              <div className="font-display font-bold text-lg text-ink">THOUBAL <span className="text-brand-red">TKD</span></div>
+              <div className="text-[0.62rem] tracking-wide text-charcoal uppercase mt-0.5">Thoubal District Taekwondo Association</div>
             </div>
           </Link>
-          <Link to="/" className="btn btn-outline">← Home</Link>
+          <Link to="/" className="inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk">← Home</Link>
         </div>
       </header>
 
-      <section style={{ padding: '64px 0' }}>
-        <div className="wrap" style={{ maxWidth: 760 }}>
-          <div className="section-head">
-            <div className="kicker-line">Academy policy</div>
-            <h2>Rules &amp; Regulations</h2>
+      <section className="py-16">
+        <div className="max-w-[760px] mx-auto px-7">
+          <div className="mb-9">
+            <div className="text-brand-red font-display font-semibold text-sm mb-2">Academy policy</div>
+            <h2 className="font-display text-ink uppercase text-3xl">Rules &amp; Regulations</h2>
           </div>
 
           {loading ? (
             <p>Loading…</p>
           ) : error ? (
-            <p style={{ color: 'var(--red)' }}>Could not load rules right now.</p>
+            <p className="text-brand-red">Could not load rules right now.</p>
           ) : !rules ? (
-            <p style={{ color: 'var(--charcoal)' }}>Rules have not been published yet. Please check back soon.</p>
+            <p className="text-charcoal">Rules have not been published yet. Please check back soon.</p>
           ) : (
-            <div style={{ whiteSpace: 'pre-wrap', fontSize: '1.02rem', lineHeight: 1.8, color: 'var(--charcoal)' }}>
+            <div className="whitespace-pre-wrap text-[1.02rem] leading-relaxed text-charcoal">
               {rules.content}
             </div>
           )}
         </div>
       </section>
 
-      <footer>
-        <div className="wrap">
-          <div className="foot-bottom">
-            <span>© 2026 Thoubal Taekwondo Academy. All rights reserved.</span>
-            <Link to="/login">Student &amp; Parent Login →</Link>
-          </div>
+      <footer className="bg-ink text-[#C9C7C0] py-8">
+        <div className="max-w-[1180px] mx-auto px-7 flex justify-between flex-wrap gap-3 text-sm">
+          <span>© 2026 Thoubal Taekwondo Academy. All rights reserved.</span>
+          <Link to="/login" className="hover:text-gold">Student &amp; Parent Login →</Link>
         </div>
       </footer>
-    </>
+    </div>
   )
 }

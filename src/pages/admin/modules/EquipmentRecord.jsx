@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 
 const CATEGORIES = ['uniform', 'gear', 'belt', 'other']
@@ -8,6 +7,11 @@ const emptyItemForm = {
   id: null, name: '', category: 'uniform', stock_qty: '', unit_price: '', training_center_id: '',
 }
 const emptyIssueForm = { student_id: '', quantity: 1, paid: false, amount: '' }
+
+const inputCls = "px-2.5 py-2.5 border border-black/10"
+const btnPrimary = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
+const btnOutline = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk"
+const btnSm = "text-[0.75rem] px-3 py-1.5"
 
 export default function EquipmentRecord() {
   const [items, setItems] = useState([])
@@ -133,7 +137,6 @@ export default function EquipmentRecord() {
       return
     }
 
-    // Decrement stock
     const { error: stockError } = await supabase
       .from('inventory_items')
       .update({ stock_qty: issuingFor.stock_qty - qty })
@@ -161,207 +164,183 @@ export default function EquipmentRecord() {
   }
 
   return (
-    <div className="dash-shell">
-      <div className="dash-topbar">
-        <Link to="/admin" className="logo" style={{ color: 'var(--chalk)' }}>THOUBAL <span>TKD</span></Link>
-        <Link to="/admin" className="dash-signout">← Back to Dashboard</Link>
-      </div>
+    <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
+      {viewingHistory ? (
+        <>
+          <button className={`${btnOutline} mb-5`} onClick={() => setViewingHistory(null)}>
+            ← All Equipment
+          </button>
+          <h1 className="font-display text-ink uppercase text-3xl mb-2">{viewingHistory.name} — Issuance History</h1>
+          <p className="text-charcoal mb-9">Every time this item was given to a student.</p>
 
-      <div className="dash-body">
-        {viewingHistory ? (
-          <>
-            <button className="btn btn-outline" style={{ marginBottom: 20 }} onClick={() => setViewingHistory(null)}>
-              ← All Equipment
-            </button>
-            <h1>{viewingHistory.name} — Issuance History</h1>
-            <p className="dash-lede">Every time this item was given to a student.</p>
-
-            {issuedHistory.length === 0 ? (
-              <p style={{ color: 'var(--charcoal)' }}>Not issued to anyone yet.</p>
-            ) : (
-              <div className="module-grid">
-                {issuedHistory.map((rec) => (
-                  <div className="module-card" key={rec.id}>
-                    <h3>{rec.students?.full_name}</h3>
-                    <p>Qty: {rec.quantity}</p>
-                    <p style={{ fontSize: '0.85rem', marginTop: 4 }}>{rec.issued_on}</p>
-                    <p style={{ fontSize: '0.8rem', color: rec.paid ? 'var(--red)' : '#999', marginTop: 4 }}>
-                      {rec.paid ? `Paid ₹${rec.amount || 0}` : 'Not paid'}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        ) : (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 12 }}>
-              <h1>Equipment Record</h1>
-              <button className="btn btn-primary" onClick={openAddItem}>+ Add Item</button>
+          {issuedHistory.length === 0 ? (
+            <p className="text-charcoal">Not issued to anyone yet.</p>
+          ) : (
+            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+              {issuedHistory.map((rec) => (
+                <div key={rec.id} className="bg-white border border-black/10 p-6">
+                  <h3 className="font-semibold text-base text-ink mb-1.5">{rec.students?.full_name}</h3>
+                  <p className="text-sm text-charcoal">Qty: {rec.quantity}</p>
+                  <p className="text-[0.85rem] mt-1">{rec.issued_on}</p>
+                  <p className="text-[0.8rem] mt-1" style={{ color: rec.paid ? '#B3282D' : '#999' }}>
+                    {rec.paid ? `Paid ₹${rec.amount || 0}` : 'Not paid'}
+                  </p>
+                </div>
+              ))}
             </div>
-            <p className="dash-lede">Uniforms, gear, and belts — stock and issuance per center.</p>
+          )}
+        </>
+      ) : (
+        <>
+          <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
+            <h1 className="font-display text-ink uppercase text-3xl">Equipment Record</h1>
+            <button className={btnPrimary} onClick={openAddItem}>+ Add Item</button>
+          </div>
+          <p className="text-charcoal mb-9">Uniforms, gear, and belts — stock and issuance per center.</p>
 
-            {error && <p style={{ color: 'var(--red)', marginBottom: 16 }}>{error}</p>}
+          {error && <p className="text-brand-red mb-4">{error}</p>}
 
-            {showItemForm && (
-              <div className="module-card" style={{ marginBottom: 28, maxWidth: 460 }}>
-                <h3 style={{ marginBottom: 16 }}>{itemForm.id ? 'Edit Item' : 'New Inventory Item'}</h3>
-                <form onSubmit={handleItemSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {showItemForm && (
+            <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[460px]">
+              <h3 className="font-semibold text-base text-ink mb-4">{itemForm.id ? 'Edit Item' : 'New Inventory Item'}</h3>
+              <form onSubmit={handleItemSubmit} className="flex flex-col gap-3">
+                <input
+                  type="text" placeholder="Item name (e.g. Dobok - Size M)" required
+                  value={itemForm.name}
+                  onChange={(e) => setItemForm({ ...itemForm, name: e.target.value })}
+                  className={inputCls}
+                />
+                <select
+                  value={itemForm.category}
+                  onChange={(e) => setItemForm({ ...itemForm, category: e.target.value })}
+                  className={`${inputCls} capitalize`}
+                >
+                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <select
+                  value={itemForm.training_center_id}
+                  onChange={(e) => setItemForm({ ...itemForm, training_center_id: e.target.value })}
+                  className={inputCls}
+                >
+                  <option value="">— No specific center —</option>
+                  {centers.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <div className="flex gap-3">
                   <input
-                    type="text" placeholder="Item name (e.g. Dobok - Size M)" required
-                    value={itemForm.name}
-                    onChange={(e) => setItemForm({ ...itemForm, name: e.target.value })}
-                    style={{ padding: 10, border: '1px solid var(--line)' }}
+                    type="number" placeholder="Stock quantity"
+                    value={itemForm.stock_qty}
+                    onChange={(e) => setItemForm({ ...itemForm, stock_qty: e.target.value })}
+                    className={`${inputCls} flex-1`}
                   />
-                  <select
-                    value={itemForm.category}
-                    onChange={(e) => setItemForm({ ...itemForm, category: e.target.value })}
-                    style={{ padding: 10, border: '1px solid var(--line)', textTransform: 'capitalize' }}
-                  >
-                    {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                  <select
-                    value={itemForm.training_center_id}
-                    onChange={(e) => setItemForm({ ...itemForm, training_center_id: e.target.value })}
-                    style={{ padding: 10, border: '1px solid var(--line)' }}
-                  >
-                    <option value="">— No specific center —</option>
-                    {centers.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                  <div style={{ display: 'flex', gap: 12 }}>
-                    <input
-                      type="number" placeholder="Stock quantity"
-                      value={itemForm.stock_qty}
-                      onChange={(e) => setItemForm({ ...itemForm, stock_qty: e.target.value })}
-                      style={{ padding: 10, border: '1px solid var(--line)', flex: 1 }}
-                    />
-                    <input
-                      type="number" placeholder="Unit price (₹)" step="0.01"
-                      value={itemForm.unit_price}
-                      onChange={(e) => setItemForm({ ...itemForm, unit_price: e.target.value })}
-                      style={{ padding: 10, border: '1px solid var(--line)', flex: 1 }}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', gap: 10 }}>
-                    <button type="submit" className="btn btn-primary" disabled={savingItem}>
-                      {savingItem ? 'Saving…' : 'Save'}
-                    </button>
-                    <button type="button" className="btn btn-outline" onClick={() => setShowItemForm(false)}>
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {issuingFor && (
-              <div className="module-card" style={{ marginBottom: 28, maxWidth: 460 }}>
-                <h3 style={{ marginBottom: 6 }}>Issue: {issuingFor.name}</h3>
-                <p style={{ fontSize: '0.85rem', marginBottom: 16, color: 'var(--charcoal)' }}>
-                  In stock: {issuingFor.stock_qty}
-                </p>
-                <form onSubmit={handleIssueSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <select
-                    required
-                    value={issueForm.student_id}
-                    onChange={(e) => setIssueForm({ ...issueForm, student_id: e.target.value })}
-                    style={{ padding: 10, border: '1px solid var(--line)' }}
-                  >
-                    <option value="">— Select student —</option>
-                    {students.map((s) => (
-                      <option key={s.id} value={s.id}>{s.full_name}</option>
-                    ))}
-                  </select>
                   <input
-                    type="number" placeholder="Quantity" min="1" required
-                    value={issueForm.quantity}
-                    onChange={(e) => setIssueForm({ ...issueForm, quantity: e.target.value })}
-                    style={{ padding: 10, border: '1px solid var(--line)' }}
+                    type="number" placeholder="Unit price (₹)" step="0.01"
+                    value={itemForm.unit_price}
+                    onChange={(e) => setItemForm({ ...itemForm, unit_price: e.target.value })}
+                    className={`${inputCls} flex-1`}
                   />
-                  <label style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <input
-                      type="checkbox"
-                      checked={issueForm.paid}
-                      onChange={(e) => setIssueForm({ ...issueForm, paid: e.target.checked })}
-                    />
-                    Paid for
-                  </label>
-                  {issueForm.paid && (
-                    <input
-                      type="number" placeholder="Amount paid (₹)" step="0.01"
-                      value={issueForm.amount}
-                      onChange={(e) => setIssueForm({ ...issueForm, amount: e.target.value })}
-                      style={{ padding: 10, border: '1px solid var(--line)' }}
-                    />
+                </div>
+                <div className="flex gap-2.5">
+                  <button type="submit" className={btnPrimary} disabled={savingItem}>
+                    {savingItem ? 'Saving…' : 'Save'}
+                  </button>
+                  <button type="button" className={btnOutline} onClick={() => setShowItemForm(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {issuingFor && (
+            <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[460px]">
+              <h3 className="font-semibold text-base text-ink mb-1.5">Issue: {issuingFor.name}</h3>
+              <p className="text-[0.85rem] mb-4 text-charcoal">In stock: {issuingFor.stock_qty}</p>
+              <form onSubmit={handleIssueSubmit} className="flex flex-col gap-3">
+                <select
+                  required
+                  value={issueForm.student_id}
+                  onChange={(e) => setIssueForm({ ...issueForm, student_id: e.target.value })}
+                  className={inputCls}
+                >
+                  <option value="">— Select student —</option>
+                  {students.map((s) => (
+                    <option key={s.id} value={s.id}>{s.full_name}</option>
+                  ))}
+                </select>
+                <input
+                  type="number" placeholder="Quantity" min="1" required
+                  value={issueForm.quantity}
+                  onChange={(e) => setIssueForm({ ...issueForm, quantity: e.target.value })}
+                  className={inputCls}
+                />
+                <label className="text-sm flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={issueForm.paid}
+                    onChange={(e) => setIssueForm({ ...issueForm, paid: e.target.checked })}
+                  />
+                  Paid for
+                </label>
+                {issueForm.paid && (
+                  <input
+                    type="number" placeholder="Amount paid (₹)" step="0.01"
+                    value={issueForm.amount}
+                    onChange={(e) => setIssueForm({ ...issueForm, amount: e.target.value })}
+                    className={inputCls}
+                  />
+                )}
+                <div className="flex gap-2.5">
+                  <button type="submit" className={btnPrimary} disabled={savingIssue}>
+                    {savingIssue ? 'Issuing…' : 'Issue Item'}
+                  </button>
+                  <button type="button" className={btnOutline} onClick={() => setIssuingFor(null)}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {loading ? (
+            <p>Loading…</p>
+          ) : items.length === 0 ? (
+            <p className="text-charcoal">No inventory items yet. Add your first one above.</p>
+          ) : (
+            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-white border border-black/10 p-6"
+                  style={{ borderTopWidth: 3, borderTopColor: item.stock_qty > 0 ? '#B3282D' : '#999' }}
+                >
+                  <h3 className="font-semibold text-base text-ink mb-1.5">{item.name}</h3>
+                  <p className="text-sm text-charcoal capitalize">{item.category}</p>
+                  <p className="text-[0.85rem] mt-1.5">
+                    Stock: {item.stock_qty} {item.unit_price ? `· ₹${item.unit_price} each` : ''}
+                  </p>
+                  {item.training_centers?.name && (
+                    <p className="text-[0.8rem] mt-1">{item.training_centers.name}</p>
                   )}
-                  <div style={{ display: 'flex', gap: 10 }}>
-                    <button type="submit" className="btn btn-primary" disabled={savingIssue}>
-                      {savingIssue ? 'Issuing…' : 'Issue Item'}
+                  <div className="flex gap-2 mt-3 flex-wrap">
+                    <button
+                      className={`${btnPrimary} ${btnSm}`}
+                      onClick={() => openIssueForm(item)}
+                      disabled={item.stock_qty <= 0}
+                    >
+                      Issue
                     </button>
-                    <button type="button" className="btn btn-outline" onClick={() => setIssuingFor(null)}>
-                      Cancel
-                    </button>
+                    <button className={`${btnOutline} ${btnSm}`} onClick={() => openHistory(item)}>History</button>
+                    <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditItem(item)}>Edit</button>
+                    <button className={`${btnOutline} ${btnSm}`} onClick={() => handleDeleteItem(item)}>Delete</button>
                   </div>
-                </form>
-              </div>
-            )}
-
-            {loading ? (
-              <p>Loading…</p>
-            ) : items.length === 0 ? (
-              <p style={{ color: 'var(--charcoal)' }}>No inventory items yet. Add your first one above.</p>
-            ) : (
-              <div className="module-grid">
-                {items.map((item) => (
-                  <div className="module-card" key={item.id} style={{ borderTopColor: item.stock_qty > 0 ? 'var(--red)' : '#999' }}>
-                    <h3>{item.name}</h3>
-                    <p style={{ textTransform: 'capitalize' }}>{item.category}</p>
-                    <p style={{ fontSize: '0.85rem', marginTop: 6 }}>
-                      Stock: {item.stock_qty} {item.unit_price ? `· ₹${item.unit_price} each` : ''}
-                    </p>
-                    {item.training_centers?.name && (
-                      <p style={{ fontSize: '0.8rem', marginTop: 4 }}>{item.training_centers.name}</p>
-                    )}
-                    <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-                      <button
-                        className="btn btn-primary"
-                        style={{ fontSize: '0.75rem', padding: '6px 12px' }}
-                        onClick={() => openIssueForm(item)}
-                        disabled={item.stock_qty <= 0}
-                      >
-                        Issue
-                      </button>
-                      <button
-                        className="btn btn-outline"
-                        style={{ fontSize: '0.75rem', padding: '6px 12px' }}
-                        onClick={() => openHistory(item)}
-                      >
-                        History
-                      </button>
-                      <button
-                        className="btn btn-outline"
-                        style={{ fontSize: '0.75rem', padding: '6px 12px' }}
-                        onClick={() => openEditItem(item)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-outline"
-                        style={{ fontSize: '0.75rem', padding: '6px 12px' }}
-                        onClick={() => handleDeleteItem(item)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

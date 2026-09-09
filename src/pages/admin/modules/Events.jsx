@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 
 const EVENT_TYPES = ['tournament', 'grading', 'seminar', 'internal']
@@ -9,6 +8,11 @@ const MEDAL_COLOR = { gold: '#D4A537', silver: '#A8A8A8', bronze: '#B08D57', non
 const emptyEventForm = {
   id: null, title: '', event_type: 'tournament', event_date: '', location: '', description: '', registration_deadline: '',
 }
+
+const inputCls = "px-2.5 py-2.5 border border-black/10"
+const btnPrimary = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
+const btnOutline = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk"
+const btnSm = "text-[0.75rem] px-3 py-1.5"
 
 export default function Events() {
   const [events, setEvents] = useState([])
@@ -144,180 +148,180 @@ export default function Events() {
   const availableStudents = students.filter((s) => !registeredIds.has(s.id))
 
   return (
-    <div className="dash-shell">
-      <div className="dash-topbar">
-        <Link to="/admin" className="logo" style={{ color: 'var(--chalk)' }}>THOUBAL <span>TKD</span></Link>
-        <Link to="/admin" className="dash-signout">← Back to Dashboard</Link>
-      </div>
+    <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
+      {!selectedEvent ? (
+        <>
+          <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
+            <h1 className="font-display text-ink uppercase text-3xl">Events</h1>
+            <button className={btnPrimary} onClick={openAddEvent}>+ New Event</button>
+          </div>
+          <p className="text-charcoal mb-9">Tournaments, seminars, and internal events.</p>
 
-      <div className="dash-body">
-        {!selectedEvent ? (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 12 }}>
-              <h1>Events</h1>
-              <button className="btn btn-primary" onClick={openAddEvent}>+ New Event</button>
+          {error && <p className="text-brand-red mb-4">{error}</p>}
+
+          {showEventForm && (
+            <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[480px]">
+              <h3 className="font-semibold text-base text-ink mb-4">{eventForm.id ? 'Edit Event' : 'New Event'}</h3>
+              <form onSubmit={handleEventSubmit} className="flex flex-col gap-3">
+                <input
+                  type="text" placeholder="Event title" required
+                  value={eventForm.title}
+                  onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
+                  className={inputCls}
+                />
+                <select
+                  value={eventForm.event_type}
+                  onChange={(e) => setEventForm({ ...eventForm, event_type: e.target.value })}
+                  className={`${inputCls} capitalize`}
+                >
+                  {EVENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+                <input
+                  type="date" required
+                  value={eventForm.event_date}
+                  onChange={(e) => setEventForm({ ...eventForm, event_date: e.target.value })}
+                  className={inputCls}
+                />
+                <input
+                  type="text" placeholder="Location"
+                  value={eventForm.location}
+                  onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
+                  className={inputCls}
+                />
+                <label className="text-[0.8rem]">Registration deadline</label>
+                <input
+                  type="date"
+                  value={eventForm.registration_deadline}
+                  onChange={(e) => setEventForm({ ...eventForm, registration_deadline: e.target.value })}
+                  className={inputCls}
+                />
+                <textarea
+                  placeholder="Description"
+                  rows={3}
+                  value={eventForm.description}
+                  onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
+                  className={`${inputCls} font-body`}
+                />
+                <div className="flex gap-2.5">
+                  <button type="submit" className={btnPrimary} disabled={savingEvent}>
+                    {savingEvent ? 'Saving…' : 'Save'}
+                  </button>
+                  <button type="button" className={btnOutline} onClick={() => setShowEventForm(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
             </div>
-            <p className="dash-lede">Tournaments, seminars, and internal events.</p>
+          )}
 
-            {error && <p style={{ color: 'var(--red)', marginBottom: 16 }}>{error}</p>}
-
-            {showEventForm && (
-              <div className="module-card" style={{ marginBottom: 28, maxWidth: 480 }}>
-                <h3 style={{ marginBottom: 16 }}>{eventForm.id ? 'Edit Event' : 'New Event'}</h3>
-                <form onSubmit={handleEventSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <input
-                    type="text" placeholder="Event title" required
-                    value={eventForm.title}
-                    onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
-                    style={{ padding: 10, border: '1px solid var(--line)' }}
-                  />
-                  <select
-                    value={eventForm.event_type}
-                    onChange={(e) => setEventForm({ ...eventForm, event_type: e.target.value })}
-                    style={{ padding: 10, border: '1px solid var(--line)', textTransform: 'capitalize' }}
-                  >
-                    {EVENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                  <input
-                    type="date" required
-                    value={eventForm.event_date}
-                    onChange={(e) => setEventForm({ ...eventForm, event_date: e.target.value })}
-                    style={{ padding: 10, border: '1px solid var(--line)' }}
-                  />
-                  <input
-                    type="text" placeholder="Location"
-                    value={eventForm.location}
-                    onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
-                    style={{ padding: 10, border: '1px solid var(--line)' }}
-                  />
-                  <label style={{ fontSize: '0.8rem' }}>Registration deadline</label>
-                  <input
-                    type="date"
-                    value={eventForm.registration_deadline}
-                    onChange={(e) => setEventForm({ ...eventForm, registration_deadline: e.target.value })}
-                    style={{ padding: 10, border: '1px solid var(--line)' }}
-                  />
-                  <textarea
-                    placeholder="Description"
-                    rows={3}
-                    value={eventForm.description}
-                    onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
-                    style={{ padding: 10, border: '1px solid var(--line)', fontFamily: 'inherit' }}
-                  />
-                  <div style={{ display: 'flex', gap: 10 }}>
-                    <button type="submit" className="btn btn-primary" disabled={savingEvent}>
-                      {savingEvent ? 'Saving…' : 'Save'}
-                    </button>
-                    <button type="button" className="btn btn-outline" onClick={() => setShowEventForm(false)}>
-                      Cancel
+          {loading ? (
+            <p>Loading…</p>
+          ) : events.length === 0 ? (
+            <p className="text-charcoal">No events yet. Create one above.</p>
+          ) : (
+            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+              {events.map((ev) => (
+                <div
+                  key={ev.id}
+                  className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 cursor-pointer"
+                  onClick={() => setSelectedEvent(ev)}
+                >
+                  <h3 className="font-semibold text-base text-ink mb-1.5">{ev.title}</h3>
+                  <p className="text-sm text-charcoal capitalize">{ev.event_type}</p>
+                  <p className="text-[0.85rem] mt-1.5">{ev.event_date} {ev.location ? `· ${ev.location}` : ''}</p>
+                  <div className="mt-3">
+                    <button
+                      className={`${btnOutline} ${btnSm}`}
+                      onClick={(e) => { e.stopPropagation(); openEditEvent(ev) }}
+                    >
+                      Edit
                     </button>
                   </div>
-                </form>
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <button className={`${btnOutline} mb-5`} onClick={() => setSelectedEvent(null)}>
+            ← All Events
+          </button>
+          <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
+            <h1 className="font-display text-ink uppercase text-3xl">{selectedEvent.title}</h1>
+            <button className={btnPrimary} onClick={() => setShowRegForm(true)}>+ Register Student</button>
+          </div>
+          <p className="text-charcoal mb-9 capitalize">
+            {selectedEvent.event_type} · {selectedEvent.event_date} {selectedEvent.location ? `· ${selectedEvent.location}` : ''}
+          </p>
 
-            {loading ? (
-              <p>Loading…</p>
-            ) : events.length === 0 ? (
-              <p style={{ color: 'var(--charcoal)' }}>No events yet. Create one above.</p>
-            ) : (
-              <div className="module-grid">
-                {events.map((ev) => (
-                  <div className="module-card" key={ev.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedEvent(ev)}>
-                    <h3>{ev.title}</h3>
-                    <p style={{ textTransform: 'capitalize' }}>{ev.event_type}</p>
-                    <p style={{ fontSize: '0.85rem', marginTop: 6 }}>{ev.event_date} {ev.location ? `· ${ev.location}` : ''}</p>
-                    <div style={{ marginTop: 12 }}>
-                      <button
-                        className="btn btn-outline"
-                        style={{ fontSize: '0.75rem', padding: '6px 12px' }}
-                        onClick={(e) => { e.stopPropagation(); openEditEvent(ev) }}
+          {error && <p className="text-brand-red mb-4">{error}</p>}
+
+          {showRegForm && (
+            <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[420px]">
+              <h3 className="font-semibold text-base text-ink mb-4">Register Student</h3>
+              <form onSubmit={handleRegSubmit} className="flex flex-col gap-3">
+                <select
+                  required
+                  value={regStudentId}
+                  onChange={(e) => setRegStudentId(e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="">— Select student —</option>
+                  {availableStudents.map((s) => (
+                    <option key={s.id} value={s.id}>{s.full_name}</option>
+                  ))}
+                </select>
+                <div className="flex gap-2.5">
+                  <button type="submit" className={btnPrimary} disabled={savingReg}>
+                    {savingReg ? 'Registering…' : 'Register'}
+                  </button>
+                  <button type="button" className={btnOutline} onClick={() => setShowRegForm(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {registrations.length === 0 ? (
+            <p className="text-charcoal">No students registered for this event yet.</p>
+          ) : (
+            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+              {registrations.map((r) => (
+                <div
+                  key={r.id}
+                  className="bg-white border border-black/10 p-6"
+                  style={{ borderTopWidth: 3, borderTopColor: r.medal ? MEDAL_COLOR[r.medal] : '#ccc' }}
+                >
+                  <h3 className="font-semibold text-base text-ink mb-1.5">{r.students?.full_name}</h3>
+                  <div className="flex gap-2 mt-2.5 flex-wrap">
+                    <div className="flex-1 min-w-[120px]">
+                      <label className="text-[0.75rem] block mb-1">Result</label>
+                      <input
+                        type="text" placeholder="e.g. Semifinal"
+                        defaultValue={r.result || ''}
+                        onBlur={(e) => updateResult(r, 'result', e.target.value || null)}
+                        className="px-2 py-2 border border-black/10 text-[0.85rem] w-full"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-[120px]">
+                      <label className="text-[0.75rem] block mb-1">Medal</label>
+                      <select
+                        value={r.medal || 'none'}
+                        onChange={(e) => updateResult(r, 'medal', e.target.value === 'none' ? null : e.target.value)}
+                        className="px-2 py-2 border border-black/10 text-[0.85rem] w-full capitalize"
                       >
-                        Edit
-                      </button>
+                        {MEDALS.map((m) => <option key={m} value={m}>{m === 'none' ? 'No medal' : m}</option>)}
+                      </select>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </>
-        ) : (
-          <>
-            <button className="btn btn-outline" style={{ marginBottom: 20 }} onClick={() => setSelectedEvent(null)}>
-              ← All Events
-            </button>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 12 }}>
-              <h1>{selectedEvent.title}</h1>
-              <button className="btn btn-primary" onClick={() => setShowRegForm(true)}>+ Register Student</button>
+                </div>
+              ))}
             </div>
-            <p className="dash-lede" style={{ textTransform: 'capitalize' }}>
-              {selectedEvent.event_type} · {selectedEvent.event_date} {selectedEvent.location ? `· ${selectedEvent.location}` : ''}
-            </p>
-
-            {error && <p style={{ color: 'var(--red)', marginBottom: 16 }}>{error}</p>}
-
-            {showRegForm && (
-              <div className="module-card" style={{ marginBottom: 28, maxWidth: 420 }}>
-                <h3 style={{ marginBottom: 16 }}>Register Student</h3>
-                <form onSubmit={handleRegSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <select
-                    required
-                    value={regStudentId}
-                    onChange={(e) => setRegStudentId(e.target.value)}
-                    style={{ padding: 10, border: '1px solid var(--line)' }}
-                  >
-                    <option value="">— Select student —</option>
-                    {availableStudents.map((s) => (
-                      <option key={s.id} value={s.id}>{s.full_name}</option>
-                    ))}
-                  </select>
-                  <div style={{ display: 'flex', gap: 10 }}>
-                    <button type="submit" className="btn btn-primary" disabled={savingReg}>
-                      {savingReg ? 'Registering…' : 'Register'}
-                    </button>
-                    <button type="button" className="btn btn-outline" onClick={() => setShowRegForm(false)}>
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {registrations.length === 0 ? (
-              <p style={{ color: 'var(--charcoal)' }}>No students registered for this event yet.</p>
-            ) : (
-              <div className="module-grid">
-                {registrations.map((r) => (
-                  <div className="module-card" key={r.id} style={{ borderTopColor: r.medal ? MEDAL_COLOR[r.medal] : '#ccc' }}>
-                    <h3>{r.students?.full_name}</h3>
-                    <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-                      <div style={{ flex: 1, minWidth: 120 }}>
-                        <label style={{ fontSize: '0.75rem', display: 'block', marginBottom: 4 }}>Result</label>
-                        <input
-                          type="text" placeholder="e.g. Semifinal"
-                          defaultValue={r.result || ''}
-                          onBlur={(e) => updateResult(r, 'result', e.target.value || null)}
-                          style={{ padding: 8, border: '1px solid var(--line)', fontSize: '0.85rem', width: '100%' }}
-                        />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 120 }}>
-                        <label style={{ fontSize: '0.75rem', display: 'block', marginBottom: 4 }}>Medal</label>
-                        <select
-                          value={r.medal || 'none'}
-                          onChange={(e) => updateResult(r, 'medal', e.target.value === 'none' ? null : e.target.value)}
-                          style={{ padding: 8, border: '1px solid var(--line)', fontSize: '0.85rem', width: '100%', textTransform: 'capitalize' }}
-                        >
-                          {MEDALS.map((m) => <option key={m} value={m}>{m === 'none' ? 'No medal' : m}</option>)}
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

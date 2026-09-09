@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 
 const LEVELS = ['district', 'state', 'national', 'international']
@@ -16,6 +15,11 @@ const emptyForm = {
   description: '',
   photo_url: '',
 }
+
+const inputCls = "px-2.5 py-2.5 border border-black/10"
+const btnPrimary = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
+const btnOutline = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk"
+const btnSm = "text-[0.75rem] px-3 py-1.5"
 
 export default function Achievements() {
   const [achievements, setAchievements] = useState([])
@@ -113,140 +117,125 @@ export default function Achievements() {
     : achievements
 
   return (
-    <div className="dash-shell">
-      <div className="dash-topbar">
-        <Link to="/admin" className="logo" style={{ color: 'var(--chalk)' }}>THOUBAL <span>TKD</span></Link>
-        <Link to="/admin" className="dash-signout">← Back to Dashboard</Link>
+    <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
+      <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
+        <h1 className="font-display text-ink uppercase text-3xl">Achievements</h1>
+        <button className={btnPrimary} onClick={openAddForm}>+ Add Achievement</button>
+      </div>
+      <p className="text-charcoal mb-9">Medals and award highlights — shown publicly on the website.</p>
+
+      {error && <p className="text-brand-red mb-4">{error}</p>}
+
+      <div className="mb-6">
+        <select
+          value={levelFilter}
+          onChange={(e) => setLevelFilter(e.target.value)}
+          className={inputCls}
+        >
+          <option value="">All levels</option>
+          {LEVELS.map((l) => <option key={l} value={l} className="capitalize">{l}</option>)}
+        </select>
       </div>
 
-      <div className="dash-body">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 12 }}>
-          <h1>Achievements</h1>
-          <button className="btn btn-primary" onClick={openAddForm}>+ Add Achievement</button>
-        </div>
-        <p className="dash-lede">Medals and award highlights — shown publicly on the website.</p>
+      {showForm && (
+        <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[520px]">
+          <h3 className="font-semibold text-base text-ink mb-4">{form.id ? 'Edit Achievement' : 'New Achievement'}</h3>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <select
+              value={form.student_id}
+              onChange={(e) => setForm({ ...form, student_id: e.target.value })}
+              className={inputCls}
+            >
+              <option value="">— Select student —</option>
+              {students.map((s) => (
+                <option key={s.id} value={s.id}>{s.full_name}</option>
+              ))}
+            </select>
 
-        {error && <p style={{ color: 'var(--red)', marginBottom: 16 }}>{error}</p>}
+            <input
+              type="text" placeholder="Title (e.g. Gold Medal - State Championship 2026)" required
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              className={inputCls}
+            />
 
-        <div style={{ marginBottom: 24 }}>
-          <select
-            value={levelFilter}
-            onChange={(e) => setLevelFilter(e.target.value)}
-            style={{ padding: 10, border: '1px solid var(--line)' }}
-          >
-            <option value="">All levels</option>
-            {LEVELS.map((l) => <option key={l} value={l} style={{ textTransform: 'capitalize' }}>{l}</option>)}
-          </select>
-        </div>
+            <input
+              type="date"
+              value={form.achievement_date}
+              onChange={(e) => setForm({ ...form, achievement_date: e.target.value })}
+              className={inputCls}
+            />
 
-        {showForm && (
-          <div className="module-card" style={{ marginBottom: 28, maxWidth: 520 }}>
-            <h3 style={{ marginBottom: 16 }}>{form.id ? 'Edit Achievement' : 'New Achievement'}</h3>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="flex gap-3">
               <select
-                value={form.student_id}
-                onChange={(e) => setForm({ ...form, student_id: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
+                value={form.level}
+                onChange={(e) => setForm({ ...form, level: e.target.value })}
+                className={`${inputCls} flex-1 capitalize`}
               >
-                <option value="">— Select student —</option>
-                {students.map((s) => (
-                  <option key={s.id} value={s.id}>{s.full_name}</option>
-                ))}
+                {LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
               </select>
+              <select
+                value={form.medal}
+                onChange={(e) => setForm({ ...form, medal: e.target.value })}
+                className={`${inputCls} flex-1 capitalize`}
+              >
+                {MEDALS.map((m) => <option key={m} value={m}>{m === 'none' ? 'No medal' : m}</option>)}
+              </select>
+            </div>
 
-              <input
-                type="text" placeholder="Title (e.g. Gold Medal - State Championship 2026)" required
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              />
+            <textarea
+              placeholder="Description"
+              rows={3}
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              className={`${inputCls} font-body`}
+            />
+            <input
+              type="text" placeholder="Photo URL (optional, add after upload)"
+              value={form.photo_url}
+              onChange={(e) => setForm({ ...form, photo_url: e.target.value })}
+              className={inputCls}
+            />
 
-              <input
-                type="date"
-                value={form.achievement_date}
-                onChange={(e) => setForm({ ...form, achievement_date: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              />
+            <div className="flex gap-2.5">
+              <button type="submit" className={btnPrimary} disabled={saving}>
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+              <button type="button" className={btnOutline} onClick={() => setShowForm(false)}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
-              <div style={{ display: 'flex', gap: 12 }}>
-                <select
-                  value={form.level}
-                  onChange={(e) => setForm({ ...form, level: e.target.value })}
-                  style={{ padding: 10, border: '1px solid var(--line)', flex: 1, textTransform: 'capitalize' }}
-                >
-                  {LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
-                </select>
-                <select
-                  value={form.medal}
-                  onChange={(e) => setForm({ ...form, medal: e.target.value })}
-                  style={{ padding: 10, border: '1px solid var(--line)', flex: 1, textTransform: 'capitalize' }}
-                >
-                  {MEDALS.map((m) => <option key={m} value={m}>{m === 'none' ? 'No medal' : m}</option>)}
-                </select>
+      {loading ? (
+        <p>Loading…</p>
+      ) : filtered.length === 0 ? (
+        <p className="text-charcoal">No achievements recorded yet.</p>
+      ) : (
+        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+          {filtered.map((a) => (
+            <div
+              key={a.id}
+              className="bg-white border border-black/10 p-6"
+              style={{ borderTopWidth: 3, borderTopColor: a.medal ? MEDAL_COLOR[a.medal] : '#ccc' }}
+            >
+              <h3 className="font-semibold text-base text-ink mb-1.5">{a.title}</h3>
+              <p className="text-sm text-charcoal">{a.students?.full_name || 'Unnamed student'}</p>
+              <p className="text-[0.85rem] mt-1.5 capitalize">
+                {a.level} {a.medal ? `· ${a.medal} medal` : ''}
+              </p>
+              {a.achievement_date && <p className="text-[0.8rem] mt-1">{a.achievement_date}</p>}
+              {a.description && <p className="text-[0.85rem] mt-1.5">{a.description}</p>}
+              <div className="flex gap-2 mt-3">
+                <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(a)}>Edit</button>
+                <button className={`${btnOutline} ${btnSm}`} onClick={() => handleDelete(a)}>Delete</button>
               </div>
-
-              <textarea
-                placeholder="Description"
-                rows={3}
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)', fontFamily: 'inherit' }}
-              />
-              <input
-                type="text" placeholder="Photo URL (optional, add after upload)"
-                value={form.photo_url}
-                onChange={(e) => setForm({ ...form, photo_url: e.target.value })}
-                style={{ padding: 10, border: '1px solid var(--line)' }}
-              />
-
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'Saving…' : 'Save'}
-                </button>
-                <button type="button" className="btn btn-outline" onClick={() => setShowForm(false)}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {loading ? (
-          <p>Loading…</p>
-        ) : filtered.length === 0 ? (
-          <p style={{ color: 'var(--charcoal)' }}>No achievements recorded yet.</p>
-        ) : (
-          <div className="module-grid">
-            {filtered.map((a) => (
-              <div className="module-card" key={a.id} style={{ borderTopColor: a.medal ? MEDAL_COLOR[a.medal] : '#ccc' }}>
-                <h3>{a.title}</h3>
-                <p>{a.students?.full_name || 'Unnamed student'}</p>
-                <p style={{ fontSize: '0.85rem', marginTop: 6, textTransform: 'capitalize' }}>
-                  {a.level} {a.medal ? `· ${a.medal} medal` : ''}
-                </p>
-                {a.achievement_date && <p style={{ fontSize: '0.8rem', marginTop: 4 }}>{a.achievement_date}</p>}
-                {a.description && <p style={{ fontSize: '0.85rem', marginTop: 6 }}>{a.description}</p>}
-                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                  <button
-                    className="btn btn-outline"
-                    style={{ fontSize: '0.75rem', padding: '6px 12px' }}
-                    onClick={() => openEditForm(a)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="btn btn-outline"
-                    style={{ fontSize: '0.75rem', padding: '6px 12px' }}
-                    onClick={() => handleDelete(a)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
