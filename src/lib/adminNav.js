@@ -1,12 +1,13 @@
 import {
   LayoutGrid, Users, Building2, UserCog, CalendarDays, CalendarCheck, Award, TrendingUp,
   Medal, Package, Wallet, PiggyBank, Trophy, Inbox, ScrollText, ShieldCheck,
-  LayoutTemplate, Settings2,
+  LayoutTemplate, Settings2, BarChart3,
 } from 'lucide-react'
 
 // Single source for the admin sidebar and the dashboard tiles.
 export const ADMIN_NAV = [
   { label: 'Dashboard', short: 'Home', path: '/admin', end: true, icon: LayoutGrid },
+  { group: 'Insights', label: 'Reports & Analytics', short: 'Reports', desc: 'Charts & monthly report', path: '/admin/reports', icon: BarChart3 },
 
   { group: 'People', label: 'Students', short: 'Students', desc: 'Profiles, batches, belt rank', path: '/admin/students', icon: Users },
   { group: 'People', label: 'Coaches', short: 'Coaches', desc: 'Instructor profiles', path: '/admin/coaches', icon: UserCog },

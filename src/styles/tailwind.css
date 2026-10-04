@@ -168,6 +168,9 @@
 
 /* Status colours used in inline styles (cards' left accents, status labels) */
 :root {
+  /* Chart series (validated categorical slots 1–2, light surface) */
+  --viz-1: #2a78d6;
+  --viz-2: #eb6834;
   --status-ok: #047857;
   --status-bad: #DC2626;
   --status-warn: #B45309;
@@ -192,6 +195,8 @@
   --color-pay-action: #2AA7E6;
   --color-pay-action-dark: #1B8CC4;
   --shadow-card: 0 2px 14px rgba(0, 0, 0, 0.45);
+  --viz-1: #3987e5;
+  --viz-2: #d95926;
   --status-ok: #34D399;
   --status-bad: #F87171;
   --status-warn: #FBBF24;
@@ -213,6 +218,7 @@
     --color-surface: #fff; --color-heading: #002E6E; --color-body: #333; --color-muted: #444; --color-subtle: #555;
     --color-ink: #111; --color-charcoal: #333; --color-pay-bg: #fff; --color-pay-line: #ccc;
     --status-ok: #047857; --status-bad: #DC2626; --status-warn: #B45309; --status-info: #0079C1;
+    --viz-1: #2a78d6; --viz-2: #eb6834;
   }
   body, .paytm { background: #fff !important; }
   aside, nav, header, .no-print, button, form { display: none !important; }

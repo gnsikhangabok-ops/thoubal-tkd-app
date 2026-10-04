@@ -30,6 +30,7 @@ const Enquiries = lazy(() => import('./pages/admin/modules/Enquiries'))
 const Events = lazy(() => import('./pages/admin/modules/Events'))
 const Users = lazy(() => import('./pages/admin/modules/Users'))
 const WebsiteContent = lazy(() => import('./pages/admin/modules/WebsiteContent'))
+const Reports = lazy(() => import('./pages/admin/modules/Reports'))
 const NotFound = lazy(() => import('./pages/public/NotFound'))
 const PublicRules = lazy(() => import('./pages/public/PublicRules'))
 const StudentPortal = lazy(() => import('./pages/portal/StudentPortal'))
@@ -60,6 +61,7 @@ export default function App() {
 
             {/* Admin / Coach area — all wrapped in the persistent sidebar layout */}
             <Route path="/admin" element={<Admin allowedRoles={['super_admin', 'coach']}><AdminDashboard /></Admin>} />
+            <Route path="/admin/reports" element={<Admin allowedRoles={['super_admin', 'coach']}><Reports /></Admin>} />
             <Route path="/admin/training-centers" element={<Admin allowedRoles={['super_admin', 'coach']}><TrainingCenters /></Admin>} />
             <Route path="/admin/coaches" element={<Admin allowedRoles={['super_admin', 'coach']}><Coaches /></Admin>} />
             <Route path="/admin/students" element={<Admin allowedRoles={['super_admin', 'coach']}><Students /></Admin>} />
