@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
 import { PlusCircle, Pencil, Trash2, ShieldAlert } from 'lucide-react'
 import { supabase } from '../../../lib/supabaseClient'
-import { useListTools, exportCsv, opts } from '../../../lib/listTools'
+import { useListTools, exportCsv } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
+import ModuleHeader from '../../../components/ModuleHeader'
+import DataTable, { StatusPill } from '../../../components/DataTable'
+import { moduleTabs } from '../../../lib/moduleTabs'
 
 const ACTIONS = {
-  insert: { label: 'Added', icon: PlusCircle, color: 'var(--status-ok)' },
-  update: { label: 'Changed', icon: Pencil, color: 'var(--status-info)' },
-  delete: { label: 'Deleted', icon: Trash2, color: 'var(--status-bad)' },
+  insert: { label: 'Added', icon: PlusCircle, color: 'var(--status-ok)', tone: 'ok' },
+  update: { label: 'Changed', icon: Pencil, color: 'var(--status-info)', tone: 'info' },
+  delete: { label: 'Deleted', icon: Trash2, color: 'var(--status-bad)', tone: 'bad' },
 }
 
 const TABLE_LABELS = {
@@ -75,10 +78,17 @@ export default function ActivityLog() {
   const areas = [...new Set(entries.map((e) => e.table_name))].sort()
   const missingTable = /audit_log/.test(error) && /(does not exist|not find|schema cache)/i.test(error)
 
+  const tabs = moduleTabs(list, 'action', [['', 'All activity'], ['insert', 'Added'], ['update', 'Changed'], ['delete', 'Deleted']])
+
   return (
-    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
-      <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading mb-2">Activity Log</h1>
-      <p className="text-muted mb-8">Who added, changed or deleted what, and when. Entries can't be edited or removed. Showing the latest {PAGE}.</p>
+    <div className="p-8 max-md:p-4 max-w-[1240px] mx-auto">
+      <ModuleHeader
+        title="Activity Log"
+        description={`Audit trail of who added, changed or deleted what, and when. Entries can't be edited or removed. Showing the latest ${PAGE}.`}
+        tabs={missingTable ? undefined : tabs.items}
+        activeTab={tabs.active}
+        onTabChange={tabs.select}
+      />
 
       {missingTable ? (
         <div className="bg-surface rounded-2xl shadow-card p-6 flex gap-4 max-w-2xl">
@@ -99,41 +109,33 @@ export default function ActivityLog() {
             onExport={handleExport}
             filters={[
               { key: 'when', label: 'When', options: [{ value: '1', label: 'Last 24 hours' }, { value: '7', label: 'Last 7 days' }, { value: '30', label: 'Last 30 days' }] },
-              { key: 'action', label: 'Action', options: opts(Object.keys(ACTIONS), { insert: 'Added', update: 'Changed', delete: 'Deleted' }) },
               { key: 'area', label: 'Area', options: areas.map((a) => ({ value: a, label: TABLE_LABELS[a] || a })) },
             ]}
           />
 
           {loading ? (
-            <p>Loading…</p>
-          ) : list.result.length === 0 ? (
-            <p className="text-muted">{list.total === 0 ? 'No activity recorded yet.' : 'Nothing matches your search or filters.'}</p>
+            <p className="text-muted">Loading…</p>
           ) : (
-            <ol className="bg-surface rounded-2xl shadow-card divide-y divide-pay-line">
-              {list.result.map((e) => {
-                const a = ACTIONS[e.action] || ACTIONS.update
-                const Icon = a.icon
-                return (
-                  <li key={e.id} className="flex gap-3 px-4 md:px-5 py-3.5">
-                    <span className="grid place-items-center w-9 h-9 rounded-full bg-pay-bg shrink-0" style={{ color: a.color }}>
-                      <Icon size={17} />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm text-body">
-                        <strong className="text-heading">{e.actor_name || 'System'}</strong> {a.label.toLowerCase()} a record in{' '}
-                        <strong className="text-heading">{TABLE_LABELS[e.table_name] || e.table_name}</strong>
-                      </p>
-                      {describe(e) && <p className="text-xs text-muted mt-0.5 break-words">{describe(e)}</p>}
-                    </div>
-                    <time dateTime={e.at} className="text-xs text-subtle shrink-0 text-right">
-                      {new Date(e.at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                      <br />
-                      {new Date(e.at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+            <DataTable
+              caption="Activity Log"
+              rows={list.result}
+              rowAccent={(e) => (ACTIONS[e.action] || ACTIONS.update).color}
+              empty={list.total === 0 ? 'No activity recorded yet.' : 'Nothing matches your search or filters.'}
+              columns={[
+                { key: 'when', header: 'Date & time', width: '15%', sortValue: (e) => e.at,
+                  render: (e) => (
+                    <time dateTime={e.at} className="tabular-nums whitespace-nowrap text-sm">
+                      {new Date(e.at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      <span className="block text-xs text-subtle">{new Date(e.at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
                     </time>
-                  </li>
-                )
-              })}
-            </ol>
+                  ) },
+                { key: 'who', header: 'User', primary: true, sortValue: (e) => e.actor_name || 'System', render: (e) => <strong className="text-heading">{e.actor_name || 'System'}</strong> },
+                { key: 'action', header: 'Action', sortValue: (e) => e.action,
+                  render: (e) => { const a = ACTIONS[e.action] || ACTIONS.update; return <StatusPill tone={a.tone}>{a.label}</StatusPill> } },
+                { key: 'area', header: 'Area', sortValue: (e) => TABLE_LABELS[e.table_name] || e.table_name, render: (e) => TABLE_LABELS[e.table_name] || e.table_name },
+                { key: 'details', header: 'Details', fullOnMobile: true, render: (e) => <span className="text-xs text-muted break-words">{describe(e) || '—'}</span> },
+              ]}
+            />
           )}
         </>
       )}

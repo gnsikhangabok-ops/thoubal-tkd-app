@@ -69,7 +69,7 @@
   /* Gradient metric card */
   .pay-stat {
     @apply rounded-2xl px-5 py-5 text-white shadow-card;
-    background: linear-gradient(135deg, var(--color-pay-navy) 0%, #0057A8 60%, var(--color-pay-blue) 130%);
+    background: linear-gradient(135deg, var(--color-pay-navy) 0%, var(--color-pay-stat-mid, #0057A8) 60%, var(--color-pay-blue) 130%);
   }
 
   /* Scrolling "Latest Updates" line; static for users who prefer reduced motion */
@@ -219,6 +219,7 @@
 .clinic {
   --color-pay-navy: #0B4F4E;
   --color-pay-blue: #2BB5A8;
+  --color-pay-stat-mid: #0E7C7B;
   --color-pay-action: #0E7C7B;
   --color-pay-action-dark: #0A6160;
   --color-pay-sky: #E2F3F1;

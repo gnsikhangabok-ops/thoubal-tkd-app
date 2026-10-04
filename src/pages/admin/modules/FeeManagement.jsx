@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
-import { useListTools, exportCsv, byText, opts } from '../../../lib/listTools'
+import { useListTools, exportCsv, byText } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
 import DocumentModal from '../../../components/docs/DocumentModal'
 import FeeReceipt from '../../../components/docs/FeeReceipt'
 import { ReceiptText } from 'lucide-react'
+import ModuleHeader from '../../../components/ModuleHeader'
+import DataTable, { StatusPill } from '../../../components/DataTable'
+import { moduleTabs } from '../../../lib/moduleTabs'
 
 function currentMonthFirst() {
   const d = new Date()
@@ -224,17 +227,19 @@ export default function FeeManagement() {
     ])
   }
 
+  const tabs = moduleTabs(list, 'status', [['', 'All'], ['pending', 'Pending'], ['overdue', 'Overdue'], ['paid', 'Paid'], ['waived', 'Waived']])
+  const FEE_TONE = { paid: 'ok', pending: 'warn', overdue: 'bad', waived: 'neutral' }
+
   return (
-    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
-      <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Fee Management</h1>
-        <button className={btnPrimary} onClick={openGenForm}>+ Generate Month's Fees</button>
-      </div>
-      <p className="text-muted mb-8">
-        Track monthly dues, payments, and receipts. Rates come from{' '}
-        <Link to="/admin/fee-setup" className="underline">Fee Setup</Link>. Payments post automatically to{' '}
-        <Link to="/admin/accounts" className="underline">Accounts</Link>.
-      </p>
+    <div className="p-8 max-md:p-4 max-w-[1240px] mx-auto">
+      <ModuleHeader
+        title="Fee Management"
+        description={<>Track monthly dues, payments, and receipts. Rates come from <Link to="/admin/fee-setup" className="underline">Fee Setup</Link>. Payments post automatically to <Link to="/admin/accounts" className="underline">Accounts</Link>.</>}
+        actions={<button className={btnPrimary} onClick={openGenForm}>+ Generate month's fees</button>}
+        tabs={tabs.items}
+        activeTab={tabs.active}
+        onTabChange={tabs.select}
+      />
 
       <div className="mb-6">
         <label className="text-[0.85rem] font-semibold mr-2.5">Month:</label>
@@ -370,42 +375,38 @@ export default function FeeManagement() {
         placeholder="Search student or receipt no.…"
         printTitle={`Fees — ${formatMonth(monthFilter)}`}
         onExport={handleExport}
-        filters={[{ key: 'status', label: 'Status', options: opts(['paid', 'pending', 'overdue', 'waived']) }]}
         sorts={[{ key: 'name', label: 'Student A–Z' }, { key: 'due', label: 'Highest balance' }]}
       />
 
       {loading ? (
-        <p>Loading…</p>
-      ) : list.result.length === 0 ? (
-        <p className="text-charcoal">No fee records for {formatMonth(monthFilter)} yet. Generate them above.</p>
+        <p className="text-muted">Loading…</p>
       ) : (
-        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {list.result.map((p) => (
-            <div
-              key={p.id}
-              className="bg-surface rounded-2xl shadow-card p-6"
-              style={{ borderLeftWidth: 4, borderLeftColor: statusColor[p.status] }}
-            >
-              <h3 className="font-semibold text-base text-heading mb-1.5">{p.students?.full_name}</h3>
-              <p className="text-sm text-charcoal">Due: ₹{p.amount_due} · Paid: ₹{p.amount_paid || 0}</p>
-              <p className="text-[0.8rem] mt-1.5 uppercase font-display" style={{ color: statusColor[p.status] }}>
-                {p.status}
-              </p>
-              {p.receipt_no && <p className="text-[0.8rem] mt-1">Receipt: {p.receipt_no}</p>}
-              {Number(p.amount_paid) > 0 && (
-                <button className={`${btnPrimary} ${btnSm} mt-3`} onClick={() => setReceiptFor(p)}>
-                  <ReceiptText size={14} /> Receipt
-                </button>
-              )}
+        <DataTable
+          caption={`Fees for ${formatMonth(monthFilter)}`}
+          rows={list.result}
+          rowAccent={(p) => statusColor[p.status]}
+          empty={list.total === 0 ? `No fee records for ${formatMonth(monthFilter)} yet. Generate them above.` : 'Nothing matches this view or search.'}
+          columns={[
+            { key: 'student', header: 'Student', primary: true, width: '26%', sortValue: (p) => p.students?.full_name, render: (p) => <strong className="text-heading">{p.students?.full_name}</strong> },
+            { key: 'due', header: 'Due', align: 'right', sortValue: (p) => Number(p.amount_due), render: (p) => `₹${Number(p.amount_due || 0).toLocaleString('en-IN')}` },
+            { key: 'paid', header: 'Paid', align: 'right', sortValue: (p) => Number(p.amount_paid || 0), render: (p) => `₹${Number(p.amount_paid || 0).toLocaleString('en-IN')}` },
+            { key: 'balance', header: 'Balance', align: 'right', sortValue: (p) => (p.amount_due || 0) - (p.amount_paid || 0),
+              render: (p) => { const b = Math.max(0, (p.amount_due || 0) - (p.amount_paid || 0)); return <strong className="tabular-nums" style={{ color: b > 0 ? 'var(--status-warn)' : undefined }}>₹{b.toLocaleString('en-IN')}</strong> } },
+            { key: 'status', header: 'Status', sortValue: (p) => p.status, render: (p) => <StatusPill tone={FEE_TONE[p.status]}>{p.status}</StatusPill> },
+            { key: 'receipt', header: 'Receipt', hideOnMobile: true, render: (p) => <span className="tabular-nums">{p.receipt_no || '—'}</span> },
+          ]}
+          actions={(p) => (
+            <>
+              {Number(p.amount_paid) > 0 && <button className={`${btnOutline} ${btnSm}`} onClick={() => setReceiptFor(p)}><ReceiptText size={13} /> Receipt</button>}
               {p.status !== 'paid' && p.status !== 'waived' && (
-                <div className="flex gap-2 mt-3">
-                  <button className={`${btnOutline} ${btnSm}`} onClick={() => openPayForm(p)}>Record Payment</button>
+                <>
+                  <button className={`${btnPrimary} ${btnSm}`} onClick={() => openPayForm(p)}>Record payment</button>
                   <button className={`${btnOutline} ${btnSm}`} onClick={() => markWaived(p)}>Waive</button>
-                </div>
+                </>
               )}
-            </div>
-          ))}
-        </div>
+            </>
+          )}
+        />
       )}
       {receiptFor && (
         <DocumentModal title={`Fee receipt — ${receiptFor.students?.full_name}`} size="a5" onClose={() => setReceiptFor(null)}>

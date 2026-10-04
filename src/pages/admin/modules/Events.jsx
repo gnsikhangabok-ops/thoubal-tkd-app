@@ -3,6 +3,9 @@ import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byText, byDateDesc, opts } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
+import ModuleHeader from '../../../components/ModuleHeader'
+import DataTable, { StatusPill } from '../../../components/DataTable'
+import { moduleTabs } from '../../../lib/moduleTabs'
 
 const EVENT_TYPES = ['tournament', 'grading', 'seminar', 'internal']
 const MEDALS = ['gold', 'silver', 'bronze', 'none']
@@ -167,15 +170,19 @@ export default function Events() {
     ])
   }
 
+  const tabs = moduleTabs(list, 'when', [['', 'All'], ['upcoming', 'Upcoming'], ['past', 'Past']])
   return (
-    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
+    <div className="p-8 max-md:p-4 max-w-[1240px] mx-auto">
       {!selectedEvent ? (
         <>
-          <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-            <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Events</h1>
-            <button className={btnPrimary} onClick={openAddEvent}>+ New Event</button>
-          </div>
-          <p className="text-muted mb-8">Tournaments, seminars, and internal events.</p>
+          <ModuleHeader
+            title="Events"
+            description="Tournaments, seminars, and internal events."
+            actions={<button className={btnPrimary} onClick={openAddEvent}>+ New event</button>}
+            tabs={tabs.items}
+            activeTab={tabs.active}
+            onTabChange={tabs.select}
+          />
 
           {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -241,51 +248,37 @@ export default function Events() {
             onExport={handleExport}
             filters={[
               { key: 'type', label: 'Type', options: opts(EVENT_TYPES) },
-              { key: 'when', label: 'When', options: opts(['upcoming', 'past']) },
             ]}
             sorts={[{ key: 'newest', label: 'Latest date first' }, { key: 'title', label: 'Title A–Z' }]}
           />
 
           {loading ? (
-            <p>Loading…</p>
-          ) : list.result.length === 0 ? (
-            <p className="text-muted">{list.total === 0 ? <>No events yet. Create one above.</> : 'Nothing matches your search or filters.'}</p>
+            <p className="text-muted">Loading…</p>
           ) : (
-            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-              {list.result.map((ev) => (
-                <div
-                  key={ev.id}
-                  className="bg-surface rounded-2xl shadow-card p-6 cursor-pointer"
-                  onClick={() => setSelectedEvent(ev)}
-                >
-                  <h3 className="font-semibold text-base text-heading mb-1.5">{ev.title}</h3>
-                  <p className="text-sm text-charcoal capitalize">{ev.event_type}</p>
-                  <p className="text-[0.85rem] mt-1.5">{ev.event_date} {ev.location ? `· ${ev.location}` : ''}</p>
-                  <div className="mt-3">
-                    <button
-                      className={`${btnOutline} ${btnSm}`}
-                      onClick={(e) => { e.stopPropagation(); openEditEvent(ev) }}
-                    >
-                      Edit
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <DataTable
+              caption="Events"
+              rows={list.result}
+              onRowClick={setSelectedEvent}
+              empty={list.total === 0 ? 'No events yet. Create one above.' : 'Nothing in this view.'}
+              columns={[
+              { key: 'title', header: 'Event', primary: true, width: '34%', sortValue: (e) => e.title, render: (e) => <strong className="text-heading">{e.title}</strong> },
+              { key: 'date', header: 'Date', sortValue: (e) => e.event_date, render: (e) => <span className="tabular-nums whitespace-nowrap">{e.event_date || '—'}</span> },
+              { key: 'type', header: 'Type', sortValue: (e) => e.event_type, render: (e) => <span className="capitalize">{e.event_type || '—'}</span> },
+              { key: 'location', header: 'Venue', sortValue: (e) => e.location, render: (e) => e.location || '—' },
+              { key: 'when', header: 'Status', render: (e) => (e.event_date >= new Date().toISOString().slice(0, 10) ? <StatusPill tone="info">Upcoming</StatusPill> : <StatusPill>Completed</StatusPill>) },
+              ]}
+              actions={(ev) => <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditEvent(ev)}>Edit</button>}
+            />
           )}
         </>
       ) : (
         <>
-          <button className={`${btnOutline} mb-5`} onClick={() => setSelectedEvent(null)}>
-            ← All Events
-          </button>
-          <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-            <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">{selectedEvent.title}</h1>
-            <button className={btnPrimary} onClick={() => setShowRegForm(true)}>+ Register Student</button>
-          </div>
-          <p className="text-charcoal mb-9 capitalize">
-            {selectedEvent.event_type} · {selectedEvent.event_date} {selectedEvent.location ? `· ${selectedEvent.location}` : ''}
-          </p>
+          <ModuleHeader
+            title={selectedEvent.title}
+            description={`${selectedEvent.event_type} · ${selectedEvent.event_date}${selectedEvent.location ? ` · ${selectedEvent.location}` : ''}`}
+            crumbs={[{ label: selectedEvent.title }]}
+            actions={<><button className={btnOutline} onClick={() => setSelectedEvent(null)}>← All events</button><button className={btnPrimary} onClick={() => setShowRegForm(true)}>+ Register student</button></>}
+          />
 
           {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -316,42 +309,34 @@ export default function Events() {
             </div>
           )}
 
-          {registrations.length === 0 ? (
-            <p className="text-charcoal">No students registered for this event yet.</p>
-          ) : (
-            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-              {registrations.map((r) => (
-                <div
-                  key={r.id}
-                  className="bg-surface rounded-2xl shadow-card p-6"
-                  style={{ borderLeftWidth: 4, borderLeftColor: r.medal ? MEDAL_COLOR[r.medal] : '#ccc' }}
-                >
-                  <h3 className="font-semibold text-base text-heading mb-1.5">{r.students?.full_name}</h3>
-                  <div className="flex gap-2 mt-2.5 flex-wrap">
-                    <div className="flex-1 min-w-[120px]">
-                      <label className="text-[0.75rem] block mb-1">Result</label>
-                      <input
-                        type="text" placeholder="e.g. Semifinal"
-                        defaultValue={r.result || ''}
-                        onBlur={(e) => updateResult(r, 'result', e.target.value || null)}
-                        className="px-2 py-2 border border-pay-line rounded-xl text-[0.85rem] w-full"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-[120px]">
-                      <label className="text-[0.75rem] block mb-1">Medal</label>
-                      <select
-                        value={r.medal || 'none'}
-                        onChange={(e) => updateResult(r, 'medal', e.target.value === 'none' ? null : e.target.value)}
-                        className="px-2 py-2 border border-pay-line rounded-xl text-[0.85rem] w-full capitalize"
-                      >
-                        {MEDALS.map((m) => <option key={m} value={m}>{m === 'none' ? 'No medal' : m}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <DataTable
+            caption="Registered students"
+            rows={registrations}
+            rowAccent={(r) => (r.medal ? MEDAL_COLOR[r.medal] : 'var(--color-pay-line)')}
+            empty="No students registered for this event yet."
+            columns={[
+              { key: 'student', header: 'Student', primary: true, width: '30%', sortValue: (r) => r.students?.full_name, render: (r) => <strong className="text-heading">{r.students?.full_name}</strong> },
+              { key: 'result', header: 'Result',
+                render: (r) => (
+                  <input
+                    type="text" placeholder="e.g. Semifinal" aria-label={`Result for ${r.students?.full_name}`}
+                    defaultValue={r.result || ''}
+                    onBlur={(e) => updateResult(r, 'result', e.target.value || null)}
+                    className="w-full max-w-[220px] rounded-lg border border-pay-line bg-surface px-2 py-1 text-sm"
+                  />
+                ) },
+              { key: 'medal', header: 'Medal', sortValue: (r) => MEDALS.indexOf(r.medal || 'none'),
+                render: (r) => (
+                  <select
+                    value={r.medal || 'none'} aria-label={`Medal for ${r.students?.full_name}`}
+                    onChange={(e) => updateResult(r, 'medal', e.target.value === 'none' ? null : e.target.value)}
+                    className="rounded-lg border border-pay-line bg-surface px-2 py-1 text-sm capitalize"
+                  >
+                    {MEDALS.map((m) => <option key={m} value={m}>{m === 'none' ? 'No medal' : m}</option>)}
+                  </select>
+                ) },
+            ]}
+          />
         </>
       )}
     </div>

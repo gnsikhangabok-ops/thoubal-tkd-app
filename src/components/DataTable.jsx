@@ -13,6 +13,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown, ChevronRight } from 'lucide-react'
  *   align?: 'right' | 'center',
  *   primary?: true,                  // card title on phones
  *   hideOnMobile?: true,
+ *   fullOnMobile?: true,             // whole card row on phones (controls, long text)
  *   width?: string,                  // e.g. '30%'
  * }]
  */
@@ -115,9 +116,9 @@ export default function DataTable({ columns, rows, rowKey = (r) => r.id, onRowCl
               </div>
               <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
                 {columns.filter((c) => c !== primary && !c.hideOnMobile).map((c) => (
-                  <div key={c.key} className="min-w-0">
+                  <div key={c.key} className={c.fullOnMobile ? 'col-span-2' : 'min-w-0'}>
                     <dt className="text-[0.68rem] uppercase tracking-wider text-subtle">{c.header}</dt>
-                    <dd className="text-body truncate">{cell(c, r)}</dd>
+                    <dd className={`text-body ${c.fullOnMobile ? 'break-words' : 'truncate'}`}>{cell(c, r)}</dd>
                   </div>
                 ))}
               </dl>

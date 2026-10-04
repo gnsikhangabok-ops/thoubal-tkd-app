@@ -3,6 +3,9 @@ import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byText, byDateDesc, opts } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
+import ModuleHeader from '../../../components/ModuleHeader'
+import DataTable from '../../../components/DataTable'
+import { moduleTabs } from '../../../lib/moduleTabs'
 
 const LEVELS = ['district', 'state', 'national', 'international']
 const MEDALS = ['gold', 'silver', 'bronze', 'none']
@@ -130,13 +133,18 @@ export default function Achievements() {
     ])
   }
 
+  const tabs = moduleTabs(list, 'level', [['', 'All'], ...LEVELS.map((l) => [l, l.charAt(0).toUpperCase() + l.slice(1)])])
+
   return (
-    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
-      <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Achievements</h1>
-        <button className={btnPrimary} onClick={openAddForm}>+ Add Achievement</button>
-      </div>
-      <p className="text-muted mb-8">Medals and award highlights — shown publicly on the website.</p>
+    <div className="p-8 max-md:p-4 max-w-[1240px] mx-auto">
+      <ModuleHeader
+        title="Achievements"
+        description="Medals and award highlights — shown publicly on the website."
+        actions={<button className={btnPrimary} onClick={openAddForm}>+ Add achievement</button>}
+        tabs={tabs.items}
+        activeTab={tabs.active}
+        onTabChange={tabs.select}
+      />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -218,38 +226,42 @@ export default function Achievements() {
         printTitle="Achievements"
         onExport={handleExport}
         filters={[
-          { key: 'level', label: 'Level', options: opts(LEVELS) },
           { key: 'medal', label: 'Medal', options: opts(MEDALS, { none: 'No medal' }) },
         ]}
         sorts={[{ key: 'newest', label: 'Newest first' }, { key: 'title', label: 'Title A–Z' }]}
       />
 
       {loading ? (
-        <p>Loading…</p>
-      ) : list.result.length === 0 ? (
-        <p className="text-muted">{list.total === 0 ? <>No achievements recorded yet.</> : 'Nothing matches your search or filters.'}</p>
+        <p className="text-muted">Loading…</p>
       ) : (
-        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {list.result.map((a) => (
-            <div
-              key={a.id}
-              className="bg-surface rounded-2xl shadow-card p-6"
-              style={{ borderLeftWidth: 4, borderLeftColor: a.medal ? MEDAL_COLOR[a.medal] : '#ccc' }}
-            >
-              <h3 className="font-semibold text-base text-heading mb-1.5">{a.title}</h3>
-              <p className="text-sm text-charcoal">{a.students?.full_name || 'Unnamed student'}</p>
-              <p className="text-[0.85rem] mt-1.5 capitalize">
-                {a.level} {a.medal ? `· ${a.medal} medal` : ''}
-              </p>
-              {a.achievement_date && <p className="text-[0.8rem] mt-1">{a.achievement_date}</p>}
-              {a.description && <p className="text-[0.85rem] mt-1.5">{a.description}</p>}
-              <div className="flex gap-2 mt-3">
-                <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(a)}>Edit</button>
-                <button className={`${btnOutline} ${btnSm}`} onClick={() => handleDelete(a)}>Delete</button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <DataTable
+          caption="Achievements"
+          rows={list.result}
+          rowAccent={(a) => MEDAL_COLOR[a.medal] || 'var(--color-pay-line)'}
+          empty={list.total === 0 ? 'No achievements recorded yet.' : 'Nothing matches this view, search or filters.'}
+          columns={[
+            { key: 'title', header: 'Achievement', primary: true, width: '30%', sortValue: (a) => a.title,
+              render: (a) => (
+                <span className="block leading-tight">
+                  <strong className="text-heading">{a.title}</strong>
+                  {a.description && <span className="block text-xs text-subtle line-clamp-1">{a.description}</span>}
+                </span>
+              ) },
+            { key: 'athlete', header: 'Athlete', sortValue: (a) => a.students?.full_name, render: (a) => a.students?.full_name || '—' },
+            { key: 'level', header: 'Level', sortValue: (a) => LEVELS.indexOf(a.level), render: (a) => <span className="capitalize">{a.level || '—'}</span> },
+            { key: 'medal', header: 'Medal', sortValue: (a) => MEDALS.indexOf(a.medal),
+              render: (a) => (a.medal && a.medal !== 'none' ? (
+                <span className="inline-flex items-center gap-1.5 capitalize"><span className="w-2.5 h-2.5 rounded-full" style={{ background: MEDAL_COLOR[a.medal] }} aria-hidden="true" />{a.medal}</span>
+              ) : '—') },
+            { key: 'date', header: 'Date', sortValue: (a) => a.achievement_date, render: (a) => <span className="tabular-nums whitespace-nowrap">{a.achievement_date || '—'}</span> },
+          ]}
+          actions={(a) => (
+            <>
+              <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(a)}>Edit</button>
+              <button className={`${btnOutline} ${btnSm}`} onClick={() => handleDelete(a)}>Delete</button>
+            </>
+          )}
+        />
       )}
     </div>
   )

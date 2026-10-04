@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
 import { btnPrimary, btnOutline } from '../../../lib/adminUi'
+import ModuleHeader from '../../../components/ModuleHeader'
 
 
 export default function RulesAndRegulations() {
@@ -59,19 +60,16 @@ export default function RulesAndRegulations() {
   }
 
   return (
-    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
-      <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Rules &amp; Regulations</h1>
-        {!editing && (
+    <div className="p-8 max-md:p-4 max-w-[1240px] mx-auto">
+      <ModuleHeader
+        title="Rules & Regulations"
+        description="Shown to students/parents at registration and publicly on the website. Saving creates a new version — old versions stay in history."
+        actions={!editing && (
           <button className={btnPrimary} onClick={startEditing}>
             {current ? 'Edit (new version)' : 'Write Rules'}
           </button>
         )}
-      </div>
-      <p className="text-muted mb-8">
-        Shown to students/parents at registration and publicly on the website.
-        Saving creates a new version — old versions stay in history.
-      </p>
+      />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -98,7 +96,7 @@ export default function RulesAndRegulations() {
           </div>
         </form>
       ) : loading ? (
-        <p>Loading…</p>
+        <p className="text-muted">Loading…</p>
       ) : !current ? (
         <p className="text-charcoal">No rules published yet. Click "Write Rules" to add the first version.</p>
       ) : (

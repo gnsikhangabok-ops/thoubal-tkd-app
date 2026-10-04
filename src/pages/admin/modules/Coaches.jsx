@@ -2,8 +2,12 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
-import { useListTools, exportCsv, byText, opts } from '../../../lib/listTools'
+import { useListTools, exportCsv, byText } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
+import ModuleHeader from '../../../components/ModuleHeader'
+import DataTable, { StatusPill } from '../../../components/DataTable'
+import { moduleTabs } from '../../../lib/moduleTabs'
+import PersonCell from '../../../components/PersonCell'
 
 const emptyForm = {
   id: null,
@@ -136,13 +140,18 @@ export default function Coaches() {
     ])
   }
 
+  const tabs = moduleTabs(list, 'status', [['', 'All coaches'], ['active', 'Active'], ['inactive', 'Inactive']])
+
   return (
-    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
-      <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Coaches</h1>
-        <button className={btnPrimary} onClick={openAddForm}>+ Add Coach</button>
-      </div>
-      <p className="text-muted mb-8">Instructors are added by admin only. No self-registration.</p>
+    <div className="p-8 max-md:p-4 max-w-[1240px] mx-auto">
+      <ModuleHeader
+        title="Coaches"
+        description="Instructors are added by admin only. No self-registration."
+        actions={<button className={btnPrimary} onClick={openAddForm}>+ Add coach</button>}
+        tabs={tabs.items}
+        activeTab={tabs.active}
+        onTabChange={tabs.select}
+      />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -228,40 +237,35 @@ export default function Coaches() {
         printTitle="Coaches"
         onExport={handleExport}
         filters={[
-          { key: 'status', label: 'Status', options: opts(['active', 'inactive']) },
           { key: 'center', label: 'Center', options: centers.map((c) => ({ value: c.id, label: c.name })) },
         ]}
         sorts={[{ key: 'name', label: 'Name A–Z' }, { key: 'center', label: 'Center' }]}
       />
 
       {loading ? (
-        <p>Loading…</p>
-      ) : list.result.length === 0 ? (
-        <p className="text-muted">{list.total === 0 ? <>No coaches yet. Add your first one above.</> : 'Nothing matches your search or filters.'}</p>
+        <p className="text-muted">Loading…</p>
       ) : (
-        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {list.result.map((c) => (
-            <div
-              key={c.id}
-              className="bg-surface rounded-2xl shadow-card p-6"
-              style={{ borderLeftWidth: 4, borderLeftColor: c.active ? 'var(--status-ok)' : '#ccc' }}
-            >
-              <h3 className="font-semibold text-base text-heading mb-1.5">{c.full_name}</h3>
-              <p className="text-sm text-charcoal">{c.designation || 'Instructor'}{c.dan_grade ? ` · ${c.dan_grade}` : ''}</p>
-              <p className="text-[0.85rem] mt-1.5">{c.training_centers?.name || 'No center assigned'}</p>
-              {c.phone && <p className="text-[0.85rem]">{c.phone}</p>}
-              <p className="text-[0.8rem] mt-2" style={{ color: c.active ? 'var(--status-ok)' : '#999' }}>
-                {c.active ? 'Active' : 'Inactive'}
-              </p>
-              <div className="flex gap-2 mt-3">
-                <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(c)}>Edit</button>
-                <button className={`${btnOutline} ${btnSm}`} onClick={() => toggleActive(c)}>
-                  {c.active ? 'Deactivate' : 'Activate'}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <DataTable
+          caption="Coaches"
+          rows={list.result}
+          rowAccent={(c) => (c.active ? 'var(--status-ok)' : 'var(--color-pay-line)')}
+          empty={list.total === 0 ? 'No coaches yet. Add your first one above.' : 'Nothing matches this view, search or filters.'}
+          columns={[
+            { key: 'name', header: 'Coach', primary: true, width: '28%', sortValue: (c) => c.full_name,
+              render: (c) => <PersonCell name={c.full_name} sub={c.designation || 'Instructor'} /> },
+            { key: 'dan', header: 'Dan grade', sortValue: (c) => c.dan_grade, render: (c) => c.dan_grade || '—' },
+            { key: 'center', header: 'Training centre', sortValue: (c) => c.training_centers?.name, render: (c) => c.training_centers?.name || 'Not assigned' },
+            { key: 'phone', header: 'Phone', render: (c) => (c.phone ? <a href={`tel:${c.phone}`} className="tabular-nums hover:text-pay-action">{c.phone}</a> : '—') },
+            { key: 'status', header: 'Status', sortValue: (c) => (c.active ? 0 : 1),
+              render: (c) => <StatusPill tone={c.active ? 'ok' : 'neutral'}>{c.active ? 'Active' : 'Inactive'}</StatusPill> },
+          ]}
+          actions={(c) => (
+            <>
+              <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(c)}>Edit</button>
+              <button className={`${btnOutline} ${btnSm}`} onClick={() => toggleActive(c)}>{c.active ? 'Deactivate' : 'Activate'}</button>
+            </>
+          )}
+        />
       )}
     </div>
   )

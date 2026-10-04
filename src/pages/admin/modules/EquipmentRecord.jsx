@@ -3,6 +3,9 @@ import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byText, byNumberDesc, opts } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
+import ModuleHeader from '../../../components/ModuleHeader'
+import DataTable, { StatusPill } from '../../../components/DataTable'
+import { moduleTabs } from '../../../lib/moduleTabs'
 
 const CATEGORIES = ['uniform', 'gear', 'belt', 'other']
 
@@ -184,40 +187,40 @@ export default function EquipmentRecord() {
     ])
   }
 
+  const tabs = moduleTabs(list, 'stock', [['', 'All items'], ['in_stock', 'In stock'], ['out_of_stock', 'Out of stock']])
   return (
-    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
+    <div className="p-8 max-md:p-4 max-w-[1240px] mx-auto">
       {viewingHistory ? (
         <>
-          <button className={`${btnOutline} mb-5`} onClick={() => setViewingHistory(null)}>
-            ← All Equipment
-          </button>
-          <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading mb-2">{viewingHistory.name} — Issuance History</h1>
-          <p className="text-muted mb-8">Every time this item was given to a student.</p>
+          <ModuleHeader
+            title={`${viewingHistory.name} — issuance history`}
+            description="Every time this item was given to a student."
+            crumbs={[{ label: viewingHistory.name }]}
+            actions={<button className={btnOutline} onClick={() => setViewingHistory(null)}>← All equipment</button>}
+          />
 
-          {issuedHistory.length === 0 ? (
-            <p className="text-charcoal">Not issued to anyone yet.</p>
-          ) : (
-            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-              {issuedHistory.map((rec) => (
-                <div key={rec.id} className="bg-surface rounded-2xl shadow-card p-6">
-                  <h3 className="font-semibold text-base text-heading mb-1.5">{rec.students?.full_name}</h3>
-                  <p className="text-sm text-charcoal">Qty: {rec.quantity}</p>
-                  <p className="text-[0.85rem] mt-1">{rec.issued_on}</p>
-                  <p className="text-[0.8rem] mt-1" style={{ color: rec.paid ? 'var(--status-ok)' : '#999' }}>
-                    {rec.paid ? `Paid ₹${rec.amount || 0}` : 'Not paid'}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
+          <DataTable
+            caption="Issuance history"
+            rows={issuedHistory}
+            empty="Not issued to anyone yet."
+            columns={[
+              { key: 'student', header: 'Student', primary: true, sortValue: (r) => r.students?.full_name, render: (r) => <strong className="text-heading">{r.students?.full_name}</strong> },
+              { key: 'date', header: 'Issued on', sortValue: (r) => r.issued_on, render: (r) => <span className="tabular-nums">{r.issued_on}</span> },
+              { key: 'qty', header: 'Qty', align: 'right', sortValue: (r) => r.quantity },
+              { key: 'paid', header: 'Payment', render: (r) => (r.paid ? <StatusPill tone="ok">Paid ₹{r.amount || 0}</StatusPill> : <StatusPill tone="warn">Not paid</StatusPill>) },
+            ]}
+          />
         </>
       ) : (
         <>
-          <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-            <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Equipment Record</h1>
-            <button className={btnPrimary} onClick={openAddItem}>+ Add Item</button>
-          </div>
-          <p className="text-muted mb-8">Uniforms, gear, and belts — stock and issuance per center.</p>
+          <ModuleHeader
+            title="Equipment Record"
+            description="Uniforms, gear, and belts — stock and issuance per center."
+            actions={<button className={btnPrimary} onClick={openAddItem}>+ Add item</button>}
+            tabs={tabs.items}
+            activeTab={tabs.active}
+            onTabChange={tabs.select}
+          />
 
           {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -331,47 +334,36 @@ export default function EquipmentRecord() {
             onExport={handleExport}
             filters={[
               { key: 'category', label: 'Category', options: opts(CATEGORIES) },
-              { key: 'stock', label: 'Stock', options: opts(['in_stock', 'out_of_stock']) },
               { key: 'center', label: 'Center', options: centers.map((c) => ({ value: c.id, label: c.name })) },
             ]}
             sorts={[{ key: 'name', label: 'Name A–Z' }, { key: 'stock', label: 'Lowest stock' }, { key: 'price', label: 'Highest price' }]}
           />
 
           {loading ? (
-            <p>Loading…</p>
-          ) : list.result.length === 0 ? (
-            <p className="text-muted">{list.total === 0 ? <>No inventory items yet. Add your first one above.</> : 'Nothing matches your search or filters.'}</p>
+            <p className="text-muted">Loading…</p>
           ) : (
-            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-              {list.result.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-surface rounded-2xl shadow-card p-6"
-                  style={{ borderLeftWidth: 4, borderLeftColor: item.stock_qty > 0 ? 'var(--status-ok)' : '#999' }}
-                >
-                  <h3 className="font-semibold text-base text-heading mb-1.5">{item.name}</h3>
-                  <p className="text-sm text-charcoal capitalize">{item.category}</p>
-                  <p className="text-[0.85rem] mt-1.5">
-                    Stock: {item.stock_qty} {item.unit_price ? `· ₹${item.unit_price} each` : ''}
-                  </p>
-                  {item.training_centers?.name && (
-                    <p className="text-[0.8rem] mt-1">{item.training_centers.name}</p>
-                  )}
-                  <div className="flex gap-2 mt-3 flex-wrap">
-                    <button
-                      className={`${btnPrimary} ${btnSm}`}
-                      onClick={() => openIssueForm(item)}
-                      disabled={item.stock_qty <= 0}
-                    >
-                      Issue
-                    </button>
-                    <button className={`${btnOutline} ${btnSm}`} onClick={() => openHistory(item)}>History</button>
-                    <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditItem(item)}>Edit</button>
-                    <button className={`${btnOutline} ${btnSm}`} onClick={() => handleDeleteItem(item)}>Delete</button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <DataTable
+              caption="Inventory"
+              rows={list.result}
+              rowAccent={(i) => (i.stock_qty > 0 ? 'var(--status-ok)' : 'var(--status-bad)')}
+              empty={list.total === 0 ? 'No inventory items yet. Add your first one above.' : 'Nothing matches this view, search or filters.'}
+              columns={[
+                { key: 'name', header: 'Item', primary: true, width: '28%', sortValue: (i) => i.name, render: (i) => <strong className="text-heading">{i.name}</strong> },
+                { key: 'category', header: 'Category', sortValue: (i) => i.category, render: (i) => <span className="capitalize">{i.category}</span> },
+                { key: 'center', header: 'Centre', sortValue: (i) => i.training_centers?.name, render: (i) => i.training_centers?.name || 'All centres' },
+                { key: 'price', header: 'Unit price', align: 'right', sortValue: (i) => Number(i.unit_price || 0), render: (i) => (i.unit_price ? `₹${i.unit_price}` : '—') },
+                { key: 'stock', header: 'Stock', align: 'right', sortValue: (i) => i.stock_qty,
+                  render: (i) => (i.stock_qty > 0 ? <strong className="tabular-nums text-heading">{i.stock_qty}</strong> : <StatusPill tone="bad">Out</StatusPill>) },
+              ]}
+              actions={(item) => (
+                <>
+                  <button className={`${btnPrimary} ${btnSm}`} onClick={() => openIssueForm(item)} disabled={item.stock_qty <= 0}>Issue</button>
+                  <button className={`${btnOutline} ${btnSm}`} onClick={() => openHistory(item)}>History</button>
+                  <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditItem(item)}>Edit</button>
+                  <button className={`${btnOutline} ${btnSm}`} onClick={() => handleDeleteItem(item)}>Delete</button>
+                </>
+              )}
+            />
           )}
         </>
       )}

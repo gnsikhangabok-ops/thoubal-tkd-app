@@ -7,6 +7,7 @@ import { rupees } from '../../../lib/documents'
 import StackedColumns from '../../../components/charts/StackedColumns'
 import LineChart from '../../../components/charts/LineChart'
 import BarList from '../../../components/charts/BarList'
+import ModuleHeader from '../../../components/ModuleHeader'
 
 const PERIODS = [
   { months: 3, label: 'Last 3 months' },
@@ -139,12 +140,11 @@ export default function Reports() {
     `rounded-full px-3.5 py-1.5 text-xs font-semibold border ${active ? 'bg-pay-action border-pay-action text-white' : 'border-pay-line text-body bg-surface hover:bg-pay-bg'}`
 
   return (
-    <div className="p-8 max-md:p-4 max-w-[1200px] mx-auto">
-      <div className="flex justify-between items-start flex-wrap gap-3 mb-2">
-        <div>
-          <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Reports &amp; Analytics</h1>
-          <p className="text-muted mt-1">{periodLabel} · {centerName}</p>
-        </div>
+    <div className="p-8 max-md:p-4 max-w-[1240px] mx-auto">
+      <ModuleHeader
+        title="Reports & Analytics"
+        description={`${periodLabel} · ${centerName}`}
+        actions={
         <div className="no-print flex gap-2 flex-wrap">
           <button onClick={downloadReport} className="inline-flex items-center gap-1.5 rounded-full bg-pay-action px-5 py-2.5 text-sm font-semibold text-white hover:bg-pay-action-dark">
             <Download size={16} /> Monthly report (Excel)
@@ -153,7 +153,8 @@ export default function Reports() {
             <Printer size={16} /> Print / PDF
           </button>
         </div>
-      </div>
+        }
+      />
 
       {/* Filters: one row, above everything they scope */}
       <div className="no-print flex flex-wrap items-center gap-2 my-5">

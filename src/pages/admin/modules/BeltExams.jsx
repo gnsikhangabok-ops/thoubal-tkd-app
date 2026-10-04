@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { BELT_RANKS, BELT_LABELS } from '../../../lib/belts'
-import { useListTools, exportCsv, byText, byDateDesc, opts } from '../../../lib/listTools'
+import { useListTools, exportCsv, byText, byDateDesc } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
 import DocumentModal from '../../../components/docs/DocumentModal'
 import BeltCertificate from '../../../components/docs/BeltCertificate'
 import { Award } from 'lucide-react'
+import ModuleHeader from '../../../components/ModuleHeader'
+import DataTable, { StatusPill } from '../../../components/DataTable'
+import { moduleTabs } from '../../../lib/moduleTabs'
 
 const emptyEventForm = { id: null, title: '', exam_date: '', location: '' }
 const emptyResultForm = {
@@ -158,15 +161,19 @@ export default function BeltExams() {
     ])
   }
 
+  const tabs = moduleTabs(list, 'when', [['', 'All'], ['upcoming', 'Upcoming'], ['past', 'Past']])
   return (
-    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
+    <div className="p-8 max-md:p-4 max-w-[1240px] mx-auto">
       {!selectedEvent ? (
         <>
-          <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-            <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Belt Exams</h1>
-            <button className={btnPrimary} onClick={openAddEvent}>+ New Grading Event</button>
-          </div>
-          <p className="text-muted mb-8">Schedule grading events and record student results.</p>
+          <ModuleHeader
+            title="Belt Exams"
+            description="Schedule grading events and record student results."
+            actions={<button className={btnPrimary} onClick={openAddEvent}>+ New grading event</button>}
+            tabs={tabs.items}
+            activeTab={tabs.active}
+            onTabChange={tabs.select}
+          />
 
           {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -209,48 +216,35 @@ export default function BeltExams() {
             placeholder="Search exam, location…"
             printTitle="Belt Exams"
             onExport={handleExport}
-            filters={[{ key: 'when', label: 'When', options: opts(['upcoming', 'past']) }]}
             sorts={[{ key: 'newest', label: 'Latest date first' }, { key: 'title', label: 'Title A–Z' }]}
           />
 
           {loading ? (
-            <p>Loading…</p>
-          ) : list.result.length === 0 ? (
-            <p className="text-muted">{list.total === 0 ? <>No grading events yet. Create one above.</> : 'Nothing matches your search or filters.'}</p>
+            <p className="text-muted">Loading…</p>
           ) : (
-            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-              {list.result.map((ev) => (
-                <div
-                  key={ev.id}
-                  className="bg-surface rounded-2xl shadow-card p-6 cursor-pointer"
-                  onClick={() => setSelectedEvent(ev)}
-                >
-                  <h3 className="font-semibold text-base text-heading mb-1.5">{ev.title}</h3>
-                  <p className="text-sm text-charcoal">{ev.exam_date}</p>
-                  {ev.location && <p className="text-[0.85rem]">{ev.location}</p>}
-                  <div className="mt-3">
-                    <button
-                      className={`${btnOutline} ${btnSm}`}
-                      onClick={(e) => { e.stopPropagation(); openEditEvent(ev) }}
-                    >
-                      Edit
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <DataTable
+              caption="Belt Exams"
+              rows={list.result}
+              onRowClick={setSelectedEvent}
+              empty={list.total === 0 ? 'No grading events yet. Create one above.' : 'Nothing in this view.'}
+              columns={[
+              { key: 'title', header: 'Grading event', primary: true, width: '34%', sortValue: (e) => e.title, render: (e) => <strong className="text-heading">{e.title}</strong> },
+              { key: 'date', header: 'Date', sortValue: (e) => e.exam_date, render: (e) => <span className="tabular-nums whitespace-nowrap">{e.exam_date || '—'}</span> },
+              { key: 'location', header: 'Venue', sortValue: (e) => e.location, render: (e) => e.location || '—' },
+              { key: 'when', header: 'Status', render: (e) => (e.exam_date >= new Date().toISOString().slice(0, 10) ? <StatusPill tone="info">Upcoming</StatusPill> : <StatusPill>Completed</StatusPill>) },
+              ]}
+              actions={(ev) => <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditEvent(ev)}>Edit</button>}
+            />
           )}
         </>
       ) : (
         <>
-          <button className={`${btnOutline} mb-5`} onClick={() => setSelectedEvent(null)}>
-            ← All Grading Events
-          </button>
-          <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-            <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">{selectedEvent.title}</h1>
-            <button className={btnPrimary} onClick={openAddResult}>+ Add Result</button>
-          </div>
-          <p className="text-muted mb-8">{selectedEvent.exam_date} {selectedEvent.location ? `· ${selectedEvent.location}` : ''}</p>
+          <ModuleHeader
+            title={selectedEvent.title}
+            description={`${selectedEvent.exam_date}${selectedEvent.location ? ` · ${selectedEvent.location}` : ''}`}
+            crumbs={[{ label: selectedEvent.title }]}
+            actions={<><button className={btnOutline} onClick={() => setSelectedEvent(null)}>← All grading events</button><button className={btnPrimary} onClick={openAddResult}>+ Add result</button></>}
+          />
 
           {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -335,36 +329,24 @@ export default function BeltExams() {
             </div>
           )}
 
-          {results.length === 0 ? (
-            <p className="text-charcoal">No results recorded for this event yet.</p>
-          ) : (
-            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-              {results.map((r) => (
-                <div
-                  key={r.id}
-                  className="bg-surface rounded-2xl shadow-card p-6"
-                  style={{ borderLeftWidth: 4, borderLeftColor: r.passed ? 'var(--status-ok)' : '#ccc' }}
-                >
-                  <h3 className="font-semibold text-base text-heading mb-1.5">{r.students?.full_name}</h3>
-                  <p className="text-sm text-charcoal">{BELT_LABELS[r.from_belt]} → {BELT_LABELS[r.to_belt]}</p>
-                  <p className="text-[0.85rem] mt-1.5" style={{ color: r.passed ? 'var(--status-ok)' : '#999' }}>
-                    {r.passed ? 'Passed' : 'Did not pass'}
-                  </p>
-                  {r.remarks && <p className="text-[0.85rem] mt-1.5">{r.remarks}</p>}
-                  {r.certificate_url && (
-                    <a href={r.certificate_url} target="_blank" rel="noreferrer" className="text-[0.8rem] underline block mt-1.5">
-                      View uploaded certificate
-                    </a>
-                  )}
-                  {r.passed && (
-                    <button className={`${btnPrimary} ${btnSm} mt-3`} onClick={() => setCertificateFor(r)}>
-                      <Award size={14} /> Certificate
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+          <DataTable
+            caption="Results"
+            rows={results}
+            rowAccent={(r) => (r.passed ? 'var(--status-ok)' : 'var(--status-bad)')}
+            empty="No results recorded for this event yet."
+            columns={[
+              { key: 'student', header: 'Student', primary: true, width: '26%', sortValue: (r) => r.students?.full_name, render: (r) => <strong className="text-heading">{r.students?.full_name}</strong> },
+              { key: 'promotion', header: 'Promotion', render: (r) => <span className="whitespace-nowrap">{BELT_LABELS[r.from_belt]} → {BELT_LABELS[r.to_belt]}</span> },
+              { key: 'result', header: 'Result', sortValue: (r) => (r.passed ? 0 : 1), render: (r) => <StatusPill tone={r.passed ? 'ok' : 'bad'}>{r.passed ? 'Passed' : 'Not passed'}</StatusPill> },
+              { key: 'remarks', header: 'Remarks', render: (r) => r.remarks || '—' },
+            ]}
+            actions={(r) => (
+              <>
+                {r.certificate_url && <a href={r.certificate_url} target="_blank" rel="noreferrer" className={`${btnOutline} ${btnSm}`}>Uploaded</a>}
+                {r.passed && <button className={`${btnPrimary} ${btnSm}`} onClick={() => setCertificateFor(r)}><Award size={13} /> Certificate</button>}
+              </>
+            )}
+          />
         </>
       )}
       {certificateFor && (

@@ -3,6 +3,10 @@ import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byText, opts } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
+import ModuleHeader from '../../../components/ModuleHeader'
+import DataTable, { StatusPill } from '../../../components/DataTable'
+import { moduleTabs } from '../../../lib/moduleTabs'
+import PersonCell from '../../../components/PersonCell'
 
 const ROLES = ['student', 'coach', 'super_admin']
 const ROLE_COLOR = { student: '#999', coach: '#D4A537', super_admin: 'var(--status-bad)' }
@@ -105,10 +109,17 @@ export default function Users() {
     ])
   }
 
+  const tabs = moduleTabs(list, 'role', [['', 'All users'], ['super_admin', 'Super admins'], ['coach', 'Coaches'], ['student', 'Students']])
+
   return (
-    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
-      <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading mb-2">Users</h1>
-      <p className="text-muted mb-8">Everyone who has signed up. Assign roles and link students to their portal login.</p>
+    <div className="p-8 max-md:p-4 max-w-[1240px] mx-auto">
+      <ModuleHeader
+        title="Users"
+        description="Everyone who has signed up. Assign roles and link students to their portal login."
+        tabs={tabs.items}
+        activeTab={tabs.active}
+        onTabChange={tabs.select}
+      />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -149,55 +160,43 @@ export default function Users() {
         printTitle="Users"
         onExport={handleExport}
         filters={[
-          { key: 'role', label: 'Role', options: opts(ROLES) },
           { key: 'linked', label: 'Student record', options: opts(['linked', 'not_linked']) },
         ]}
         sorts={[{ key: 'name', label: 'Name A–Z' }, { key: 'role', label: 'Role' }]}
       />
 
       {loading ? (
-        <p>Loading…</p>
-      ) : list.result.length === 0 ? (
-        <p className="text-muted">{list.total === 0 ? <>No users found.</> : 'Nothing matches your search or filters.'}</p>
+        <p className="text-muted">Loading…</p>
       ) : (
-        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {list.result.map((p) => {
-            const linked = linkedStudentName(p.id)
-            return (
-              <div
-                key={p.id}
-                className="bg-surface rounded-2xl shadow-card p-6"
-                style={{ borderLeftWidth: 4, borderLeftColor: ROLE_COLOR[p.role] }}
-              >
-                <h3 className="font-semibold text-base text-heading mb-1.5">{p.full_name}</h3>
-                <p className="text-sm text-charcoal capitalize">{p.role?.replace('_', ' ')}</p>
-                {linked && <p className="text-[0.85rem] mt-1.5">Linked to: {linked}</p>}
-                {p.role === 'student' && !linked && (
-                  <p className="text-[0.8rem] mt-1.5 text-amber-700">⚠ Not linked to a student record yet</p>
-                )}
-
-                <div className="mt-3">
-                  <label className="text-[0.75rem] block mb-1 uppercase tracking-wide">Role</label>
-                  <select
-                    value={p.role}
-                    onChange={(e) => updateRole(p, e.target.value)}
-                    className="px-2 py-2 border border-pay-line rounded-xl text-[0.85rem] capitalize mb-2.5"
-                  >
-                    {ROLES.map((r) => (
-                      <option key={r} value={r}>{r.replace('_', ' ')}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {p.role === 'student' && (
-                  <button className={`${btnOutline} ${btnSm}`} onClick={() => openLinkForm(p)}>
-                    {linked ? 'Change Link' : 'Link to Student'}
-                  </button>
-                )}
-              </div>
-            )
-          })}
-        </div>
+        <DataTable
+          caption="Users"
+          rows={list.result}
+          rowAccent={(p) => ROLE_COLOR[p.role]}
+          empty={list.total === 0 ? 'No users found.' : 'Nothing matches this view, search or filters.'}
+          columns={[
+            { key: 'name', header: 'User', primary: true, width: '30%', sortValue: (p) => p.full_name, render: (p) => <PersonCell name={p.full_name || '(no name)'} sub={p.role?.replace('_', ' ')} /> },
+            { key: 'role', header: 'Role', sortValue: (p) => ROLES.indexOf(p.role),
+              render: (p) => (
+                <select
+                  value={p.role}
+                  onChange={(e) => updateRole(p, e.target.value)}
+                  aria-label={`Role for ${p.full_name}`}
+                  className="rounded-lg border border-pay-line bg-surface px-2 py-1 text-sm capitalize text-heading"
+                >
+                  {ROLES.map((r) => <option key={r} value={r}>{r.replace('_', ' ')}</option>)}
+                </select>
+              ) },
+            { key: 'linked', header: 'Student record',
+              render: (p) => {
+                const linked = linkedStudentName(p.id)
+                if (p.role !== 'student') return <span className="text-subtle">—</span>
+                return linked ? <StatusPill tone="ok">{linked}</StatusPill> : <StatusPill tone="warn">Not linked</StatusPill>
+              } },
+          ]}
+          actions={(p) => p.role === 'student' && (
+            <button className={`${btnOutline} ${btnSm}`} onClick={() => openLinkForm(p)}>{linkedStudentName(p.id) ? 'Change link' : 'Link to student'}</button>
+          )}
+        />
       )}
     </div>
   )

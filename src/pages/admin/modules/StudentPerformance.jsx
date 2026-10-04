@@ -3,6 +3,9 @@ import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byText, byDateDesc, opts } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
+import ModuleHeader from '../../../components/ModuleHeader'
+import DataTable, { StatusPill } from '../../../components/DataTable'
+import { moduleTabs } from '../../../lib/moduleTabs'
 
 const CATEGORIES = ['Sparring', 'Poomsae', 'Fitness', 'Discipline', 'Technique', 'Other']
 const RATINGS = ['Excellent', 'Good', 'Satisfactory', 'Needs Improvement']
@@ -132,13 +135,19 @@ export default function StudentPerformance() {
     ])
   }
 
+  const tabs = moduleTabs(list, 'rating', [['', 'All'], ...RATINGS.map((r) => [r, r])])
+  const RATING_TONE = { Excellent: 'ok', Good: 'info', Satisfactory: 'warn', 'Needs Improvement': 'bad' }
+
   return (
-    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
-      <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Student Performance</h1>
-        <button className={btnPrimary} onClick={openAddForm}>+ Add Assessment</button>
-      </div>
-      <p className="text-muted mb-8">Ongoing coach evaluations — sparring, poomsae, fitness, discipline.</p>
+    <div className="p-8 max-md:p-4 max-w-[1240px] mx-auto">
+      <ModuleHeader
+        title="Student Performance"
+        description="Ongoing coach evaluations — sparring, poomsae, fitness, discipline."
+        actions={<button className={btnPrimary} onClick={openAddForm}>+ Add assessment</button>}
+        tabs={tabs.items}
+        activeTab={tabs.active}
+        onTabChange={tabs.select}
+      />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -222,34 +231,32 @@ export default function StudentPerformance() {
         onExport={handleExport}
         filters={[
           { key: 'category', label: 'Category', options: opts(CATEGORIES) },
-          { key: 'rating', label: 'Rating', options: opts(RATINGS) },
         ]}
         sorts={[{ key: 'newest', label: 'Newest first' }, { key: 'student', label: 'Student A–Z' }]}
       />
 
       {loading ? (
-        <p>Loading…</p>
-      ) : list.result.length === 0 ? (
-        <p className="text-muted">{list.total === 0 ? <>No performance records yet.</> : 'Nothing matches your search or filters.'}</p>
+        <p className="text-muted">Loading…</p>
       ) : (
-        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {list.result.map((r) => (
-            <div
-              key={r.id}
-              className="bg-surface rounded-2xl shadow-card p-6"
-              style={{ borderLeftWidth: 4, borderLeftColor: RATING_COLOR[r.rating] || 'var(--status-info)' }}
-            >
-              <h3 className="font-semibold text-base text-heading mb-1.5">{r.students?.full_name}</h3>
-              <p className="text-sm text-charcoal">{r.category} · {r.rating}</p>
-              <p className="text-[0.8rem] mt-1">{r.recorded_on}</p>
-              {r.remarks && <p className="text-[0.85rem] mt-1.5">{r.remarks}</p>}
-              <div className="flex gap-2 mt-3">
-                <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(r)}>Edit</button>
-                <button className={`${btnOutline} ${btnSm}`} onClick={() => handleDelete(r)}>Delete</button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <DataTable
+          caption="Performance assessments"
+          rows={list.result}
+          rowAccent={(r) => RATING_COLOR[r.rating] || 'var(--status-info)'}
+          empty={list.total === 0 ? 'No performance records yet.' : 'Nothing matches this view, search or filters.'}
+          columns={[
+            { key: 'student', header: 'Student', primary: true, width: '22%', sortValue: (r) => r.students?.full_name, render: (r) => <strong className="text-heading">{r.students?.full_name || '—'}</strong> },
+            { key: 'date', header: 'Date', sortValue: (r) => r.recorded_on, render: (r) => <span className="tabular-nums whitespace-nowrap">{r.recorded_on || '—'}</span> },
+            { key: 'category', header: 'Category', sortValue: (r) => r.category },
+            { key: 'rating', header: 'Rating', sortValue: (r) => RATINGS.indexOf(r.rating), render: (r) => <StatusPill tone={RATING_TONE[r.rating] || 'neutral'}>{r.rating}</StatusPill> },
+            { key: 'remarks', header: 'Coach remarks', hideOnMobile: false, render: (r) => <span className="line-clamp-2">{r.remarks || '—'}</span> },
+          ]}
+          actions={(r) => (
+            <>
+              <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(r)}>Edit</button>
+              <button className={`${btnOutline} ${btnSm}`} onClick={() => handleDelete(r)}>Delete</button>
+            </>
+          )}
+        />
       )}
     </div>
   )

@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
-import { Link2 } from 'lucide-react'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byDateDesc, byNumberDesc, opts } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
+import ModuleHeader from '../../../components/ModuleHeader'
+import DataTable, { StatusPill } from '../../../components/DataTable'
+import { moduleTabs } from '../../../lib/moduleTabs'
 
 const INCOME_CATEGORIES = ['student_fee', 'donation', 'sponsorship', 'other']
 const EXPENSE_CATEGORIES = ['salary', 'equipment', 'rent', 'event', 'maintenance', 'other']
@@ -135,20 +137,23 @@ export default function Accounts() {
     ])
   }
 
+  const tabs = moduleTabs(list, 'type', [['', 'All transactions'], ['income', 'Income'], ['expense', 'Expenses']])
+
   return (
-    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
-      <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Accounts</h1>
-        <div className="flex gap-2.5">
-          <button className={btnPrimary} onClick={() => openAddForm('income')}>+ Add Income</button>
-          <button className={btnOutline} onClick={() => openAddForm('expense')}>+ Add Expense</button>
-        </div>
-      </div>
-      <p className="text-muted mb-8">
-        Income vs expenses — profit &amp; loss overview. Fee collections from{' '}
-        <Link to="/admin/fees" className="underline">Fee Management</Link> and{' '}
-        <Link to="/admin/fee-setup" className="underline">Fee Setup</Link> post here automatically.
-      </p>
+    <div className="p-8 max-md:p-4 max-w-[1240px] mx-auto">
+      <ModuleHeader
+        title="Accounts"
+        description={<>Income vs expenses — profit &amp; loss overview. Fee collections from <Link to="/admin/fees" className="underline">Fee Management</Link> and <Link to="/admin/fee-setup" className="underline">Fee Setup</Link> post here automatically.</>}
+        actions={
+          <>
+            <button className={btnPrimary} onClick={() => openAddForm('income')}>+ Add income</button>
+            <button className={btnOutline} onClick={() => openAddForm('expense')}>+ Add expense</button>
+          </>
+        }
+        tabs={tabs.items}
+        activeTab={tabs.active}
+        onTabChange={tabs.select}
+      />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -230,7 +235,6 @@ export default function Accounts() {
         printTitle="Accounts"
         onExport={handleExport}
         filters={[
-          { key: 'type', label: 'Type', options: opts(['income', 'expense']) },
           { key: 'source', label: 'Source', options: opts(['auto', 'manual'], { auto: 'Auto-posted from fees', manual: 'Manual entry' }) },
           { key: 'category', label: 'Category', options: opts([...new Set([...INCOME_CATEGORIES, ...EXPENSE_CATEGORIES])], CATEGORY_LABELS) },
         ]}
@@ -238,38 +242,41 @@ export default function Accounts() {
       />
 
       {loading ? (
-        <p>Loading…</p>
-      ) : list.result.length === 0 ? (
-        <p className="text-muted">{list.total === 0 ? <>No transactions recorded yet.</> : 'Nothing matches your search or filters.'}</p>
+        <p className="text-muted">Loading…</p>
       ) : (
-        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {list.result.map((tx) => {
-            const isAuto = !!tx.related_student_id
-            return (
-              <div
-                key={tx.id}
-                className="bg-surface rounded-2xl shadow-card p-6"
-                style={{ borderLeftWidth: 4, borderLeftColor: tx.type === 'income' ? 'var(--status-ok)' : 'var(--status-bad)' }}
-              >
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <h3 className="font-semibold text-base text-heading capitalize">{tx.type} · {CATEGORY_LABELS[tx.category] || tx.category}</h3>
-                  {isAuto && <Link2 size={14} className="text-charcoal/50 shrink-0" title="Auto-posted from fee collection" />}
-                </div>
-                <p className="text-xl font-display" style={{ color: tx.type === 'income' ? 'var(--status-ok)' : 'var(--status-bad)' }}>
+        <DataTable
+          caption="Transactions"
+          rows={list.result}
+          rowAccent={(tx) => (tx.type === 'income' ? 'var(--status-ok)' : 'var(--status-bad)')}
+          empty={list.total === 0 ? 'No transactions recorded yet.' : 'Nothing matches this view, search or filters.'}
+          columns={[
+            { key: 'date', header: 'Date', primary: true, sortValue: (tx) => tx.transaction_date, render: (tx) => <span className="tabular-nums whitespace-nowrap font-semibold text-heading">{tx.transaction_date}</span> },
+            { key: 'category', header: 'Category', sortValue: (tx) => CATEGORY_LABELS[tx.category] || tx.category,
+              render: (tx) => (
+                <span className="block leading-tight">
+                  <span className="capitalize">{CATEGORY_LABELS[tx.category] || tx.category}</span>
+                  <span className="block text-xs text-subtle capitalize">{tx.type}</span>
+                </span>
+              ) },
+            { key: 'details', header: 'Details',
+              render: (tx) => (
+                <span className="block leading-tight">
+                  {tx.description || '—'}
+                  {(tx.students?.full_name || tx.training_centers?.name) && (
+                    <span className="block text-xs text-subtle">{[tx.students?.full_name, tx.training_centers?.name].filter(Boolean).join(' · ')}</span>
+                  )}
+                </span>
+              ) },
+            { key: 'source', header: 'Source', render: (tx) => (tx.related_student_id ? <StatusPill tone="info">Auto · fees</StatusPill> : <StatusPill>Manual</StatusPill>) },
+            { key: 'amount', header: 'Amount', align: 'right', sortValue: (tx) => (tx.type === 'income' ? 1 : -1) * Number(tx.amount),
+              render: (tx) => (
+                <strong className="tabular-nums whitespace-nowrap" style={{ color: tx.type === 'income' ? 'var(--status-ok)' : 'var(--status-bad)' }}>
                   {tx.type === 'income' ? '+' : '−'}₹{Number(tx.amount).toLocaleString('en-IN')}
-                </p>
-                <p className="text-[0.85rem] mt-1">{tx.transaction_date}</p>
-                {tx.students?.full_name && <p className="text-[0.8rem]">{tx.students.full_name}</p>}
-                {tx.training_centers?.name && <p className="text-[0.8rem]">{tx.training_centers.name}</p>}
-                {tx.description && <p className="text-[0.85rem] mt-1.5">{tx.description}</p>}
-                {isAuto && (
-                  <p className="text-[0.7rem] mt-2 text-charcoal/60 uppercase tracking-wide">Auto-posted</p>
-                )}
-                <button className={`${btnOutline} ${btnSm} mt-3`} onClick={() => handleDelete(tx)}>Delete</button>
-              </div>
-            )
-          })}
-        </div>
+                </strong>
+              ) },
+          ]}
+          actions={(tx) => <button className={`${btnOutline} ${btnSm}`} onClick={() => handleDelete(tx)}>Delete</button>}
+        />
       )}
     </div>
   )
