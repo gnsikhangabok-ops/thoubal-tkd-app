@@ -8,6 +8,9 @@ import PublicFooter from '../../components/site/PublicFooter'
 import { Alert } from '../../components/site/FormField'
 import { useT } from '../../lib/i18n'
 import { DEFAULT_PHOTOS, DEFAULT_GALLERY } from '../../lib/defaultPhotos'
+import Photo from '../../components/media/Photo'
+import Lightbox from '../../components/media/Lightbox'
+import { Expand } from 'lucide-react'
 import {
   ShieldCheck, Users2, Medal, Sparkles, Target, HeartPulse,
   GraduationCap, Globe2, Trophy, Flag, FileText,
@@ -72,6 +75,7 @@ export default function Home() {
   const [enquiryForm, setEnquiryForm] = useState(EMPTY_ENQUIRY)
   const [enquirySubmitting, setEnquirySubmitting] = useState(false)
   const [enquiryStatus, setEnquiryStatus] = useState('')
+  const [viewing, setViewing] = useState(null) // gallery photo open in the full-screen viewer
 
   useEffect(() => {
     supabase
@@ -119,12 +123,7 @@ export default function Home() {
       <main id="main">
         {/* HERO */}
         <section className="relative overflow-hidden bg-pay-navy rounded-b-[2rem] md:rounded-b-[3rem]">
-          <img
-            src={photo('hero_image')}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover object-[center_35%]"
-            fetchPriority="high"
-          />
+          <Photo photo={photo('hero_image')} alt="" eager sizes="100vw" className="!absolute inset-0 !bg-pay-navy" imgClassName="object-[center_35%]" />
           {/* navy wash: solid behind the text on the left, the team photo shows through on the right */}
           <div className="absolute inset-0 bg-gradient-to-r from-pay-navy via-pay-navy/85 to-pay-navy/25 max-md:bg-pay-navy/75" aria-hidden="true" />
           <div className="absolute inset-0 bg-gradient-to-t from-pay-navy/70 via-transparent to-transparent" aria-hidden="true" />
@@ -196,11 +195,11 @@ export default function Home() {
         {/* ABOUT */}
         <section id="about" className={sectionCls}>
           <div className={`${container} grid md:grid-cols-[1fr_1.2fr] gap-8 md:gap-12 items-center`}>
-            <img
-              src={photo('about_image')}
-              alt={content.about_image ? 'Thoubal Taekwondo Academy' : DEFAULT_GALLERY[0].alt}
-              loading="lazy"
-              className="aspect-[4/3] w-full object-cover rounded-3xl shadow-card"
+            <Photo
+              photo={photo('about_image')}
+              alt={content.about_image ? 'Thoubal Taekwondo Academy' : undefined}
+              sizes="(min-width: 768px) 45vw, 100vw"
+              className="aspect-[4/3] rounded-3xl shadow-card ring-1 ring-black/5"
             />
             <div>
               <SectionHeading kicker="About the academy" title={c('about_heading')} />
@@ -319,14 +318,19 @@ export default function Home() {
               {[1, 2].map((n) => (
                 <div key={n} className="bg-surface rounded-3xl shadow-card p-3">
                   {photo(`coach_${n}_photo`) ? (
-                    <div className="aspect-[4/5] overflow-hidden rounded-2xl bg-pay-sky">
-                      <img
-                        src={photo(`coach_${n}_photo`)}
+                    <div className="relative">
+                      <Photo
+                        photo={photo(`coach_${n}_photo`)}
                         alt={c(`coach_${n}_name`)}
-                        loading="lazy"
-                        // the bundled photos are full-length event shots: zoom in on head and shoulders
-                        className={`w-full h-full object-cover ${content[`coach_${n}_photo`] ? 'object-top' : 'scale-[1.7] origin-[50%_28%]'}`}
+                        sizes="(min-width: 640px) 340px, 92vw"
+                        className="aspect-[4/5] rounded-2xl"
+                        imgClassName="object-top"
                       />
+                      {!content[`coach_${n}_photo`] && DEFAULT_PHOTOS[`coach_${n}_photo`].credit && (
+                        <span className="absolute bottom-2 right-2 rounded-full bg-black/45 px-2 py-0.5 text-[0.62rem] text-white/90 backdrop-blur-sm">
+                          Photo © {DEFAULT_PHOTOS[`coach_${n}_photo`].credit}
+                        </span>
+                      )}
                     </div>
                   ) : (
                     <PhotoPlaceholder label="Photo" className="aspect-[4/5]" />
@@ -353,17 +357,39 @@ export default function Home() {
                       <img key={key} src={content[key]} alt={`Academy gallery photo ${i + 1}`} loading="lazy" className={`object-cover w-full h-full rounded-2xl ${span}`} />
                     ) : null
                   })
-                : DEFAULT_GALLERY.map((g) => (
-                    <figure key={g.src} className={`relative overflow-hidden rounded-2xl row-span-2 ${g.wide ? 'col-span-2' : 'col-span-1'}`}>
-                      <img src={g.src} alt={g.alt} loading="lazy" className="w-full h-full object-cover" />
-                      <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 pt-8 pb-2.5 text-xs font-semibold text-white">
-                        {g.caption}
-                      </figcaption>
+                : DEFAULT_GALLERY.map((g, i) => (
+                    <figure key={g.src} className={`group relative row-span-2 ${g.wide ? 'col-span-2' : 'col-span-1'}`}>
+                      <button
+                        type="button"
+                        onClick={() => setViewing(i)}
+                        aria-label={`${g.caption} — view larger`}
+                        className="block w-full h-full overflow-hidden rounded-2xl shadow-card ring-1 ring-black/5 focus-visible:ring-4 focus-visible:ring-pay-blue"
+                      >
+                        <Photo
+                          photo={g}
+                          sizes={g.wide ? '(min-width: 768px) 50vw, 100vw' : '(min-width: 768px) 25vw, 50vw'}
+                          className="w-full h-full"
+                          imgClassName="transition-transform duration-700 ease-out group-hover:scale-105"
+                        />
+                        <span className="absolute top-2.5 right-2.5 grid place-items-center w-8 h-8 rounded-full bg-black/40 text-white opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity backdrop-blur-sm" aria-hidden="true">
+                          <Expand size={15} />
+                        </span>
+                        <figcaption className="absolute inset-x-0 bottom-0 rounded-b-2xl bg-gradient-to-t from-black/75 via-black/30 to-transparent px-3 pt-10 pb-2.5 text-left text-xs md:text-[0.8rem] font-semibold text-white">
+                          {g.caption}
+                        </figcaption>
+                      </button>
                     </figure>
                   ))}
             </div>
           </div>
         </section>
+
+        <Lightbox
+          items={DEFAULT_GALLERY}
+          index={hasGalleryImages ? null : viewing}
+          onChange={setViewing}
+          onClose={() => setViewing(null)}
+        />
 
         {/* ENQUIRY */}
         <section id="enquiry" className={sectionCls}>
