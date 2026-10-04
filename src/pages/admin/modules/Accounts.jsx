@@ -133,17 +133,17 @@ export default function Accounts() {
       <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
         <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
           <strong className="block font-display text-4xl text-chalk">₹{Number(summary.total_income).toLocaleString('en-IN')}</strong>
-          <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">Total Income</span>
+          <span className="text-sm text-[#C9D3E6] uppercase tracking-wide">Total Income</span>
         </div>
         <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
           <strong className="block font-display text-4xl text-chalk">₹{Number(summary.total_expense).toLocaleString('en-IN')}</strong>
-          <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">Total Expenses</span>
+          <span className="text-sm text-[#C9D3E6] uppercase tracking-wide">Total Expenses</span>
         </div>
         <div className="bg-ink px-5 py-6 border-b-[3px]" style={{ borderBottomColor: summary.net_balance >= 0 ? '#D4A537' : '#B3282D' }}>
           <strong className="block font-display text-4xl" style={{ color: summary.net_balance >= 0 ? '#F7F5F0' : '#ff8b8b' }}>
             ₹{Number(summary.net_balance).toLocaleString('en-IN')}
           </strong>
-          <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">Net Balance</span>
+          <span className="text-sm text-[#C9D3E6] uppercase tracking-wide">Net Balance</span>
         </div>
       </div>
 

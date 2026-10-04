@@ -14,12 +14,7 @@ export default function Enquiries() {
   const [error, setError] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
 
-  useEffect(() => {
-    loadEnquiries()
-  }, [])
-
   async function loadEnquiries() {
-    setLoading(true)
     const { data, error } = await supabase
       .from('enquiries')
       .select('*')
@@ -29,6 +24,11 @@ export default function Enquiries() {
     else setEnquiries(data)
     setLoading(false)
   }
+
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- state is only set after the awaited fetch
+    loadEnquiries()
+  }, [])
 
   async function updateStatus(enquiry, status) {
     const { error } = await supabase
@@ -53,11 +53,11 @@ export default function Enquiries() {
       <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
         <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
           <strong className="block font-display text-4xl text-chalk">{newCount}</strong>
-          <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">New Enquiries</span>
+          <span className="text-sm text-[#C9D3E6] uppercase tracking-wide">New Enquiries</span>
         </div>
         <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
           <strong className="block font-display text-4xl text-chalk">{enquiries.length}</strong>
-          <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">Total Enquiries</span>
+          <span className="text-sm text-[#C9D3E6] uppercase tracking-wide">Total Enquiries</span>
         </div>
       </div>
 

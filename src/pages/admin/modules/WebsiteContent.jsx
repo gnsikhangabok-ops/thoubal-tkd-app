@@ -6,6 +6,12 @@ import { Upload, Check, ImageIcon } from 'lucide-react'
 // type: 'text' | 'textarea' | 'image'
 const FIELD_GROUPS = [
   {
+    label: 'Latest Updates Bar',
+    fields: [
+      { key: 'announcement', label: 'Announcement text', type: 'textarea', placeholder: 'Admissions open for the new training session…' },
+    ],
+  },
+  {
     label: 'Hero Section',
     fields: [
       { key: 'hero_kicker', label: 'Kicker text', type: 'text', placeholder: 'Khangabok, Thoubal · Manipur' },
@@ -67,12 +73,7 @@ export default function WebsiteContent() {
   const [savedKey, setSavedKey] = useState(null)
   const [uploadingKey, setUploadingKey] = useState(null)
 
-  useEffect(() => {
-    loadContent()
-  }, [])
-
   async function loadContent() {
-    setLoading(true)
     const { data, error } = await supabase.from('site_content').select('*')
     if (error) {
       setError(error.message)
@@ -83,6 +84,11 @@ export default function WebsiteContent() {
     }
     setLoading(false)
   }
+
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- state is only set after the awaited fetch
+    loadContent()
+  }, [])
 
   async function saveField(key, value) {
     setSavingKey(key)
@@ -116,6 +122,7 @@ export default function WebsiteContent() {
     setError('')
 
     const ext = file.name.split('.').pop()
+    // oxlint-disable-next-line react/purity -- runs in an upload handler, not during render
     const path = `${key}-${Date.now()}.${ext}`
 
     const { error: uploadError } = await supabase.storage

@@ -36,6 +36,7 @@ export default function FeeManagement() {
 
   useEffect(() => {
     loadPayments()
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- reload when the month filter changes
   }, [monthFilter])
 
   async function loadPayments() {
@@ -222,15 +223,15 @@ export default function FeeManagement() {
       <div className="grid gap-4 mb-9" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
         <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
           <strong className="block font-display text-4xl text-chalk">₹{totalDue.toLocaleString('en-IN')}</strong>
-          <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">Total Due — {formatMonth(monthFilter)}</span>
+          <span className="text-sm text-[#C9D3E6] uppercase tracking-wide">Total Due — {formatMonth(monthFilter)}</span>
         </div>
         <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
           <strong className="block font-display text-4xl text-chalk">₹{totalPaid.toLocaleString('en-IN')}</strong>
-          <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">Total Collected</span>
+          <span className="text-sm text-[#C9D3E6] uppercase tracking-wide">Total Collected</span>
         </div>
         <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
           <strong className="block font-display text-4xl text-chalk">{pendingCount}</strong>
-          <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">Students Pending</span>
+          <span className="text-sm text-[#C9D3E6] uppercase tracking-wide">Students Pending</span>
         </div>
       </div>
 

@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
-import logo from '../../assets/logo.png'
+import { useSiteContent, telHref } from '../../lib/siteContent'
+import { inputClass } from '../../lib/ui'
+import PublicHeader from '../../components/site/PublicHeader'
+import PublicFooter from '../../components/site/PublicFooter'
+import { Alert } from '../../components/site/FormField'
 import {
   ShieldCheck, Users2, Medal, Sparkles, Target, HeartPulse,
-  GraduationCap, Globe2, Trophy, Flag,
+  GraduationCap, Globe2, Trophy, Flag, ChevronRight, FileText,
+  ClipboardList, LogIn, Award, Megaphone, MapPin, Phone, Mail, Clock,
 } from 'lucide-react'
 
 const WHY_FEATURES = [
@@ -20,40 +25,62 @@ const WHY_FEATURES = [
   { icon: Trophy, title: 'Olympic Sport Pathway', desc: 'Taekwondo is an Olympic discipline — train with a pathway to the highest stage.', national: true },
 ]
 
-const MEDAL_COLOR = { gold: '#D4A537', silver: '#A8A8A8', bronze: '#B08D57' }
+const PROGRAMS = [
+  { age: 'Ages 5–8', title: 'Little Dragons', desc: 'Coordination, discipline basics, and fun introduction to stances and kicks.' },
+  { age: 'Ages 9–14', title: 'Junior Program', desc: 'Poomsae fundamentals, controlled sparring, and belt-grading preparation.' },
+  { age: 'Ages 15+', title: 'Senior Program', desc: 'Advanced Kyorugi, competition training, and black belt curriculum.' },
+  { age: 'All levels', title: 'Competition Squad', desc: 'Selective training for state and national tournament representation.' },
+  { age: 'Adults', title: 'Self-Defense & Fitness', desc: 'Practical self-defense and conditioning for adult beginners.' },
+]
 
-// Fallbacks used until an admin sets real content via Website Content module
-const DEFAULTS = {
-  hero_kicker: 'Khangabok, Thoubal · Manipur',
-  hero_headline: 'Discipline earns the black belt.',
-  hero_body: 'Thoubal Taekwondo Academy trains students of all ages in technique, sparring, and self-discipline — from white belt to black belt, from the dojang to the national stage.',
-  about_heading: 'Built on respect, discipline, and hard work',
-  about_paragraph_1: 'Founded to bring quality Taekwondo training to Khangabok and the wider Thoubal district, the academy trains students in Poomsae, Kyorugi (sparring), and self-defense under certified instruction.',
-  about_paragraph_2: 'Every student progresses through a structured belt-grading system, with regular gradings, competitive exposure, and a focus on discipline both on and off the mat.',
-  stat_students: '200+',
-  stat_medals: '15+',
-  stat_belts: '8',
-  coach_1_name: 'Ranbir Moirangthem',
-  coach_1_role: 'Head Coach · NIS Certified (SAI Bangalore)',
-  coach_2_name: 'Jemsh Saikhom',
-  coach_2_role: 'Assistant Coach · State Taekwondo Referee',
-  contact_address: 'Khangabok, Thoubal, Manipur',
-  contact_phone: '+91 XXXXX XXXXX',
-  contact_email: 'info@thoubaltkd.in',
+const QUICK_LINKS = [
+  { icon: ClipboardList, label: 'Admission Enquiry', href: '#enquiry' },
+  { icon: FileText, label: 'Rules & Regulations', to: '/rules' },
+  { icon: Award, label: 'Belt Grading Programs', href: '#programs' },
+  { icon: Trophy, label: 'Achievements & Results', href: '#achievements' },
+  { icon: LogIn, label: 'Student / Parent Login', to: '/login' },
+]
+
+const MEDAL_COLOR = { gold: '#D4A537', silver: '#A8A8A8', bronze: '#B08D57' }
+const EMPTY_ENQUIRY = { child_name: '', age: '', guardian_phone: '', program_interested: 'Little Dragons (5–8)', message: '' }
+
+function SectionHeading({ kicker, title, light = false }) {
+  return (
+    <div className="mb-10">
+      <div className={`font-display font-semibold text-sm uppercase tracking-wide mb-1.5 ${light ? 'text-gold' : 'text-brand-red'}`}>{kicker}</div>
+      <h2 className={`text-2xl md:text-3xl ${light ? 'text-chalk' : 'text-ink'}`}>{title}</h2>
+      <div className="flex h-1 w-24 mt-3">
+        <span className="flex-1 bg-saffron" />
+        <span className={`flex-1 ${light ? 'bg-white' : 'bg-[#D9DEE7]'}`} />
+        <span className="flex-1 bg-india-green" />
+      </div>
+    </div>
+  )
+}
+
+function PhotoPlaceholder({ label, className = '' }) {
+  return (
+    <div className={`bg-[#E3E8F0] border border-line flex items-center justify-center text-[#7C879A] font-display text-sm uppercase ${className}`}>
+      {label}
+    </div>
+  )
 }
 
 export default function Home() {
-  const [content, setContent] = useState({})
+  const { content, c } = useSiteContent()
   const [recentAchievements, setRecentAchievements] = useState([])
-  const [enquiryForm, setEnquiryForm] = useState({
-    child_name: '', age: '', guardian_phone: '', program_interested: 'Little Dragons (5–8)', message: '',
-  })
+  const [enquiryForm, setEnquiryForm] = useState(EMPTY_ENQUIRY)
   const [enquirySubmitting, setEnquirySubmitting] = useState(false)
   const [enquiryStatus, setEnquiryStatus] = useState('')
 
-  function c(key) {
-    return content[key] || DEFAULTS[key] || ''
-  }
+  useEffect(() => {
+    supabase
+      .from('achievements')
+      .select('*, students(full_name)')
+      .order('achievement_date', { ascending: false })
+      .limit(6)
+      .then(({ data }) => { if (data) setRecentAchievements(data) })
+  }, [])
 
   async function handleEnquirySubmit(e) {
     e.preventDefault()
@@ -73,378 +100,341 @@ export default function Home() {
       setEnquiryStatus('error')
     } else {
       setEnquiryStatus('success')
-      setEnquiryForm({ child_name: '', age: '', guardian_phone: '', program_interested: 'Little Dragons (5–8)', message: '' })
+      setEnquiryForm(EMPTY_ENQUIRY)
     }
   }
 
-  useEffect(() => {
-    async function loadContent() {
-      const { data } = await supabase.from('site_content').select('*')
-      if (data) {
-        const map = {}
-        data.forEach((row) => { map[row.key] = row.value })
-        setContent(map)
-      }
-    }
-    async function loadAchievements() {
-      const { data } = await supabase
-        .from('achievements')
-        .select('*, students(full_name)')
-        .order('achievement_date', { ascending: false })
-        .limit(6)
-      if (data) setRecentAchievements(data)
-    }
-    loadContent()
-    loadAchievements()
-  }, [])
-
-  const inputClass = "px-4 py-3 border border-black/10 bg-chalk font-body text-[0.95rem] text-ink focus:outline-2 focus:outline-brand-red focus:outline-offset-1"
-
+  const setField = (key) => (e) => setEnquiryForm({ ...enquiryForm, [key]: e.target.value })
   const galleryKeys = ['gallery_1', 'gallery_2', 'gallery_3', 'gallery_4', 'gallery_5', 'gallery_6']
   const hasGalleryImages = galleryKeys.some((k) => content[k])
+  const phoneHref = telHref(c('contact_phone'))
+  const sectionCls = 'py-16 md:py-20 scroll-mt-14'
+  const container = 'max-w-[1180px] mx-auto px-4 md:px-7'
 
   return (
-    <div className="font-body text-charcoal bg-chalk">
-      {/* NAV */}
-      <header className="sticky top-0 z-50 bg-chalk border-b border-black/10">
-        <div className="max-w-[1180px] mx-auto px-7 py-4 flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="Thoubal Taekwondo Academy" className="w-11 h-11 object-contain" />
-            <div className="flex flex-col leading-tight">
-              <div className="font-display font-bold text-lg text-ink">THOUBAL <span className="text-brand-red">TKD</span></div>
-              <div className="text-[0.62rem] tracking-wide text-charcoal uppercase mt-0.5">Thoubal District Taekwondo Association</div>
-            </div>
-          </div>
-          <nav className="hidden md:flex gap-8">
-            <a href="#about" className="text-sm font-medium hover:text-brand-red">About</a>
-            <a href="#programs" className="text-sm font-medium hover:text-brand-red">Programs</a>
-            <a href="#achievements" className="text-sm font-medium hover:text-brand-red">Achievements</a>
-            <a href="#coaches" className="text-sm font-medium hover:text-brand-red">Coaches</a>
-            <a href="#gallery" className="text-sm font-medium hover:text-brand-red">Gallery</a>
-            <a href="#enquiry" className="text-sm font-medium hover:text-brand-red">Contact</a>
-          </nav>
-          <Link to="/login" className="inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark">Enquire</Link>
-        </div>
-      </header>
+    <div id="top" className="font-body text-charcoal bg-chalk">
+      <PublicHeader />
 
-      {/* BELT STRIP */}
-      <div className="flex h-2 w-full">
-        <span className="flex-1 bg-[#EDEBE4]"></span>
-        <span className="flex-1 bg-gold"></span>
-        <span className="flex-1 bg-[#4C6B4F]"></span>
-        <span className="flex-1 bg-[#2F5A78]"></span>
-        <span className="flex-1 bg-brand-red"></span>
-        <span className="flex-1 bg-ink"></span>
+      {/* LATEST UPDATES */}
+      <div className="bg-white border-b border-line">
+        <div className={`${container} flex items-stretch`}>
+          <span className="shrink-0 flex items-center gap-1.5 bg-brand-red text-chalk font-display font-semibold text-xs uppercase tracking-wide px-3 py-2">
+            <Megaphone size={14} /> Latest Updates
+          </span>
+          <div className="flex-1 overflow-hidden flex items-center px-3 py-2 text-sm text-ink">
+            <p className="ticker whitespace-nowrap">{c('announcement')}</p>
+          </div>
+        </div>
       </div>
 
-      {/* HERO */}
-      <section className="relative overflow-hidden bg-ink py-28 md:py-32">
-        <div className="absolute top-0 right-[-10%] h-full w-3/5 flex gap-3.5 -skew-x-[14deg] opacity-90">
-          <div className="w-14 h-full bg-[#EDEBE4]"></div>
-          <div className="w-14 h-full bg-gold"></div>
-          <div className="w-14 h-full bg-[#4C6B4F]"></div>
-          <div className="w-14 h-full bg-[#2F5A78]"></div>
-          <div className="w-14 h-full bg-brand-red"></div>
-        </div>
-        <div className="relative z-10 max-w-[1180px] mx-auto px-7">
-          <div className="inline-flex items-center gap-2 bg-white/5 border border-white/15 px-3 py-1.5 mb-5">
-            <span className="flex flex-col w-4 h-3 overflow-hidden rounded-[1px]">
-              <span className="flex-1 bg-[#FF9933]"></span>
-              <span className="flex-1 bg-white"></span>
-              <span className="flex-1 bg-[#138808]"></span>
-            </span>
-            <span className="text-[0.68rem] font-display uppercase tracking-wide text-[#C9C7C0]">Recognized National Sport · Olympic Discipline</span>
-          </div>
-          <div className="text-gold font-display font-medium text-sm tracking-wide mb-4">{c('hero_kicker')}</div>
-          <h1 className="font-display font-bold text-chalk uppercase tracking-wide leading-[1.02] max-w-[11ch] text-5xl md:text-7xl">
-            {c('hero_headline')}
-          </h1>
-          <p className="text-[#C9C7C0] text-lg max-w-[44ch] my-6">
-            {c('hero_body')}
-          </p>
-          <div className="flex gap-4 flex-wrap">
-            <a href="#enquiry" className="inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark">Enroll Now</a>
-            <a href="#programs" className="inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-chalk text-chalk hover:bg-chalk hover:text-ink">View Programs</a>
-          </div>
-        </div>
-      </section>
-
-      {/* ABOUT */}
-      <section id="about" className="py-20">
-        <div className="max-w-[1180px] mx-auto px-7 grid md:grid-cols-2 gap-16 items-center">
-          {content.about_image ? (
-            <img src={content.about_image} alt="Academy" className="aspect-[4/5] w-full object-cover" />
-          ) : (
-            <div className="aspect-[4/5] bg-gradient-to-br from-[#1c1c1a] to-charcoal flex items-center justify-center text-[#8a8a86] font-display text-sm uppercase">
-              Academy photo
-            </div>
-          )}
-          <div>
-            <div className="mb-6">
-              <div className="text-brand-red font-display font-semibold text-sm mb-2">About the academy</div>
-              <h2 className="font-display text-ink uppercase text-3xl md:text-4xl">{c('about_heading')}</h2>
-            </div>
-            <p className="mb-4 text-[1.05rem]">{c('about_paragraph_1')}</p>
-            <p className="mb-4 text-[1.05rem]">{c('about_paragraph_2')}</p>
-            <div className="flex gap-10 mt-8 flex-wrap">
-              <div><strong className="block font-display text-3xl text-brand-red">{c('stat_students')}</strong><span className="text-sm">Students trained</span></div>
-              <div><strong className="block font-display text-3xl text-brand-red">{c('stat_medals')}</strong><span className="text-sm">State &amp; national medals</span></div>
-              <div><strong className="block font-display text-3xl text-brand-red">{c('stat_belts')}</strong><span className="text-sm">Belt ranks taught</span></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* PROGRAMS */}
-      <section id="programs" className="bg-ink py-20">
-        <div className="max-w-[1180px] mx-auto px-7">
-          <div className="mb-12">
-            <div className="text-gold font-display font-semibold text-sm mb-2">Training programs</div>
-            <h2 className="font-display text-chalk uppercase text-3xl md:text-4xl">A path for every age and level</h2>
-          </div>
-          <div className="flex gap-5 overflow-x-auto pb-2 [scrollbar-width:none]">
-            {[
-              { age: 'Ages 5–8', title: 'Little Dragons', desc: 'Coordination, discipline basics, and fun introduction to stances and kicks.' },
-              { age: 'Ages 9–14', title: 'Junior Program', desc: 'Poomsae fundamentals, controlled sparring, and belt-grading preparation.' },
-              { age: 'Ages 15+', title: 'Senior Program', desc: 'Advanced Kyorugi, competition training, and black belt curriculum.' },
-              { age: 'All levels', title: 'Competition Squad', desc: 'Selective training for state and national tournament representation.' },
-              { age: 'Adults', title: 'Self-Defense & Fitness', desc: 'Practical self-defense and conditioning for adult beginners.' },
-            ].map((p) => (
-              <div key={p.title} className="flex-none w-[260px] bg-[#1a1a18] p-7 border-t-[3px] border-t-gold">
-                <div className="text-gold font-display text-sm mb-2.5">{p.age}</div>
-                <h3 className="text-chalk text-xl font-display uppercase mb-2.5">{p.title}</h3>
-                <p className="text-[#B8B6B0] text-sm">{p.desc}</p>
+      <main id="main">
+        {/* HERO */}
+        <section className="bg-ink relative overflow-hidden">
+          <div
+            className="absolute inset-0 opacity-[0.07]"
+            style={{ backgroundImage: 'repeating-linear-gradient(45deg, #fff 0 1px, transparent 1px 14px)' }}
+            aria-hidden="true"
+          />
+          <div className={`${container} relative grid lg:grid-cols-[1.5fr_1fr] gap-10 py-14 md:py-20`}>
+            <div>
+              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 px-3 py-1.5 mb-5">
+                <span className="flex flex-col w-4 h-3 overflow-hidden" aria-hidden="true">
+                  <span className="flex-1 bg-saffron" />
+                  <span className="flex-1 bg-white" />
+                  <span className="flex-1 bg-india-green" />
+                </span>
+                <span className="text-[0.7rem] font-display uppercase tracking-wide text-[#D5DEEE]">Recognized National Sport · Olympic Discipline</span>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ACHIEVEMENTS */}
-      <section id="achievements" className="py-20">
-        <div className="max-w-[1180px] mx-auto px-7">
-          <div className="mb-12">
-            <div className="text-brand-red font-display font-semibold text-sm mb-2">Achievements</div>
-            <h2 className="font-display text-ink uppercase text-3xl md:text-4xl">Results on the mat</h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 border border-black/10">
-            {[
-              { n: '12', l: 'Gold medals, state-level' },
-              { n: '3', l: 'National qualifiers' },
-              { n: '40+', l: 'Black belts awarded' },
-              { n: '9', l: 'Years of training' },
-            ].map((s, i) => (
-              <div key={s.l} className={`p-9 ${i < 3 ? 'md:border-r border-black/10' : ''}`}>
-                <strong className="block font-display text-4xl text-ink">{s.n}</strong>
-                <span className="text-sm">{s.l}</span>
+              <div className="text-gold font-display font-medium text-sm uppercase tracking-wide mb-3">{c('hero_kicker')}</div>
+              <h1 className="font-display font-bold text-chalk uppercase tracking-wide leading-[1.05] max-w-[16ch] text-4xl md:text-6xl">
+                {c('hero_headline')}
+              </h1>
+              <p className="text-[#D5DEEE] text-base md:text-lg max-w-[52ch] my-6">{c('hero_body')}</p>
+              <div className="flex gap-3 flex-wrap">
+                <a href="#enquiry" className="inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark">Apply for Admission</a>
+                <a href="#programs" className="inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-chalk text-chalk hover:bg-chalk hover:text-ink">View Programs</a>
               </div>
-            ))}
-          </div>
+            </div>
 
-          {recentAchievements.length > 0 && (
-            <div className="grid gap-4 mt-8" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-              {recentAchievements.map((a) => (
-                <div
-                  key={a.id}
-                  className="bg-white border border-black/10 p-6"
-                  style={{ borderTopWidth: 3, borderTopColor: a.medal ? MEDAL_COLOR[a.medal] : '#B3282D' }}
-                >
-                  <h3 className="font-semibold text-base text-ink normal-case">{a.title}</h3>
-                  <p className="capitalize text-sm mt-1">{a.level}{a.medal ? ` · ${a.medal} medal` : ''}</p>
-                  {a.students?.full_name && <p className="text-sm mt-1">{a.students.full_name}</p>}
+            {/* Quick links panel */}
+            <aside aria-label="Quick links" className="bg-white self-start border-t-4 border-t-gold">
+              <h2 className="bg-[#EAF0F8] text-ink text-base px-5 py-3 border-b border-line">Quick Links</h2>
+              <ul>
+                {QUICK_LINKS.map(({ icon: Icon, label, href, to }) => {
+                  const cls = 'flex items-center gap-3 px-5 py-3.5 border-b border-line text-sm font-medium text-ink hover:bg-[#F3F6FB] hover:text-brand-red'
+                  const inner = (
+                    <>
+                      <Icon size={18} className="text-brand-red shrink-0" strokeWidth={1.75} />
+                      <span className="flex-1">{label}</span>
+                      <ChevronRight size={16} className="text-[#9AA5B8]" />
+                    </>
+                  )
+                  return (
+                    <li key={label}>
+                      {to ? <Link to={to} className={cls}>{inner}</Link> : <a href={href} className={cls}>{inner}</a>}
+                    </li>
+                  )
+                })}
+              </ul>
+            </aside>
+          </div>
+        </section>
+
+        {/* KEY FIGURES */}
+        <section aria-label="Key figures" className="bg-white border-b border-line">
+          <div className={container}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-line border-x border-line">
+              {[
+                { n: c('stat_students'), l: 'Students trained' },
+                { n: c('stat_medals'), l: 'State & national medals' },
+                { n: c('stat_belts'), l: 'Belt ranks taught' },
+                { n: PROGRAMS.length, l: 'Training programs' },
+              ].map((s) => (
+                <div key={s.l} className="bg-white px-4 md:px-6 py-7">
+                  <strong className="block font-display text-3xl md:text-4xl text-ink">{s.n}</strong>
+                  <span className="text-sm">{s.l}</span>
                 </div>
               ))}
             </div>
-          )}
-        </div>
-      </section>
-
-      {/* WHY TRAIN WITH US */}
-      <section id="why-us" className="bg-[#EFEBE1] py-20">
-        <div className="max-w-[1180px] mx-auto px-7">
-          <div className="mb-12">
-            <div className="text-brand-red font-display font-semibold text-sm mb-2">Why train with us</div>
-            <h2 className="font-display text-ink uppercase text-3xl md:text-4xl">Built for serious training, backed by real recognition</h2>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-black/10 border border-black/10">
-            {WHY_FEATURES.map((f) => {
-              const Icon = f.icon
-              return (
-                <div key={f.title} className="relative bg-[#EFEBE1] p-6 pt-7 flex flex-col gap-3">
-                  {f.national && (
-                    <span className="absolute top-0 left-0 right-0 flex h-1">
-                      <span className="flex-1 bg-[#FF9933]"></span>
-                      <span className="flex-1 bg-white"></span>
-                      <span className="flex-1 bg-[#138808]"></span>
-                    </span>
-                  )}
-                  <Icon size={22} className="text-brand-red" strokeWidth={1.75} />
-                  <h3 className="font-semibold text-[0.95rem] text-ink leading-snug">{f.title}</h3>
-                  <p className="text-[0.8rem] text-charcoal leading-relaxed">{f.desc}</p>
+        </section>
+
+        {/* ABOUT */}
+        <section id="about" className={sectionCls}>
+          <div className={`${container} grid md:grid-cols-[1fr_1.2fr] gap-10 md:gap-14 items-start`}>
+            {content.about_image ? (
+              <img src={content.about_image} alt="Training at Thoubal Taekwondo Academy" className="aspect-[4/3] md:aspect-[4/5] w-full object-cover border border-line" />
+            ) : (
+              <PhotoPlaceholder label="Academy photo" className="aspect-[4/3] md:aspect-[4/5]" />
+            )}
+            <div>
+              <SectionHeading kicker="About the academy" title={c('about_heading')} />
+              <p className="mb-4 text-[1.02rem]">{c('about_paragraph_1')}</p>
+              <p className="mb-6 text-[1.02rem]">{c('about_paragraph_2')}</p>
+              <dl className="grid sm:grid-cols-2 gap-px bg-line border border-line text-sm">
+                {[
+                  ['Governing body', 'Thoubal District Taekwondo Association'],
+                  ['Affiliations', 'AMTA · TFI · Asian Taekwondo Union'],
+                  ['Disciplines', 'Poomsae, Kyorugi, Self-defense'],
+                  ['Location', c('contact_address')],
+                ].map(([k, v]) => (
+                  <div key={k} className="bg-white px-4 py-3">
+                    <dt className="text-xs uppercase tracking-wide text-[#6B778C]">{k}</dt>
+                    <dd className="font-medium text-ink mt-0.5">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
+        </section>
+
+        {/* PROGRAMS */}
+        <section id="programs" className={`${sectionCls} bg-[#EAF0F8]`}>
+          <div className={container}>
+            <SectionHeading kicker="Training programs" title="A path for every age and level" />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              {PROGRAMS.map((p) => (
+                <div key={p.title} className="bg-white border border-line flex flex-col">
+                  <div className="bg-ink text-gold font-display text-xs uppercase tracking-wide px-5 py-2">{p.age}</div>
+                  <div className="p-5">
+                    <h3 className="text-ink text-lg mb-2">{p.title}</h3>
+                    <p className="text-sm">{p.desc}</p>
+                  </div>
                 </div>
-              )
-            })}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* COACHES */}
-      <section id="coaches" className="py-20">
-        <div className="max-w-[1180px] mx-auto px-7">
-          <div className="mb-12">
-            <div className="text-brand-red font-display font-semibold text-sm mb-2">Our instructors</div>
-            <h2 className="font-display text-ink uppercase text-3xl md:text-4xl">Coaches</h2>
-          </div>
-          <div className="grid gap-8 max-w-[640px]" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
-            <div>
-              {content.coach_1_photo ? (
-                <img src={content.coach_1_photo} alt={c('coach_1_name')} className="aspect-square w-full object-cover mb-4" />
-              ) : (
-                <div className="aspect-square bg-gradient-to-br from-[#e7e4db] to-[#cfccc2] mb-4 flex items-center justify-center text-[#8a8a86] font-display text-sm">Photo</div>
-              )}
-              <h3 className="text-lg font-semibold mb-1">{c('coach_1_name')}</h3>
-              <span className="text-brand-red text-sm font-display">{c('coach_1_role')}</span>
+        {/* ACHIEVEMENTS */}
+        <section id="achievements" className={sectionCls}>
+          <div className={container}>
+            <SectionHeading kicker="Achievements" title="Results on the mat" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { n: '12', l: 'Gold medals, state-level' },
+                { n: '3', l: 'National qualifiers' },
+                { n: '40+', l: 'Black belts awarded' },
+                { n: '9', l: 'Years of training' },
+              ].map((s) => (
+                <div key={s.l} className="bg-white border border-line border-l-4 border-l-ink p-5 md:p-7">
+                  <strong className="block font-display text-3xl md:text-4xl text-ink">{s.n}</strong>
+                  <span className="text-sm">{s.l}</span>
+                </div>
+              ))}
             </div>
-            <div>
-              {content.coach_2_photo ? (
-                <img src={content.coach_2_photo} alt={c('coach_2_name')} className="aspect-square w-full object-cover mb-4" />
-              ) : (
-                <div className="aspect-square bg-gradient-to-br from-[#e7e4db] to-[#cfccc2] mb-4 flex items-center justify-center text-[#8a8a86] font-display text-sm">Photo</div>
-              )}
-              <h3 className="text-lg font-semibold mb-1">{c('coach_2_name')}</h3>
-              <span className="text-brand-red text-sm font-display">{c('coach_2_role')}</span>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* GALLERY */}
-      <section id="gallery" className="py-20">
-        <div className="max-w-[1180px] mx-auto px-7">
-          <div className="mb-12">
-            <div className="text-brand-red font-display font-semibold text-sm mb-2">Gallery</div>
-            <h2 className="font-display text-ink uppercase text-3xl md:text-4xl">From the dojang and the podium</h2>
+            {recentAchievements.length > 0 && (
+              <>
+                <h3 className="text-ink text-lg mt-12 mb-4">Recent results</h3>
+                <div className="bg-white border border-line overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-ink text-chalk font-display uppercase tracking-wide text-xs">
+                      <tr>
+                        <th className="text-left px-4 py-3">Event / Title</th>
+                        <th className="text-left px-4 py-3">Athlete</th>
+                        <th className="text-left px-4 py-3">Level</th>
+                        <th className="text-left px-4 py-3">Medal</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentAchievements.map((a, i) => (
+                        <tr key={a.id} className={i % 2 ? 'bg-[#F5F7FA]' : ''}>
+                          <td className="px-4 py-3 font-medium text-ink">{a.title}</td>
+                          <td className="px-4 py-3">{a.students?.full_name || '—'}</td>
+                          <td className="px-4 py-3 capitalize">{a.level || '—'}</td>
+                          <td className="px-4 py-3 capitalize">
+                            {a.medal ? (
+                              <span className="inline-flex items-center gap-1.5">
+                                <span className="w-2.5 h-2.5 rounded-full" style={{ background: MEDAL_COLOR[a.medal] }} />
+                                {a.medal}
+                              </span>
+                            ) : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5" style={{ gridAutoRows: 140 }}>
-            {galleryKeys.map((key, i) => {
-              const isLarge = i === 0
-              const isWide = i === 5
-              return content[key] ? (
-                <img
-                  key={key}
-                  src={content[key]}
-                  alt="Gallery"
-                  className={`object-cover w-full h-full ${isLarge ? 'col-span-2 row-span-2' : ''} ${isWide ? 'col-span-2' : ''}`}
-                />
-              ) : !hasGalleryImages ? (
-                <div
-                  key={key}
-                  className={`bg-gradient-to-br from-[#1c1c1a] to-[#4a4a46] ${isLarge ? 'col-span-2 row-span-2' : ''} ${isWide ? 'col-span-2' : ''}`}
-                />
-              ) : null
-            })}
-          </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ENQUIRY */}
-      <section id="enquiry" className="bg-[#EFEBE1] py-20">
-        <div className="max-w-[1180px] mx-auto px-7 grid md:grid-cols-2 gap-16">
-          <div>
-            <div className="mb-6">
-              <div className="text-brand-red font-display font-semibold text-sm mb-2">Join the academy</div>
-              <h2 className="font-display text-ink uppercase text-3xl md:text-4xl">Enroll your child, or yourself</h2>
+        {/* WHY TRAIN WITH US */}
+        <section id="why-us" className={`${sectionCls} bg-ink`}>
+          <div className={container}>
+            <SectionHeading light kicker="Why train with us" title="Serious training, backed by official recognition" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-px bg-white/15 border border-white/15">
+              {WHY_FEATURES.map((f) => {
+                const Icon = f.icon
+                return (
+                  <div key={f.title} className="relative bg-ink p-6 pt-7 flex flex-col gap-3">
+                    {f.national && <span className="tricolor absolute top-0 left-0" aria-hidden="true" />}
+                    <Icon size={22} className="text-gold" strokeWidth={1.75} />
+                    <h3 className="font-semibold text-[0.95rem] text-chalk leading-snug normal-case font-body tracking-normal">{f.title}</h3>
+                    <p className="text-[0.82rem] text-[#C9D3E6] leading-relaxed">{f.desc}</p>
+                  </div>
+                )
+              })}
             </div>
-            <form className="flex flex-col gap-4" onSubmit={handleEnquirySubmit}>
-              <label className="text-sm font-semibold -mb-2">Full name</label>
-              <input
-                type="text" placeholder="Student's full name" required
-                value={enquiryForm.child_name}
-                onChange={(e) => setEnquiryForm({ ...enquiryForm, child_name: e.target.value })}
-                className={inputClass}
-              />
-              <label className="text-sm font-semibold -mb-2">Age</label>
-              <input
-                type="number" placeholder="Age" required
-                value={enquiryForm.age}
-                onChange={(e) => setEnquiryForm({ ...enquiryForm, age: e.target.value })}
-                className={inputClass}
-              />
-              <label className="text-sm font-semibold -mb-2">Parent/Guardian contact</label>
-              <input
-                type="tel" placeholder="Phone number" required
-                value={enquiryForm.guardian_phone}
-                onChange={(e) => setEnquiryForm({ ...enquiryForm, guardian_phone: e.target.value })}
-                className={inputClass}
-              />
-              <label className="text-sm font-semibold -mb-2">Program interested in</label>
-              <select
-                value={enquiryForm.program_interested}
-                onChange={(e) => setEnquiryForm({ ...enquiryForm, program_interested: e.target.value })}
-                className={inputClass}
-              >
-                <option>Little Dragons (5–8)</option>
-                <option>Junior Program (9–14)</option>
-                <option>Senior Program (15+)</option>
-                <option>Self-Defense &amp; Fitness (Adults)</option>
-              </select>
-              <label className="text-sm font-semibold -mb-2">Message</label>
-              <textarea
-                rows="3" placeholder="Any questions?"
-                value={enquiryForm.message}
-                onChange={(e) => setEnquiryForm({ ...enquiryForm, message: e.target.value })}
-                className={inputClass}
-              ></textarea>
-              {enquiryStatus === 'success' && (
-                <p className="text-brand-red text-sm">Thank you! We'll get back to you soon.</p>
-              )}
-              {enquiryStatus === 'error' && (
-                <p className="text-brand-red text-sm">Something went wrong. Please try again or call us directly.</p>
-              )}
-              <button
-                type="submit"
-                className="inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark mt-2 disabled:opacity-60"
-                disabled={enquirySubmitting}
-              >
-                {enquirySubmitting ? 'Sending…' : 'Send Enquiry'}
-              </button>
-            </form>
           </div>
-          <div className="bg-[#d8d5cb] min-h-[280px] flex items-center justify-center text-[#7a776d] font-display">
-            Map — Khangabok, Thoubal
-          </div>
-        </div>
-      </section>
+        </section>
 
-      {/* FOOTER */}
-      <footer className="bg-ink text-[#C9C7C0] py-14">
-        <div className="max-w-[1180px] mx-auto px-7">
-          <div className="grid md:grid-cols-[2fr_1fr_1fr] gap-10 mb-10">
-            <div>
-              <h4 className="text-chalk font-display text-base mb-4">Thoubal Taekwondo Academy</h4>
-              <p className="text-sm max-w-[36ch] text-[#B8B6B0]">Under Thoubal District Taekwondo Association. Regd. No. 255/SR/Th/2025. Affiliated to AMTA, TFI &amp; Asian Taekwondo Union.</p>
-            </div>
-            <div>
-              <h4 className="text-chalk font-display text-base mb-4">Explore</h4>
-              <a href="#about" className="block text-sm mb-2 hover:text-gold">About</a>
-              <a href="#programs" className="block text-sm mb-2 hover:text-gold">Programs</a>
-              <a href="#achievements" className="block text-sm mb-2 hover:text-gold">Achievements</a>
-              <a href="#gallery" className="block text-sm mb-2 hover:text-gold">Gallery</a>
-              <Link to="/rules" className="block text-sm mb-2 hover:text-gold">Rules &amp; Regulations</Link>
-            </div>
-            <div>
-              <h4 className="text-chalk font-display text-base mb-4">Contact</h4>
-              <a href="#" className="block text-sm mb-2 hover:text-gold">{c('contact_address')}</a>
-              <a href="#" className="block text-sm mb-2 hover:text-gold">{c('contact_phone')}</a>
-              <a href="#" className="block text-sm mb-2 hover:text-gold">{c('contact_email')}</a>
+        {/* COACHES */}
+        <section id="coaches" className={sectionCls}>
+          <div className={container}>
+            <SectionHeading kicker="Our instructors" title="Coaching staff" />
+            <div className="grid gap-6 sm:grid-cols-2 max-w-[720px]">
+              {[1, 2].map((n) => (
+                <div key={n} className="bg-white border border-line">
+                  {content[`coach_${n}_photo`] ? (
+                    <img src={content[`coach_${n}_photo`]} alt={c(`coach_${n}_name`)} className="aspect-[4/3] w-full object-cover" />
+                  ) : (
+                    <PhotoPlaceholder label="Photo" className="aspect-[4/3] border-0 border-b" />
+                  )}
+                  <div className="p-5 border-t-4 border-t-ink">
+                    <h3 className="text-lg text-ink mb-1">{c(`coach_${n}_name`)}</h3>
+                    <span className="text-brand-red text-sm font-medium">{c(`coach_${n}_role`)}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-          <div className="border-t border-white/10 pt-6 text-sm text-[#8a8a86] flex justify-between flex-wrap gap-3">
-            <span>© 2026 Thoubal Taekwondo Academy. All rights reserved.</span>
-            <Link to="/login" className="hover:text-gold">Student &amp; Parent Login →</Link>
+        </section>
+
+        {/* GALLERY */}
+        <section id="gallery" className={`${sectionCls} bg-[#EAF0F8]`}>
+          <div className={container}>
+            <SectionHeading kicker="Photo gallery" title="From the dojang and the podium" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5" style={{ gridAutoRows: 140 }}>
+              {galleryKeys.map((key, i) => {
+                const span = `${i === 0 ? 'col-span-2 row-span-2' : ''} ${i === 5 ? 'col-span-2' : ''}`
+                return content[key] ? (
+                  <img key={key} src={content[key]} alt={`Academy gallery photo ${i + 1}`} className={`object-cover w-full h-full border border-line ${span}`} />
+                ) : !hasGalleryImages ? (
+                  <div key={key} className={`bg-[#D3DBE7] border border-line ${span}`} />
+                ) : null
+              })}
+            </div>
           </div>
-        </div>
-      </footer>
+        </section>
+
+        {/* ENQUIRY */}
+        <section id="enquiry" className={sectionCls}>
+          <div className={`${container} grid lg:grid-cols-[1.4fr_1fr] gap-8`}>
+            <div className="bg-white border border-line">
+              <div className="bg-ink px-5 md:px-7 py-4 border-b-4 border-b-gold">
+                <h2 className="text-chalk text-xl">Admission Enquiry Form</h2>
+                <p className="text-[#C9D3E6] text-sm mt-1">Enroll your child, or yourself. The academy office will contact you.</p>
+              </div>
+              <form className="grid sm:grid-cols-2 gap-4 p-5 md:p-7" onSubmit={handleEnquirySubmit}>
+                <label className="flex flex-col gap-1.5 sm:col-span-2">
+                  <span className="text-sm font-semibold text-ink">Student's full name <span className="text-brand-red">*</span></span>
+                  <input type="text" required value={enquiryForm.child_name} onChange={setField('child_name')} className={inputClass} />
+                </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-sm font-semibold text-ink">Age <span className="text-brand-red">*</span></span>
+                  <input type="number" min="3" max="99" required value={enquiryForm.age} onChange={setField('age')} className={inputClass} />
+                </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-sm font-semibold text-ink">Parent / guardian phone <span className="text-brand-red">*</span></span>
+                  <input type="tel" required value={enquiryForm.guardian_phone} onChange={setField('guardian_phone')} className={inputClass} />
+                </label>
+                <label className="flex flex-col gap-1.5 sm:col-span-2">
+                  <span className="text-sm font-semibold text-ink">Program interested in</span>
+                  <select value={enquiryForm.program_interested} onChange={setField('program_interested')} className={inputClass}>
+                    <option>Little Dragons (5–8)</option>
+                    <option>Junior Program (9–14)</option>
+                    <option>Senior Program (15+)</option>
+                    <option>Self-Defense &amp; Fitness (Adults)</option>
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1.5 sm:col-span-2">
+                  <span className="text-sm font-semibold text-ink">Message</span>
+                  <textarea rows="3" value={enquiryForm.message} onChange={setField('message')} className={inputClass} />
+                </label>
+                <div className="sm:col-span-2 flex flex-col gap-3">
+                  {enquiryStatus === 'success' && <Alert tone="success">Thank you! Your enquiry has been received. We'll get back to you soon.</Alert>}
+                  {enquiryStatus === 'error' && <Alert>Something went wrong. Please try again or call the academy office.</Alert>}
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <span className="text-xs text-charcoal">Fields marked <span className="text-brand-red">*</span> are mandatory.</span>
+                    <button
+                      type="submit"
+                      className="px-8 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
+                      disabled={enquirySubmitting}
+                    >
+                      {enquirySubmitting ? 'Submitting…' : 'Submit Enquiry'}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <aside className="bg-white border border-line self-start">
+              <h2 className="bg-[#EAF0F8] text-ink text-base px-5 py-3 border-b border-line border-l-4 border-l-brand-red">Academy Office</h2>
+              <ul className="p-5 flex flex-col gap-4 text-sm">
+                <li className="flex gap-3"><MapPin size={18} className="shrink-0 text-brand-red" /><span>{c('contact_address')}</span></li>
+                <li className="flex gap-3">
+                  <Phone size={18} className="shrink-0 text-brand-red" />
+                  {phoneHref ? <a href={phoneHref} className="hover:text-brand-red">{c('contact_phone')}</a> : <span>{c('contact_phone')}</span>}
+                </li>
+                <li className="flex gap-3">
+                  <Mail size={18} className="shrink-0 text-brand-red" />
+                  <a href={`mailto:${c('contact_email')}`} className="hover:text-brand-red break-all">{c('contact_email')}</a>
+                </li>
+                <li className="flex gap-3"><Clock size={18} className="shrink-0 text-brand-red" /><span>Training sessions: morning &amp; evening batches. Contact the office for timings.</span></li>
+              </ul>
+              <div className="border-t border-line p-5 bg-chalk text-sm">
+                Already enrolled?{' '}
+                <Link to="/login" className="font-semibold text-ink underline hover:text-brand-red">Sign in to the student portal</Link>
+              </div>
+            </aside>
+          </div>
+        </section>
+      </main>
+
+      <PublicFooter c={c} />
     </div>
   )
 }

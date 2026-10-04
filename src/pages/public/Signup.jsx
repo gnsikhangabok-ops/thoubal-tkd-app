@@ -1,10 +1,14 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
-import logo from '../../assets/logo.png'
-import { Eye, EyeOff } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
+import AuthShell from '../../components/site/AuthShell'
+import PageLoader from '../../components/site/PageLoader'
+import { TextField, PasswordField, Alert } from '../../components/site/FormField'
+import { primaryButton } from '../../lib/ui'
 
 export default function Signup() {
+  const { session, loading, refreshProfile } = useAuth()
   const navigate = useNavigate()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -13,6 +17,10 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  // Already signed in — but not while our own signup is still creating the profile.
+  if (session && !submitting) return <Navigate to="/redirect" replace />
+  if (loading && !submitting) return <PageLoader />
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -29,9 +37,12 @@ export default function Signup() {
 
     setSubmitting(true)
 
+    // full_name in user metadata lets the on-signup database trigger create the profile
+    // (see supabase/migrations). The client-side upsert below is a fallback.
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
+      options: { data: { full_name: fullName } },
     })
 
     if (signUpError) {
@@ -40,110 +51,68 @@ export default function Signup() {
       return
     }
 
-    const userId = data.user?.id
-    if (!userId) {
-      setError('Signup succeeded but no user was returned. Please try logging in.')
+    if (!data.session) {
+      // Email confirmation is on: the user can't act until they confirm.
       setSubmitting(false)
+      navigate('/login', {
+        replace: true,
+        state: { notice: `Registration received. Please check ${email} for a confirmation link, then sign in.` },
+      })
       return
     }
 
-    const { error: profileError } = await supabase.from('profiles').insert({
-      id: userId,
-      role: 'student',
-      full_name: fullName,
-    })
-
-    setSubmitting(false)
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert(
+        { id: data.user.id, role: 'student', full_name: fullName },
+        { onConflict: 'id', ignoreDuplicates: true },
+      )
 
     if (profileError) {
-      setError(`Account created, but profile setup failed: ${profileError.message}. Please contact the academy admin.`)
-      return
+      console.error('Profile setup failed:', profileError.message)
     }
 
-    navigate('/login')
+    await refreshProfile()
+    setSubmitting(false)
+    navigate('/redirect', { replace: true })
   }
 
-  const inputClass = "px-3.5 py-3 border border-black/10 bg-white font-body text-[0.95rem] text-ink focus:outline-2 focus:outline-brand-red focus:outline-offset-1"
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-ink p-5 font-body">
-      <div className="w-full max-w-sm bg-chalk px-9 py-10 border-t-4 border-t-brand-red">
-        <div className="flex items-center gap-3 mb-7">
-          <img src={logo} alt="Thoubal Taekwondo Academy" className="w-11 h-11 object-contain" />
-          <div className="flex flex-col leading-tight">
-            <div className="font-display font-bold text-lg text-ink">THOUBAL <span className="text-brand-red">TKD</span></div>
-            <div className="text-[0.62rem] tracking-wide text-charcoal uppercase mt-0.5">Thoubal District Taekwondo Association</div>
-          </div>
-        </div>
-        <h2 className="font-display text-ink uppercase text-2xl mb-1.5">Create Account</h2>
-        <p className="text-charcoal text-sm mb-7">For students, parents, and staff. Access is assigned by the academy admin after signup.</p>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
-          <input
-            type="text"
-            placeholder="Full name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            required
-            className={inputClass}
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className={inputClass}
-          />
-          <div className="relative">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className={`${inputClass} w-full pr-10`}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              className="absolute top-1/2 -translate-y-1/2 right-3 text-charcoal hover:text-ink"
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
-              tabIndex={-1}
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
-          <div className="relative">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Confirm password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              className={`${inputClass} w-full pr-10`}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              className="absolute top-1/2 -translate-y-1/2 right-3 text-charcoal hover:text-ink"
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
-              tabIndex={-1}
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
-          {error && <p className="text-brand-red text-sm">{error}</p>}
-          <button
-            type="submit"
-            className="inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark mt-1 w-full disabled:opacity-60"
-            disabled={submitting}
-          >
-            {submitting ? 'Creating account…' : 'Sign up'}
-          </button>
-        </form>
-        <Link to="/login" className="block text-center mt-5 text-sm text-charcoal hover:text-brand-red">Already have an account? Sign in</Link>
-        <Link to="/" className="block text-center mt-2 text-sm text-charcoal hover:text-brand-red">← Back to homepage</Link>
-      </div>
-    </div>
+    <AuthShell
+      title="New Account Registration"
+      subtitle="For students and parents. Coaches and staff should register here too — the academy admin will then grant staff access."
+      footer={
+        <p className="text-charcoal">
+          Already registered?{' '}
+          <Link to="/login" className="font-semibold text-ink underline hover:text-brand-red">Sign in</Link>
+        </p>
+      }
+    >
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <TextField
+          label="Full name" type="text" autoComplete="name" required
+          value={fullName} onChange={(e) => setFullName(e.target.value)}
+        />
+        <TextField
+          label="Email address" type="email" autoComplete="email" required
+          value={email} onChange={(e) => setEmail(e.target.value)}
+        />
+        <PasswordField
+          label="Password" autoComplete="new-password" required minLength={6}
+          visible={showPassword} onToggle={() => setShowPassword((v) => !v)}
+          value={password} onChange={(e) => setPassword(e.target.value)}
+        />
+        <PasswordField
+          label="Confirm password" autoComplete="new-password" required
+          visible={showPassword} showToggle={false}
+          value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+        />
+        <p className="text-xs text-charcoal -mt-1">Minimum 6 characters. Fields marked <span className="text-brand-red">*</span> are mandatory.</p>
+        {error && <Alert>{error}</Alert>}
+        <button type="submit" className={`${primaryButton} mt-1`} disabled={submitting}>
+          {submitting ? 'Creating account…' : 'Register'}
+        </button>
+      </form>
+    </AuthShell>
   )
 }

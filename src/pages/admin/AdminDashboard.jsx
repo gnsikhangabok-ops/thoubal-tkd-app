@@ -125,7 +125,7 @@ export default function AdminDashboard() {
               <strong className="block font-display text-4xl text-chalk leading-none">
                 {s.value === null ? '—' : s.value}
               </strong>
-              <span className="text-xs text-[#B8B6B0] uppercase tracking-wide mt-2 block">{s.label}</span>
+              <span className="text-xs text-[#C9D3E6] uppercase tracking-wide mt-2 block">{s.label}</span>
             </div>
           )
         })}

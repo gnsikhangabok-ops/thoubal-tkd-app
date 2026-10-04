@@ -34,6 +34,7 @@ export default function Attendance() {
 
   useEffect(() => {
     if (selectedBatch) loadStudentsAndAttendance()
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- reload when the batch or date changes
   }, [selectedBatch, sessionDate])
 
   async function loadBatches() {
@@ -187,7 +188,7 @@ export default function Attendance() {
           <div className="grid gap-4 mb-5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
             <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
               <strong className="block font-display text-4xl text-chalk">{presentCount} / {students.length}</strong>
-              <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">Present today</span>
+              <span className="text-sm text-[#C9D3E6] uppercase tracking-wide">Present today</span>
             </div>
           </div>
 

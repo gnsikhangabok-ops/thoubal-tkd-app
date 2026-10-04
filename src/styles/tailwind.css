@@ -1,16 +1,21 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #0F0F0E;
-  --color-chalk: #F7F5F0;
-  --color-brand-red: #B3282D;
-  --color-brand-red-dark: #8f2024;
-  --color-gold: #D4A537;
-  --color-charcoal: #3A3A38;
-  --color-line: rgba(15, 15, 14, 0.12);
+  /* Official academy palette: navy institutional base, saffron/green national accents.
+     Token names are kept from the original theme so existing modules restyle automatically. */
+  --color-ink: #0B2350;          /* navy — headers, sidebars, dark panels */
+  --color-ink-deep: #071735;     /* utility bar / footer */
+  --color-chalk: #F5F7FA;        /* page background */
+  --color-brand-red: #B3282D;    /* primary action (taekwondo red) */
+  --color-brand-red-dark: #8F2024;
+  --color-gold: #F2A33A;         /* saffron-gold accent on navy */
+  --color-saffron: #FF9933;
+  --color-india-green: #138808;
+  --color-charcoal: #2E3A4D;
+  --color-line: rgba(11, 35, 80, 0.14);
 
-  --font-display: 'Oswald', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  --font-display: 'Roboto Condensed', 'Arial Narrow', sans-serif;
+  --font-body: 'Noto Sans', 'Segoe UI', sans-serif;
 }
 
 @layer base {
@@ -24,6 +29,34 @@
   h1, h2, h3 {
     @apply font-display text-ink uppercase tracking-wide;
   }
+  :focus-visible {
+    outline: 2px solid var(--color-saffron);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Thin saffron / white / green band used at the top of every page shell */
+  .tricolor {
+    @apply flex h-1 w-full;
+    background: linear-gradient(to right, var(--color-saffron) 0 33.33%, #fff 33.33% 66.66%, var(--color-india-green) 66.66% 100%);
+  }
+
+  /* Scrolling "Latest Updates" line; static for users who prefer reduced motion */
+  .ticker {
+    display: inline-block;
+    padding-left: 100%;
+    animation: ticker 28s linear infinite;
+  }
+  .ticker:hover { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) {
+    .ticker { padding-left: 0; animation: none; white-space: normal; }
+  }
+}
+
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
 }
 
 @layer components {
@@ -59,7 +92,7 @@
   .stat-grid { @apply grid gap-4 mb-9; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
   .stat-card { @apply bg-ink px-5 py-6 border-b-[3px] border-b-gold; }
   .stat-card strong { @apply block font-display text-4xl text-chalk; }
-  .stat-card span { @apply text-sm text-[#B8B6B0] uppercase tracking-wide; }
+  .stat-card span { @apply text-sm text-[#C9D3E6] uppercase tracking-wide; }
 
   .auth-page { @apply min-h-screen flex items-center justify-center bg-ink p-5; }
   .auth-card { @apply w-full max-w-sm bg-chalk px-9 py-10 border-t-4 border-t-brand-red; }

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { useState } from 'react'
+import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import logo from '../assets/logo.png'
 import { Menu, X } from 'lucide-react'
+import { roleLabel } from '../lib/roles'
 
 const NAV_ITEMS = [
   { label: 'Dashboard', path: '/admin', end: true },
@@ -27,13 +28,7 @@ const NAV_ITEMS = [
 
 export default function AdminLayout({ children }) {
   const { profile, signOut } = useAuth()
-  const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
-
-  // Close the mobile menu automatically whenever the route changes
-  useEffect(() => {
-    setMobileOpen(false)
-  }, [location.pathname])
 
   const visibleItems = NAV_ITEMS.filter(
     (item) => !item.superAdminOnly || profile?.role === 'super_admin'
@@ -41,10 +36,14 @@ export default function AdminLayout({ children }) {
 
   const sidebarContent = (
     <>
-      <div className="flex items-center justify-between gap-2.5 px-4 py-5 border-b border-white/10">
+      <div className="tricolor shrink-0" />
+      <div className="flex items-center justify-between gap-2.5 px-4 py-4 border-b border-white/10">
         <div className="flex items-center gap-2.5">
-          <img src={logo} alt="Thoubal Taekwondo Academy" className="w-8 h-8 object-contain" />
-          <div className="font-display font-bold text-sm text-chalk">THOUBAL <span className="text-brand-red">TKD</span></div>
+          <img src={logo} alt="Thoubal Taekwondo Academy" className="w-9 h-9 object-contain" />
+          <div className="flex flex-col leading-tight">
+            <div className="font-display font-bold text-sm text-chalk uppercase tracking-wide">Thoubal <span className="text-gold">TKD</span></div>
+            <div className="text-[0.6rem] uppercase tracking-wide text-[#AEBBD3]">Management Portal</div>
+          </div>
         </div>
         <button
           onClick={() => setMobileOpen(false)}
@@ -61,11 +60,12 @@ export default function AdminLayout({ children }) {
             key={item.path}
             to={item.path}
             end={item.end}
+            onClick={() => setMobileOpen(false)}
             className={({ isActive }) =>
               `px-4.5 py-2.5 text-sm font-medium border-l-[3px] ${
                 isActive
                   ? 'bg-gold/10 border-l-gold text-chalk font-semibold'
-                  : 'border-l-transparent text-[#C9C7C0] hover:bg-white/5 hover:text-chalk'
+                  : 'border-l-transparent text-[#C9D3E6] hover:bg-white/5 hover:text-chalk'
               }`
             }
           >
@@ -77,8 +77,8 @@ export default function AdminLayout({ children }) {
       <div className="px-4.5 py-4 border-t border-white/10">
         <div className="flex flex-col items-start gap-1.5 text-chalk text-sm">
           <span>{profile?.full_name}</span>
-          <span className="bg-brand-red text-chalk font-display text-[0.7rem] tracking-wide px-2.5 py-0.5 uppercase">
-            {profile?.role?.replace('_', ' ')}
+          <span className="bg-gold text-ink font-display font-semibold text-[0.7rem] tracking-wide px-2.5 py-0.5 uppercase">
+            {roleLabel(profile?.role)}
           </span>
         </div>
         <button
@@ -102,7 +102,7 @@ export default function AdminLayout({ children }) {
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between bg-ink border-b-[3px] border-b-gold px-4 py-3">
         <div className="flex items-center gap-2">
           <img src={logo} alt="Thoubal Taekwondo Academy" className="w-7 h-7 object-contain" />
-          <div className="font-display font-bold text-sm text-chalk">THOUBAL <span className="text-brand-red">TKD</span></div>
+          <div className="font-display font-bold text-sm text-chalk uppercase tracking-wide">Thoubal <span className="text-gold">TKD</span></div>
         </div>
         <button
           onClick={() => setMobileOpen(true)}

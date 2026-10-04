@@ -15,7 +15,7 @@ const btnPrimary = "inline-block px-4 py-2 font-display font-semibold text-[0.8r
 const btnOutline = "inline-block px-4 py-2 font-display font-semibold text-[0.8rem] uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk"
 
 export default function StudentPortal() {
-  const { profile, signOut } = useAuth()
+  const { session, profile, signOut } = useAuth()
   const [student, setStudent] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -28,23 +28,22 @@ export default function StudentPortal() {
   const [events, setEvents] = useState([])
   const [myRegistrations, setMyRegistrations] = useState([])
 
-  useEffect(() => {
-    loadStudentAndData()
-  }, [profile])
+  const profileId = profile?.id
 
-  async function loadStudentAndData() {
-    if (!profile) return
-    setLoading(true)
-    setError('')
-
+  async function loadStudentAndData(profileId) {
     const { data: studentData, error: studentError } = await supabase
       .from('students')
       .select('*, training_centers(name), batches(name)')
-      .eq('profile_id', profile.id)
-      .single()
+      .eq('profile_id', profileId)
+      .maybeSingle()
 
     if (studentError) {
-      setError('Could not find your student record. Please contact the academy admin.')
+      setError('load')
+      setLoading(false)
+      return
+    }
+    if (!studentData) {
+      setError('unlinked')
       setLoading(false)
       return
     }
@@ -70,6 +69,11 @@ export default function StudentPortal() {
     setLoading(false)
   }
 
+  useEffect(() => {
+    if (profileId) loadStudentAndData(profileId)
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- loader only uses state setters
+  }, [profileId])
+
   const presentCount = attendance.filter((a) => a.status === 'present').length
   const attendanceRate = attendance.length > 0 ? Math.round((presentCount / attendance.length) * 100) : null
   const pendingFees = fees.filter((f) => f.status === 'pending' || f.status === 'overdue')
@@ -77,17 +81,18 @@ export default function StudentPortal() {
 
   return (
     <div className="min-h-screen bg-chalk font-body">
+      <div className="tricolor" />
       <div className="flex items-center justify-between gap-4 flex-wrap bg-ink px-8 max-md:px-4 py-4 border-b-[3px] border-b-gold">
         <div className="flex items-center gap-3">
           <img src={logo} alt="Thoubal Taekwondo Academy" className="w-11 h-11 max-md:w-8 max-md:h-8 object-contain" />
           <div className="flex flex-col leading-tight">
-            <div className="font-display font-bold text-lg max-md:text-sm text-chalk">THOUBAL <span className="text-brand-red">TKD</span></div>
-            <div className="hidden md:block text-[0.62rem] tracking-wide text-[#B8B6B0] uppercase mt-0.5">Thoubal District Taekwondo Association</div>
+            <div className="font-display font-bold text-lg max-md:text-sm text-chalk">THOUBAL <span className="text-gold">TKD</span></div>
+            <div className="hidden md:block text-[0.62rem] tracking-wide text-[#C9D3E6] uppercase mt-0.5">Student &amp; Parent Portal</div>
           </div>
         </div>
         <div className="flex items-center gap-4 text-chalk text-sm flex-wrap">
           <span className="max-md:hidden">{profile?.full_name}</span>
-          <span className="bg-brand-red text-chalk font-display text-[0.7rem] tracking-wide px-2.5 py-0.5 uppercase">Student</span>
+          <span className="bg-gold text-ink font-display font-semibold text-[0.7rem] tracking-wide px-2.5 py-0.5 uppercase">Student</span>
           <button
             onClick={signOut}
             className="bg-transparent border border-chalk text-chalk font-display text-sm px-4 py-2 cursor-pointer uppercase tracking-wide hover:bg-chalk hover:text-ink"
@@ -100,8 +105,18 @@ export default function StudentPortal() {
       <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
         {loading ? (
           <p>Loading…</p>
+        ) : error === 'unlinked' ? (
+          <div className="max-w-xl bg-white border border-line border-l-4 border-l-gold p-6">
+            <h1 className="text-xl text-ink mb-2">Welcome, {profile?.full_name || 'student'}</h1>
+            <p className="text-sm mb-3">Your account is active, but it hasn't been linked to a student record yet.</p>
+            <ol className="list-decimal pl-5 text-sm flex flex-col gap-1.5">
+              <li>Contact the academy office or your coach.</li>
+              <li>Ask them to link your login (<strong>{session?.user?.email}</strong>) to your student record.</li>
+              <li>Refresh this page — your attendance, fees and belt progress will appear here.</li>
+            </ol>
+          </div>
         ) : error ? (
-          <p className="text-brand-red">{error}</p>
+          <p className="text-brand-red">Could not load your records right now. Please refresh the page or try again later.</p>
         ) : (
           <>
             <h1 className="font-display text-ink uppercase text-3xl mb-2">{student.full_name}</h1>
@@ -125,15 +140,15 @@ export default function StudentPortal() {
               <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
                 <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
                   <strong className="block font-display text-4xl text-chalk">{attendanceRate !== null ? `${attendanceRate}%` : '—'}</strong>
-                  <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">Attendance (last 30 sessions)</span>
+                  <span className="text-sm text-[#C9D3E6] uppercase tracking-wide">Attendance (last 30 sessions)</span>
                 </div>
                 <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
                   <strong className="block font-display text-2xl text-chalk">{BELT_LABELS[student.current_belt]}</strong>
-                  <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">Current Belt</span>
+                  <span className="text-sm text-[#C9D3E6] uppercase tracking-wide">Current Belt</span>
                 </div>
                 <div className="bg-ink px-5 py-6 border-b-[3px]" style={{ borderBottomColor: pendingFees.length > 0 ? '#B3282D' : '#D4A537' }}>
                   <strong className="block font-display text-4xl text-chalk">{pendingFees.length}</strong>
-                  <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">Pending Fee Payments</span>
+                  <span className="text-sm text-[#C9D3E6] uppercase tracking-wide">Pending Fee Payments</span>
                 </div>
               </div>
             )}
@@ -143,7 +158,7 @@ export default function StudentPortal() {
                 <div className="grid gap-4 mb-5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
                   <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
                     <strong className="block font-display text-4xl text-chalk">{presentCount} / {attendance.length}</strong>
-                    <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">Present (last 30 sessions)</span>
+                    <span className="text-sm text-[#C9D3E6] uppercase tracking-wide">Present (last 30 sessions)</span>
                   </div>
                 </div>
                 {attendance.length === 0 ? (
