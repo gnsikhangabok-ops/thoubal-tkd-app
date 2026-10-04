@@ -20,13 +20,20 @@ const PHOTOS = [
   // name, source, crop (x, y, w, h) or null, full width, small width
   ['team-banner', '4.webp', null, 1600, 800],                                         // hero (upscaled smoothly)
   ['gtcm-2025-award', '2.webp', null, 1280, 720],
-  ['coach-ranbir-moirangthem', '5.webp', { left: 175, top: 230, width: 440, height: 550 }, 880, 440],
-  ['coach-jemsh-saikhom', '3.webp', { left: 236, top: 200, width: 448, height: 560 }, 880, 440],
+  // coach cards (4:5): Ranbir at the SAI Bangalore course, Jemsh at the 4th Foundation Day
+  ['coach-ranbir-moirangthem', '6.webp', { left: 70, top: 400, width: 560, height: 700 }, 880, 440],
+  ['coach-jemsh-saikhom', '15.jpg', { left: 195, top: 0, width: 720, height: 900 }, 880, 440],
   ['sai-bangalore-ranbir-moirangthem', '6.webp', null, 720, 480],
   ['gtc-2025-coach-young-athlete', '7.webp', { left: 0, top: 0, width: 720, height: 1195 }, 720, 480],
   ['gtc-2025-podium-cadets', '8.jpg', { left: 0, top: 0, width: 721, height: 1195 }, 720, 480],
   ['gtc-2025-podium-juniors', '9.jpg', { left: 0, top: 0, width: 1280, height: 650 }, 1280, 720],
   ['gtc-2025-young-athlete', '10.jpg', { left: 0, top: 0, width: 720, height: 1195 }, 720, 480],
+  // 4th Foundation Day, 30 December 2024
+  ['foundation-day-2024-address', '11.jpg', null, 1280, 720],
+  ['foundation-day-2024-honour-1', '12.jpg', null, 960, 480],
+  ['foundation-day-2024-honour-2', '13.jpg', null, 960, 480],
+  ['foundation-day-2024-guests', '14.jpg', null, 960, 480],
+  ['foundation-day-2024-jemsh-saikhom', '15.jpg', null, 1169, 480],
 ];
 
 const enhance = (img) => img
