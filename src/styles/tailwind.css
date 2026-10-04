@@ -1,20 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  /* Official academy palette: navy institutional base, saffron/green national accents.
-     Token names are kept from the original theme so existing modules restyle automatically. */
+  /* Base palette (token names kept from the original theme) */
   --color-ink: #0B2350;          /* navy — headers, sidebars, dark panels */
-  --color-ink-deep: #071735;     /* utility bar / footer */
-  --color-chalk: #F5F7FA;        /* page background */
+  --color-chalk: #F3F7FB;        /* page background */
   --color-brand-red: #B3282D;    /* primary action (taekwondo red) */
   --color-brand-red-dark: #8F2024;
   --color-gold: #F2A33A;         /* saffron-gold accent on navy */
-  --color-saffron: #FF9933;
-  --color-india-green: #138808;
   --color-charcoal: #2E3A4D;
   --color-line: rgba(11, 35, 80, 0.14);
 
-  /* Paytm-style app palette used inside the logged-in modules (admin + student portal) */
+  /* Paytm-style app palette used across the site */
   --color-pay-navy: #002E6E;
   --color-pay-blue: #00BAF2;
   --color-pay-action: #0079C1;   /* darker blue so white button text stays readable */
@@ -24,7 +20,7 @@
   --color-pay-line: #E3EAF3;
   --shadow-card: 0 2px 12px rgba(0, 46, 110, 0.08);
 
-  --font-display: 'Roboto Condensed', 'Arial Narrow', sans-serif;
+  --font-display: 'Noto Sans', 'Segoe UI', sans-serif;
   --font-body: 'Noto Sans', 'Segoe UI', sans-serif;
 }
 
@@ -40,19 +36,13 @@
     @apply font-display text-ink uppercase tracking-wide;
   }
   :focus-visible {
-    outline: 2px solid var(--color-saffron);
+    outline: 2px solid var(--color-pay-action);
     outline-offset: 2px;
   }
 }
 
 @layer components {
-  /* Thin saffron / white / green band used at the top of every page shell */
-  .tricolor {
-    @apply flex h-1 w-full;
-    background: linear-gradient(to right, var(--color-saffron) 0 33.33%, #fff 33.33% 66.66%, var(--color-india-green) 66.66% 100%);
-  }
-
-  /* App shell for logged-in modules: plain sans headings instead of the condensed uppercase site style */
+  /* App shell: plain sans headings instead of the condensed uppercase base style */
   .paytm {
     --font-display: var(--font-body);
     background: var(--color-pay-bg);

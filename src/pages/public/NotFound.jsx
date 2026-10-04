@@ -6,7 +6,7 @@ export default function NotFound() {
   return (
     <AuthShell title="Page not found" subtitle="Error 404">
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-charcoal">
+        <p className="text-sm text-[#5B6B82]">
           The page you requested does not exist or may have been moved. Please check the address or use the links below.
         </p>
         <Link to="/" className={`${primaryButton} text-center`}>Go to homepage</Link>

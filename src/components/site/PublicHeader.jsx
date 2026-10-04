@@ -1,73 +1,55 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Menu, X, LogIn } from 'lucide-react'
-import logo from '../../assets/logo.png'
-import { REGISTRATION_NO } from '../../lib/siteContent'
+import Brand from './Brand'
 
 const NAV = [
-  { label: 'Home', href: '/#top' },
   { label: 'About', href: '/#about' },
   { label: 'Programs', href: '/#programs' },
   { label: 'Achievements', href: '/#achievements' },
   { label: 'Coaches', href: '/#coaches' },
   { label: 'Gallery', href: '/#gallery' },
-  { label: 'Rules & Regulations', to: '/rules' },
+  { label: 'Rules', to: '/rules' },
   { label: 'Contact', href: '/#enquiry' },
 ]
 
 export default function PublicHeader() {
   const [open, setOpen] = useState(false)
 
-  const navLink = (item, extra = '') => {
-    const cls = `block font-display font-medium text-sm uppercase tracking-wide text-chalk hover:bg-white/10 ${extra}`
-    return item.to ? (
+  const navLink = (item, cls) =>
+    item.to ? (
       <Link key={item.label} to={item.to} className={cls} onClick={() => setOpen(false)}>{item.label}</Link>
     ) : (
       <a key={item.label} href={item.href} className={cls} onClick={() => setOpen(false)}>{item.label}</a>
     )
-  }
 
   return (
     <>
-      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] bg-chalk text-ink px-3 py-2">
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] bg-white text-pay-navy rounded-full px-4 py-2 shadow-card">
         Skip to main content
       </a>
-      <div className="tricolor" />
 
-      {/* Utility bar */}
-      <div className="bg-ink-deep text-[#C9D3E6] text-xs">
-        <div className="max-w-[1180px] mx-auto px-4 md:px-7 py-1.5 flex items-center justify-between gap-4">
-          <span className="truncate">
-            <span className="hidden sm:inline">Registered under Thoubal District Taekwondo Association · </span>
-            Regd. No. {REGISTRATION_NO}
-          </span>
-          <Link to="/login" className="shrink-0 inline-flex items-center gap-1.5 hover:text-gold">
-            <LogIn size={13} /> Student &amp; Staff Login
-          </Link>
-        </div>
-      </div>
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-pay-line">
+        <div className="max-w-[1180px] mx-auto px-4 md:px-7 py-2.5 flex items-center justify-between gap-4">
+          <Brand size="lg" />
 
-      {/* Identity header */}
-      <header className="bg-white border-b border-line">
-        <div className="max-w-[1180px] mx-auto px-4 md:px-7 py-4 flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-3 md:gap-4 min-w-0">
-            <img src={logo} alt="" className="w-12 h-12 md:w-16 md:h-16 object-contain shrink-0" />
-            <div className="flex flex-col leading-tight min-w-0">
-              <span className="text-[0.62rem] md:text-xs tracking-wide text-charcoal uppercase">Thoubal District Taekwondo Association</span>
-              <span className="font-display font-bold text-lg md:text-2xl text-ink uppercase tracking-wide">Thoubal Taekwondo Academy</span>
-              <span className="hidden md:block text-xs text-charcoal mt-0.5">Khangabok, Thoubal, Manipur · Affiliated to AMTA · TFI · Asian Taekwondo Union</span>
-            </div>
-          </Link>
-          <a
-            href="/#enquiry"
-            className="hidden md:inline-block shrink-0 px-5 py-2.5 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark"
-          >
-            Admission Enquiry
-          </a>
+          <nav aria-label="Main" className="hidden lg:flex items-center gap-0.5 min-w-0">
+            {NAV.map((item) => navLink(item, 'rounded-full px-3 py-2 text-sm font-medium whitespace-nowrap text-[#4A5A73] hover:bg-pay-bg hover:text-pay-navy'))}
+          </nav>
+
+          <div className="hidden lg:flex items-center gap-2 shrink-0">
+            <Link to="/login" className="inline-flex items-center gap-1.5 rounded-full border border-pay-line px-4 py-2 text-sm font-semibold text-pay-navy hover:bg-pay-bg">
+              <LogIn size={16} /> Login
+            </Link>
+            <a href="/#enquiry" className="rounded-full bg-pay-action px-5 py-2 text-sm font-semibold text-white hover:bg-pay-action-dark">
+              Enroll Now
+            </a>
+          </div>
+
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="md:hidden text-ink p-1.5 border border-line"
+            className="lg:hidden p-2 rounded-full text-pay-navy hover:bg-pay-bg"
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
             aria-controls="public-nav"
@@ -75,26 +57,21 @@ export default function PublicHeader() {
             {open ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
-      </header>
 
-      {/* Primary navigation */}
-      <nav id="public-nav" aria-label="Main" className="sticky top-0 z-50 bg-ink border-b-4 border-b-gold">
-        <div className="hidden md:flex max-w-[1180px] mx-auto px-4 md:px-7 flex-wrap">
-          {NAV.map((item) => navLink(item, 'px-4 py-3 border-r border-white/10 first:border-l'))}
-        </div>
         {open && (
-          <div className="md:hidden flex flex-col py-1">
-            {NAV.map((item) => navLink(item, 'px-5 py-3 border-b border-white/10'))}
-            <a
-              href="/#enquiry"
-              onClick={() => setOpen(false)}
-              className="m-4 text-center px-5 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk"
-            >
-              Admission Enquiry
-            </a>
-          </div>
+          <nav id="public-nav" aria-label="Main" className="lg:hidden border-t border-pay-line px-4 pb-4 pt-2 flex flex-col">
+            {NAV.map((item) => navLink(item, 'rounded-xl px-3 py-3 text-[0.95rem] font-medium text-pay-navy hover:bg-pay-bg'))}
+            <div className="grid grid-cols-2 gap-2 mt-3">
+              <Link to="/login" onClick={() => setOpen(false)} className="text-center rounded-full border border-pay-action px-4 py-2.5 text-sm font-semibold text-pay-action">
+                Login
+              </Link>
+              <a href="/#enquiry" onClick={() => setOpen(false)} className="text-center rounded-full bg-pay-action px-4 py-2.5 text-sm font-semibold text-white">
+                Enroll Now
+              </a>
+            </div>
+          </nav>
         )}
-      </nav>
+      </header>
     </>
   )
 }

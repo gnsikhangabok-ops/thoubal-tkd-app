@@ -34,9 +34,9 @@ export default function Login() {
       title="Sign in"
       subtitle="Login for students, parents, coaches and academy staff"
       footer={
-        <p className="text-charcoal">
+        <p className="text-[#5B6B82]">
           New to the academy portal?{' '}
-          <Link to="/signup" className="font-semibold text-ink underline hover:text-brand-red">Register an account</Link>
+          <Link to="/signup" className="font-semibold text-pay-action hover:underline">Register an account</Link>
         </p>
       }
     >

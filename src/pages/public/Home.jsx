@@ -8,8 +8,8 @@ import PublicFooter from '../../components/site/PublicFooter'
 import { Alert } from '../../components/site/FormField'
 import {
   ShieldCheck, Users2, Medal, Sparkles, Target, HeartPulse,
-  GraduationCap, Globe2, Trophy, Flag, ChevronRight, FileText,
-  ClipboardList, LogIn, Award, Megaphone, MapPin, Phone, Mail, Clock,
+  GraduationCap, Globe2, Trophy, Flag, FileText,
+  ClipboardList, LogIn, Award, Megaphone, MapPin, Phone, Mail, Clock, BadgeCheck,
 } from 'lucide-react'
 
 const WHY_FEATURES = [
@@ -46,21 +46,16 @@ const EMPTY_ENQUIRY = { child_name: '', age: '', guardian_phone: '', program_int
 
 function SectionHeading({ kicker, title, light = false }) {
   return (
-    <div className="mb-10">
-      <div className={`font-display font-semibold text-sm uppercase tracking-wide mb-1.5 ${light ? 'text-gold' : 'text-brand-red'}`}>{kicker}</div>
-      <h2 className={`text-2xl md:text-3xl ${light ? 'text-chalk' : 'text-ink'}`}>{title}</h2>
-      <div className="flex h-1 w-24 mt-3">
-        <span className="flex-1 bg-saffron" />
-        <span className={`flex-1 ${light ? 'bg-white' : 'bg-[#D9DEE7]'}`} />
-        <span className="flex-1 bg-india-green" />
-      </div>
+    <div className="mb-8">
+      <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold mb-2.5 ${light ? 'bg-white/15 text-white' : 'bg-pay-sky text-pay-action'}`}>{kicker}</span>
+      <h2 className={`text-2xl md:text-3xl font-bold ${light ? '!text-white' : ''}`}>{title}</h2>
     </div>
   )
 }
 
 function PhotoPlaceholder({ label, className = '' }) {
   return (
-    <div className={`bg-[#E3E8F0] border border-line flex items-center justify-center text-[#7C879A] font-display text-sm uppercase ${className}`}>
+    <div className={`bg-gradient-to-br from-pay-sky to-[#D6E6F5] rounded-2xl flex items-center justify-center text-[#7A889E] text-sm font-medium ${className}`}>
       {label}
     </div>
   )
@@ -108,138 +103,123 @@ export default function Home() {
   const galleryKeys = ['gallery_1', 'gallery_2', 'gallery_3', 'gallery_4', 'gallery_5', 'gallery_6']
   const hasGalleryImages = galleryKeys.some((k) => content[k])
   const phoneHref = telHref(c('contact_phone'))
-  const sectionCls = 'py-16 md:py-20 scroll-mt-14'
+  const sectionCls = 'py-12 md:py-16 scroll-mt-20'
   const container = 'max-w-[1180px] mx-auto px-4 md:px-7'
 
   return (
-    <div id="top" className="font-body text-charcoal bg-chalk">
+    <div id="top" className="paytm font-body text-charcoal">
       <PublicHeader />
-
-      {/* LATEST UPDATES */}
-      <div className="bg-white border-b border-line">
-        <div className={`${container} flex items-stretch`}>
-          <span className="shrink-0 flex items-center gap-1.5 bg-brand-red text-chalk font-display font-semibold text-xs uppercase tracking-wide px-3 py-2">
-            <Megaphone size={14} /> Latest Updates
-          </span>
-          <div className="flex-1 overflow-hidden flex items-center px-3 py-2 text-sm text-ink">
-            <p className="ticker whitespace-nowrap">{c('announcement')}</p>
-          </div>
-        </div>
-      </div>
 
       <main id="main">
         {/* HERO */}
-        <section className="bg-ink relative overflow-hidden">
-          <div
-            className="absolute inset-0 opacity-[0.07]"
-            style={{ backgroundImage: 'repeating-linear-gradient(45deg, #fff 0 1px, transparent 1px 14px)' }}
-            aria-hidden="true"
-          />
-          <div className={`${container} relative grid lg:grid-cols-[1.5fr_1fr] gap-10 py-14 md:py-20`}>
-            <div>
-              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 px-3 py-1.5 mb-5">
-                <span className="flex flex-col w-4 h-3 overflow-hidden" aria-hidden="true">
-                  <span className="flex-1 bg-saffron" />
-                  <span className="flex-1 bg-white" />
-                  <span className="flex-1 bg-india-green" />
-                </span>
-                <span className="text-[0.7rem] font-display uppercase tracking-wide text-[#D5DEEE]">Recognized National Sport · Olympic Discipline</span>
-              </div>
-              <div className="text-gold font-display font-medium text-sm uppercase tracking-wide mb-3">{c('hero_kicker')}</div>
-              <h1 className="font-display font-bold text-chalk uppercase tracking-wide leading-[1.05] max-w-[16ch] text-4xl md:text-6xl">
-                {c('hero_headline')}
-              </h1>
-              <p className="text-[#D5DEEE] text-base md:text-lg max-w-[52ch] my-6">{c('hero_body')}</p>
-              <div className="flex gap-3 flex-wrap">
-                <a href="#enquiry" className="inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark">Apply for Admission</a>
-                <a href="#programs" className="inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-chalk text-chalk hover:bg-chalk hover:text-ink">View Programs</a>
-              </div>
+        <section className="relative overflow-hidden bg-gradient-to-br from-pay-navy via-[#0057A8] to-pay-blue rounded-b-[2rem] md:rounded-b-[3rem]">
+          <div className="absolute -right-24 -top-24 w-96 h-96 rounded-full bg-white/10" aria-hidden="true" />
+          <div className="absolute right-40 -bottom-32 w-72 h-72 rounded-full bg-white/10" aria-hidden="true" />
+          <div className={`${container} relative pt-12 md:pt-16 pb-28 md:pb-32`}>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white mb-5">
+              <BadgeCheck size={14} /> Registered Academy · Olympic Sport
+            </span>
+            <p className="text-[#8FE3FF] font-semibold text-sm mb-2">{c('hero_kicker')}</p>
+            <h1 className="!text-white font-bold leading-[1.1] max-w-[18ch] text-4xl md:text-6xl">{c('hero_headline')}</h1>
+            <p className="text-white/85 text-base md:text-lg max-w-[52ch] my-6">{c('hero_body')}</p>
+            <div className="flex gap-3 flex-wrap">
+              <a href="#enquiry" className="rounded-full bg-white px-6 py-3 text-sm font-bold text-pay-navy shadow-card hover:bg-pay-sky">Enroll Now</a>
+              <a href="#programs" className="rounded-full border border-white/60 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10">View Programs</a>
             </div>
-
-            {/* Quick links panel */}
-            <aside aria-label="Quick links" className="bg-white self-start border-t-4 border-t-gold">
-              <h2 className="bg-[#EAF0F8] text-ink text-base px-5 py-3 border-b border-line">Quick Links</h2>
-              <ul>
-                {QUICK_LINKS.map(({ icon: Icon, label, href, to }) => {
-                  const cls = 'flex items-center gap-3 px-5 py-3.5 border-b border-line text-sm font-medium text-ink hover:bg-[#F3F6FB] hover:text-brand-red'
-                  const inner = (
-                    <>
-                      <Icon size={18} className="text-brand-red shrink-0" strokeWidth={1.75} />
-                      <span className="flex-1">{label}</span>
-                      <ChevronRight size={16} className="text-[#9AA5B8]" />
-                    </>
-                  )
-                  return (
-                    <li key={label}>
-                      {to ? <Link to={to} className={cls}>{inner}</Link> : <a href={href} className={cls}>{inner}</a>}
-                    </li>
-                  )
-                })}
-              </ul>
-            </aside>
           </div>
         </section>
 
-        {/* KEY FIGURES */}
-        <section aria-label="Key figures" className="bg-white border-b border-line">
-          <div className={container}>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-line border-x border-line">
-              {[
-                { n: c('stat_students'), l: 'Students trained' },
-                { n: c('stat_medals'), l: 'State & national medals' },
-                { n: c('stat_belts'), l: 'Belt ranks taught' },
-                { n: PROGRAMS.length, l: 'Training programs' },
-              ].map((s) => (
-                <div key={s.l} className="bg-white px-4 md:px-6 py-7">
-                  <strong className="block font-display text-3xl md:text-4xl text-ink">{s.n}</strong>
-                  <span className="text-sm">{s.l}</span>
+        {/* QUICK SERVICES — overlaps the hero like an app service grid */}
+        <div className={`${container} relative -mt-20 md:-mt-24`}>
+          <div className="bg-white rounded-3xl shadow-card p-5 md:p-7">
+            <h2 className="text-base font-bold mb-5">Quick Services</h2>
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-y-6 gap-x-2">
+              {QUICK_LINKS.map(({ icon: Icon, label, href, to }) => {
+                const cls = 'group flex flex-col items-center text-center gap-2'
+                const inner = (
+                  <>
+                    <span className="grid place-items-center w-14 h-14 rounded-2xl bg-pay-sky text-pay-action group-hover:bg-pay-action group-hover:text-white transition-colors">
+                      <Icon size={24} strokeWidth={1.9} />
+                    </span>
+                    <span className="text-xs md:text-sm font-medium text-pay-navy leading-tight">{label}</span>
+                  </>
+                )
+                return to
+                  ? <Link key={label} to={to} className={cls}>{inner}</Link>
+                  : <a key={label} href={href} className={cls}>{inner}</a>
+              })}
+            </div>
+          </div>
+
+          {/* Announcement banner */}
+          <div className="mt-4 flex items-center gap-3 rounded-2xl bg-[#FFF6E5] px-4 py-3 overflow-hidden">
+            <span className="shrink-0 grid place-items-center w-9 h-9 rounded-full bg-[#FFE2A8] text-[#9A5B00]">
+              <Megaphone size={17} />
+            </span>
+            <div className="flex-1 overflow-hidden text-sm text-[#6B4300]">
+              <p className="ticker whitespace-nowrap"><strong>Latest update:</strong> {c('announcement')}</p>
+            </div>
+          </div>
+
+          {/* Key figures */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-4">
+            {[
+              { n: c('stat_students'), l: 'Students trained', icon: Users2 },
+              { n: c('stat_medals'), l: 'State & national medals', icon: Medal },
+              { n: c('stat_belts'), l: 'Belt ranks taught', icon: Award },
+              { n: PROGRAMS.length, l: 'Training programs', icon: Target },
+            ].map(({ n, l, icon: Icon }) => (
+              <div key={l} className="bg-white rounded-2xl shadow-card p-4 md:p-5 flex items-center gap-3">
+                <span className="grid place-items-center w-11 h-11 rounded-full bg-pay-sky text-pay-action shrink-0"><Icon size={20} /></span>
+                <div className="min-w-0">
+                  <strong className="block text-2xl font-bold text-pay-navy leading-none">{n}</strong>
+                  <span className="text-xs text-[#5B6B82]">{l}</span>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-        </section>
+        </div>
 
         {/* ABOUT */}
         <section id="about" className={sectionCls}>
-          <div className={`${container} grid md:grid-cols-[1fr_1.2fr] gap-10 md:gap-14 items-start`}>
+          <div className={`${container} grid md:grid-cols-[1fr_1.2fr] gap-8 md:gap-12 items-center`}>
             {content.about_image ? (
-              <img src={content.about_image} alt="Training at Thoubal Taekwondo Academy" className="aspect-[4/3] md:aspect-[4/5] w-full object-cover border border-line" />
+              <img src={content.about_image} alt="Training at Thoubal Taekwondo Academy" className="aspect-[4/3] w-full object-cover rounded-3xl shadow-card" />
             ) : (
-              <PhotoPlaceholder label="Academy photo" className="aspect-[4/3] md:aspect-[4/5]" />
+              <PhotoPlaceholder label="Academy photo" className="aspect-[4/3]" />
             )}
             <div>
               <SectionHeading kicker="About the academy" title={c('about_heading')} />
-              <p className="mb-4 text-[1.02rem]">{c('about_paragraph_1')}</p>
-              <p className="mb-6 text-[1.02rem]">{c('about_paragraph_2')}</p>
-              <dl className="grid sm:grid-cols-2 gap-px bg-line border border-line text-sm">
+              <p className="mb-4 text-[1.02rem] text-[#4A5A73]">{c('about_paragraph_1')}</p>
+              <p className="mb-6 text-[1.02rem] text-[#4A5A73]">{c('about_paragraph_2')}</p>
+              <div className="grid sm:grid-cols-2 gap-3 text-sm">
                 {[
                   ['Governing body', 'Thoubal District Taekwondo Association'],
                   ['Affiliations', 'AMTA · TFI · Asian Taekwondo Union'],
                   ['Disciplines', 'Poomsae, Kyorugi, Self-defense'],
                   ['Location', c('contact_address')],
                 ].map(([k, v]) => (
-                  <div key={k} className="bg-white px-4 py-3">
-                    <dt className="text-xs uppercase tracking-wide text-[#6B778C]">{k}</dt>
-                    <dd className="font-medium text-ink mt-0.5">{v}</dd>
+                  <div key={k} className="bg-white rounded-2xl shadow-card px-4 py-3">
+                    <div className="text-xs text-[#7A889E]">{k}</div>
+                    <div className="font-semibold text-pay-navy mt-0.5">{v}</div>
                   </div>
                 ))}
-              </dl>
+              </div>
             </div>
           </div>
         </section>
 
         {/* PROGRAMS */}
-        <section id="programs" className={`${sectionCls} bg-[#EAF0F8]`}>
+        <section id="programs" className={sectionCls}>
           <div className={container}>
             <SectionHeading kicker="Training programs" title="A path for every age and level" />
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-              {PROGRAMS.map((p) => (
-                <div key={p.title} className="bg-white border border-line flex flex-col">
-                  <div className="bg-ink text-gold font-display text-xs uppercase tracking-wide px-5 py-2">{p.age}</div>
-                  <div className="p-5">
-                    <h3 className="text-ink text-lg mb-2">{p.title}</h3>
-                    <p className="text-sm">{p.desc}</p>
-                  </div>
+            <div className="flex gap-4 overflow-x-auto pb-3 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-5 md:overflow-visible snap-x [scrollbar-width:none]">
+              {PROGRAMS.map((p, i) => (
+                <div key={p.title} className="snap-start shrink-0 w-[240px] md:w-auto bg-white rounded-2xl shadow-card p-5 flex flex-col">
+                  <span className="grid place-items-center w-11 h-11 rounded-full bg-gradient-to-br from-pay-navy to-pay-blue text-white text-sm font-bold mb-4">{i + 1}</span>
+                  <span className="self-start rounded-full bg-pay-sky text-pay-action text-xs font-semibold px-2.5 py-0.5 mb-2">{p.age}</span>
+                  <h3 className="text-lg font-bold mb-1.5">{p.title}</h3>
+                  <p className="text-sm text-[#5B6B82]">{p.desc}</p>
                 </div>
               ))}
             </div>
@@ -249,71 +229,67 @@ export default function Home() {
         {/* ACHIEVEMENTS */}
         <section id="achievements" className={sectionCls}>
           <div className={container}>
-            <SectionHeading kicker="Achievements" title="Results on the mat" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { n: '12', l: 'Gold medals, state-level' },
-                { n: '3', l: 'National qualifiers' },
-                { n: '40+', l: 'Black belts awarded' },
-                { n: '9', l: 'Years of training' },
-              ].map((s) => (
-                <div key={s.l} className="bg-white border border-line border-l-4 border-l-ink p-5 md:p-7">
-                  <strong className="block font-display text-3xl md:text-4xl text-ink">{s.n}</strong>
-                  <span className="text-sm">{s.l}</span>
+            <div className="rounded-3xl bg-gradient-to-br from-pay-navy via-[#0057A8] to-pay-blue p-6 md:p-10 relative overflow-hidden">
+              <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-white/10" aria-hidden="true" />
+              <div className="relative">
+                <SectionHeading light kicker="Achievements" title="Results on the mat" />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { n: '12', l: 'Gold medals, state-level' },
+                    { n: '3', l: 'National qualifiers' },
+                    { n: '40+', l: 'Black belts awarded' },
+                    { n: '9', l: 'Years of training' },
+                  ].map((s) => (
+                    <div key={s.l} className="rounded-2xl bg-white/10 px-4 py-5">
+                      <strong className="block text-3xl md:text-4xl font-bold text-white">{s.n}</strong>
+                      <span className="text-sm text-white/80">{s.l}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
 
             {recentAchievements.length > 0 && (
-              <>
-                <h3 className="text-ink text-lg mt-12 mb-4">Recent results</h3>
-                <div className="bg-white border border-line overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-ink text-chalk font-display uppercase tracking-wide text-xs">
-                      <tr>
-                        <th className="text-left px-4 py-3">Event / Title</th>
-                        <th className="text-left px-4 py-3">Athlete</th>
-                        <th className="text-left px-4 py-3">Level</th>
-                        <th className="text-left px-4 py-3">Medal</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentAchievements.map((a, i) => (
-                        <tr key={a.id} className={i % 2 ? 'bg-[#F5F7FA]' : ''}>
-                          <td className="px-4 py-3 font-medium text-ink">{a.title}</td>
-                          <td className="px-4 py-3">{a.students?.full_name || '—'}</td>
-                          <td className="px-4 py-3 capitalize">{a.level || '—'}</td>
-                          <td className="px-4 py-3 capitalize">
-                            {a.medal ? (
-                              <span className="inline-flex items-center gap-1.5">
-                                <span className="w-2.5 h-2.5 rounded-full" style={{ background: MEDAL_COLOR[a.medal] }} />
-                                {a.medal}
-                              </span>
-                            ) : '—'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
+              <div className="bg-white rounded-2xl shadow-card mt-4 p-2 md:p-3">
+                <h3 className="text-base font-bold px-3 pt-2 pb-3">Recent results</h3>
+                <ul className="divide-y divide-pay-line">
+                  {recentAchievements.map((a) => (
+                    <li key={a.id} className="flex items-center gap-3 px-3 py-3">
+                      <span
+                        className="grid place-items-center w-10 h-10 rounded-full shrink-0 text-white"
+                        style={{ background: a.medal ? MEDAL_COLOR[a.medal] : '#0079C1' }}
+                      >
+                        <Medal size={18} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold text-pay-navy truncate">{a.title}</div>
+                        <div className="text-xs text-[#5B6B82] capitalize">
+                          {a.students?.full_name ? `${a.students.full_name} · ` : ''}{a.level || ''}
+                        </div>
+                      </div>
+                      {a.medal && <span className="rounded-full bg-pay-bg px-2.5 py-0.5 text-xs font-semibold capitalize text-pay-navy">{a.medal}</span>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
         </section>
 
         {/* WHY TRAIN WITH US */}
-        <section id="why-us" className={`${sectionCls} bg-ink`}>
+        <section id="why-us" className={sectionCls}>
           <div className={container}>
-            <SectionHeading light kicker="Why train with us" title="Serious training, backed by official recognition" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-px bg-white/15 border border-white/15">
+            <SectionHeading kicker="Why train with us" title="Serious training, backed by real recognition" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
               {WHY_FEATURES.map((f) => {
                 const Icon = f.icon
                 return (
-                  <div key={f.title} className="relative bg-ink p-6 pt-7 flex flex-col gap-3">
-                    {f.national && <span className="tricolor absolute top-0 left-0" aria-hidden="true" />}
-                    <Icon size={22} className="text-gold" strokeWidth={1.75} />
-                    <h3 className="font-semibold text-[0.95rem] text-chalk leading-snug normal-case font-body tracking-normal">{f.title}</h3>
-                    <p className="text-[0.82rem] text-[#C9D3E6] leading-relaxed">{f.desc}</p>
+                  <div key={f.title} className="bg-white rounded-2xl shadow-card p-5 flex flex-col gap-3">
+                    <span className={`grid place-items-center w-11 h-11 rounded-full ${f.national ? 'bg-[#FFF6E5] text-[#B45309]' : 'bg-pay-sky text-pay-action'}`}>
+                      <Icon size={20} strokeWidth={1.9} />
+                    </span>
+                    <h3 className="font-bold text-[0.95rem] leading-snug">{f.title}</h3>
+                    <p className="text-[0.82rem] text-[#5B6B82] leading-relaxed">{f.desc}</p>
                   </div>
                 )
               })}
@@ -324,18 +300,18 @@ export default function Home() {
         {/* COACHES */}
         <section id="coaches" className={sectionCls}>
           <div className={container}>
-            <SectionHeading kicker="Our instructors" title="Coaching staff" />
-            <div className="grid gap-6 sm:grid-cols-2 max-w-[720px]">
+            <SectionHeading kicker="Our instructors" title="Meet the coaches" />
+            <div className="grid gap-4 sm:grid-cols-2 max-w-[720px]">
               {[1, 2].map((n) => (
-                <div key={n} className="bg-white border border-line">
+                <div key={n} className="bg-white rounded-3xl shadow-card p-3">
                   {content[`coach_${n}_photo`] ? (
-                    <img src={content[`coach_${n}_photo`]} alt={c(`coach_${n}_name`)} className="aspect-[4/3] w-full object-cover" />
+                    <img src={content[`coach_${n}_photo`]} alt={c(`coach_${n}_name`)} className="aspect-[4/3] w-full object-cover rounded-2xl" />
                   ) : (
-                    <PhotoPlaceholder label="Photo" className="aspect-[4/3] border-0 border-b" />
+                    <PhotoPlaceholder label="Photo" className="aspect-[4/3]" />
                   )}
-                  <div className="p-5 border-t-4 border-t-ink">
-                    <h3 className="text-lg text-ink mb-1">{c(`coach_${n}_name`)}</h3>
-                    <span className="text-brand-red text-sm font-medium">{c(`coach_${n}_role`)}</span>
+                  <div className="px-2 pt-4 pb-2">
+                    <h3 className="text-lg font-bold">{c(`coach_${n}_name`)}</h3>
+                    <span className="text-sm text-pay-action font-medium">{c(`coach_${n}_role`)}</span>
                   </div>
                 </div>
               ))}
@@ -344,16 +320,16 @@ export default function Home() {
         </section>
 
         {/* GALLERY */}
-        <section id="gallery" className={`${sectionCls} bg-[#EAF0F8]`}>
+        <section id="gallery" className={sectionCls}>
           <div className={container}>
             <SectionHeading kicker="Photo gallery" title="From the dojang and the podium" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5" style={{ gridAutoRows: 140 }}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3" style={{ gridAutoRows: 140 }}>
               {galleryKeys.map((key, i) => {
                 const span = `${i === 0 ? 'col-span-2 row-span-2' : ''} ${i === 5 ? 'col-span-2' : ''}`
                 return content[key] ? (
-                  <img key={key} src={content[key]} alt={`Academy gallery photo ${i + 1}`} className={`object-cover w-full h-full border border-line ${span}`} />
+                  <img key={key} src={content[key]} alt={`Academy gallery photo ${i + 1}`} className={`object-cover w-full h-full rounded-2xl ${span}`} />
                 ) : !hasGalleryImages ? (
-                  <div key={key} className={`bg-[#D3DBE7] border border-line ${span}`} />
+                  <div key={key} className={`rounded-2xl bg-gradient-to-br from-pay-sky to-[#D6E6F5] ${span}`} />
                 ) : null
               })}
             </div>
@@ -362,27 +338,27 @@ export default function Home() {
 
         {/* ENQUIRY */}
         <section id="enquiry" className={sectionCls}>
-          <div className={`${container} grid lg:grid-cols-[1.4fr_1fr] gap-8`}>
-            <div className="bg-white border border-line">
-              <div className="bg-ink px-5 md:px-7 py-4 border-b-4 border-b-gold">
-                <h2 className="text-chalk text-xl">Admission Enquiry Form</h2>
-                <p className="text-[#C9D3E6] text-sm mt-1">Enroll your child, or yourself. The academy office will contact you.</p>
+          <div className={`${container} grid lg:grid-cols-[1.4fr_1fr] gap-4 md:gap-6`}>
+            <div className="bg-white rounded-3xl shadow-card overflow-hidden">
+              <div className="bg-gradient-to-br from-pay-navy via-[#0057A8] to-pay-blue px-6 md:px-8 py-6">
+                <h2 className="!text-white text-xl md:text-2xl font-bold">Admission Enquiry</h2>
+                <p className="text-white/85 text-sm mt-1">Enroll your child, or yourself. Our team will call you back.</p>
               </div>
-              <form className="grid sm:grid-cols-2 gap-4 p-5 md:p-7" onSubmit={handleEnquirySubmit}>
+              <form className="grid sm:grid-cols-2 gap-4 p-6 md:p-8" onSubmit={handleEnquirySubmit}>
                 <label className="flex flex-col gap-1.5 sm:col-span-2">
-                  <span className="text-sm font-semibold text-ink">Student's full name <span className="text-brand-red">*</span></span>
+                  <span className="text-sm font-semibold text-pay-navy">Student's full name <span className="text-red-600">*</span></span>
                   <input type="text" required value={enquiryForm.child_name} onChange={setField('child_name')} className={inputClass} />
                 </label>
                 <label className="flex flex-col gap-1.5">
-                  <span className="text-sm font-semibold text-ink">Age <span className="text-brand-red">*</span></span>
+                  <span className="text-sm font-semibold text-pay-navy">Age <span className="text-red-600">*</span></span>
                   <input type="number" min="3" max="99" required value={enquiryForm.age} onChange={setField('age')} className={inputClass} />
                 </label>
                 <label className="flex flex-col gap-1.5">
-                  <span className="text-sm font-semibold text-ink">Parent / guardian phone <span className="text-brand-red">*</span></span>
+                  <span className="text-sm font-semibold text-pay-navy">Parent / guardian phone <span className="text-red-600">*</span></span>
                   <input type="tel" required value={enquiryForm.guardian_phone} onChange={setField('guardian_phone')} className={inputClass} />
                 </label>
                 <label className="flex flex-col gap-1.5 sm:col-span-2">
-                  <span className="text-sm font-semibold text-ink">Program interested in</span>
+                  <span className="text-sm font-semibold text-pay-navy">Program interested in</span>
                   <select value={enquiryForm.program_interested} onChange={setField('program_interested')} className={inputClass}>
                     <option>Little Dragons (5–8)</option>
                     <option>Junior Program (9–14)</option>
@@ -391,44 +367,42 @@ export default function Home() {
                   </select>
                 </label>
                 <label className="flex flex-col gap-1.5 sm:col-span-2">
-                  <span className="text-sm font-semibold text-ink">Message</span>
+                  <span className="text-sm font-semibold text-pay-navy">Message</span>
                   <textarea rows="3" value={enquiryForm.message} onChange={setField('message')} className={inputClass} />
                 </label>
                 <div className="sm:col-span-2 flex flex-col gap-3">
                   {enquiryStatus === 'success' && <Alert tone="success">Thank you! Your enquiry has been received. We'll get back to you soon.</Alert>}
-                  {enquiryStatus === 'error' && <Alert>Something went wrong. Please try again or call the academy office.</Alert>}
-                  <div className="flex items-center justify-between flex-wrap gap-3">
-                    <span className="text-xs text-charcoal">Fields marked <span className="text-brand-red">*</span> are mandatory.</span>
-                    <button
-                      type="submit"
-                      className="px-8 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
-                      disabled={enquirySubmitting}
-                    >
-                      {enquirySubmitting ? 'Submitting…' : 'Submit Enquiry'}
-                    </button>
-                  </div>
+                  {enquiryStatus === 'error' && <Alert>Something went wrong. Please try again or call the academy.</Alert>}
+                  <button
+                    type="submit"
+                    className="w-full sm:w-auto sm:self-end rounded-full bg-pay-action px-10 py-3 text-sm font-semibold text-white hover:bg-pay-action-dark disabled:opacity-60"
+                    disabled={enquirySubmitting}
+                  >
+                    {enquirySubmitting ? 'Submitting…' : 'Submit Enquiry'}
+                  </button>
                 </div>
               </form>
             </div>
 
-            <aside className="bg-white border border-line self-start">
-              <h2 className="bg-[#EAF0F8] text-ink text-base px-5 py-3 border-b border-line border-l-4 border-l-brand-red">Academy Office</h2>
-              <ul className="p-5 flex flex-col gap-4 text-sm">
-                <li className="flex gap-3"><MapPin size={18} className="shrink-0 text-brand-red" /><span>{c('contact_address')}</span></li>
-                <li className="flex gap-3">
-                  <Phone size={18} className="shrink-0 text-brand-red" />
-                  {phoneHref ? <a href={phoneHref} className="hover:text-brand-red">{c('contact_phone')}</a> : <span>{c('contact_phone')}</span>}
-                </li>
-                <li className="flex gap-3">
-                  <Mail size={18} className="shrink-0 text-brand-red" />
-                  <a href={`mailto:${c('contact_email')}`} className="hover:text-brand-red break-all">{c('contact_email')}</a>
-                </li>
-                <li className="flex gap-3"><Clock size={18} className="shrink-0 text-brand-red" /><span>Training sessions: morning &amp; evening batches. Contact the office for timings.</span></li>
+            <aside className="bg-white rounded-3xl shadow-card p-6 self-start">
+              <h2 className="text-lg font-bold mb-4">Contact the academy</h2>
+              <ul className="flex flex-col gap-4 text-sm">
+                {[
+                  { icon: MapPin, body: c('contact_address') },
+                  { icon: Phone, body: phoneHref ? <a href={phoneHref} className="hover:text-pay-action">{c('contact_phone')}</a> : c('contact_phone') },
+                  { icon: Mail, body: <a href={`mailto:${c('contact_email')}`} className="hover:text-pay-action break-all">{c('contact_email')}</a> },
+                  { icon: Clock, body: 'Morning & evening batches. Call us for timings.' },
+                ].map(({ icon: Icon, body }, i) => (
+                  <li key={i} className="flex items-center gap-3">
+                    <span className="grid place-items-center w-10 h-10 rounded-full bg-pay-sky text-pay-action shrink-0"><Icon size={18} /></span>
+                    <span className="text-[#4A5A73]">{body}</span>
+                  </li>
+                ))}
               </ul>
-              <div className="border-t border-line p-5 bg-chalk text-sm">
-                Already enrolled?{' '}
-                <Link to="/login" className="font-semibold text-ink underline hover:text-brand-red">Sign in to the student portal</Link>
-              </div>
+              <Link to="/login" className="mt-6 flex items-center justify-between rounded-2xl bg-pay-bg px-4 py-3 text-sm font-semibold text-pay-navy hover:bg-pay-sky">
+                Already enrolled? Open the student portal
+                <LogIn size={16} className="text-pay-action" />
+              </Link>
             </aside>
           </div>
         </section>

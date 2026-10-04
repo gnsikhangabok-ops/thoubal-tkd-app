@@ -28,39 +28,39 @@ export default function PublicRules() {
   }, [])
 
   return (
-    <div className="font-body text-charcoal bg-chalk min-h-screen flex flex-col">
+    <div className="paytm font-body text-charcoal min-h-screen flex flex-col">
       <PublicHeader />
 
-      {/* Page title band with breadcrumb */}
-      <div className="bg-[#EAF0F8] border-b border-line">
-        <div className="max-w-[1180px] mx-auto px-4 md:px-7 py-6">
-          <nav aria-label="Breadcrumb" className="text-xs text-charcoal mb-2">
-            <Link to="/" className="hover:text-brand-red underline">Home</Link>
+      <div className="bg-gradient-to-br from-pay-navy via-[#0057A8] to-pay-blue rounded-b-[2rem]">
+        <div className="max-w-[860px] mx-auto px-4 md:px-7 pt-8 pb-20">
+          <nav aria-label="Breadcrumb" className="text-xs text-white/75 mb-2">
+            <Link to="/" className="hover:text-white underline">Home</Link>
             <span className="mx-1.5">›</span>
             <span aria-current="page">Rules &amp; Regulations</span>
           </nav>
-          <h1 className="text-2xl md:text-3xl text-ink">Rules &amp; Regulations</h1>
+          <h1 className="!text-white text-2xl md:text-3xl font-bold">Rules &amp; Regulations</h1>
+          <p className="text-white/85 text-sm mt-1">Academy policy every student and parent agrees to at registration.</p>
         </div>
       </div>
 
-      <main id="main" className="flex-1 py-10 md:py-14">
-        <div className="max-w-[860px] mx-auto px-4 md:px-7">
-          <article className="bg-white border border-line">
-            <header className="flex items-center justify-between flex-wrap gap-2 px-5 md:px-8 py-4 border-b border-line border-l-4 border-l-brand-red">
-              <h2 className="text-base text-ink">Academy Policy Document</h2>
+      <main id="main" className="flex-1 pb-12">
+        <div className="max-w-[860px] mx-auto px-4 md:px-7 -mt-12">
+          <article className="bg-white rounded-3xl shadow-card overflow-hidden">
+            <header className="flex items-center justify-between flex-wrap gap-2 px-6 md:px-8 py-4 border-b border-pay-line">
+              <h2 className="text-base font-bold">Academy policy document</h2>
               {rules?.version != null && (
-                <span className="text-xs font-display uppercase tracking-wide bg-ink text-chalk px-2.5 py-1">Version {rules.version}</span>
+                <span className="rounded-full bg-pay-sky text-pay-action text-xs font-semibold px-3 py-1">Version {rules.version}</span>
               )}
             </header>
-            <div className="px-5 md:px-8 py-6 md:py-8">
+            <div className="px-6 md:px-8 py-6 md:py-8">
               {loading ? (
-                <p>Loading…</p>
+                <p className="text-[#5B6B82]">Loading…</p>
               ) : error ? (
-                <p className="text-brand-red">Could not load rules right now. Please try again later.</p>
+                <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 text-sm">Could not load rules right now. Please try again later.</p>
               ) : !rules ? (
-                <p className="text-charcoal">Rules have not been published yet. Please check back soon.</p>
+                <p className="text-[#5B6B82]">Rules have not been published yet. Please check back soon.</p>
               ) : (
-                <div className="whitespace-pre-wrap text-[1.02rem] leading-relaxed text-charcoal">{rules.content}</div>
+                <div className="whitespace-pre-wrap text-[1.02rem] leading-relaxed text-[#4A5A73]">{rules.content}</div>
               )}
             </div>
           </article>
