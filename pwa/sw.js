@@ -2,7 +2,7 @@
    - Page loads: network first, falling back to the cached app, then the offline page.
    - Built JS/CSS/fonts (content-hashed under /assets/): cache first.
    - Supabase / other sites: never cached (always live data). */
-const VERSION = 'tkd-v2'
+const VERSION = 'tkd-__BUILD_ID__' // replaced at build time so each deploy refreshes the cache
 // Cached copies were fetched without an Origin header; module scripts send one, so ignore Vary
 const MATCH = { ignoreVary: true }
 const SHELL = ['/offline.html', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png']
