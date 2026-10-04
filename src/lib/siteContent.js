@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
+import { useT } from './i18n'
 
 export const REGISTRATION_NO = '255/SR/Th/2025'
 
@@ -39,7 +40,9 @@ export function useSiteContent() {
     return () => { active = false }
   }, [])
 
-  const c = (key) => content[key] || SITE_DEFAULTS[key] || ''
+  const { t } = useT()
+  // Admin-entered text is shown as entered; built-in defaults follow the chosen language
+  const c = (key) => content[key] || (SITE_DEFAULTS[key] ? t(SITE_DEFAULTS[key]) : '')
   return { content, c }
 }
 

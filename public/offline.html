@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#002E6E" />
+  <title>Offline · Thoubal Taekwondo Academy</title>
+  <style>
+    :root { color-scheme: light dark; --bg: #F3F7FB; --card: #fff; --ink: #002E6E; --muted: #5B6B82; --btn: #0079C1; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #0B1220; --card: #131D2E; --ink: #E6EEF8; --muted: #9DB0C8; --btn: #2AA7E6; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px; background: var(--bg); font-family: system-ui, 'Segoe UI', sans-serif; color: var(--ink); }
+    .card { max-width: 380px; width: 100%; background: var(--card); border-radius: 24px; padding: 32px 24px; text-align: center; box-shadow: 0 2px 14px rgba(0,46,110,.1); }
+    img { width: 72px; height: 72px; border-radius: 50%; background: #fff; padding: 6px; }
+    h1 { font-size: 1.3rem; margin: 16px 0 6px; }
+    p { color: var(--muted); margin: 0 0 20px; line-height: 1.5; font-size: .95rem; }
+    button { border: 0; border-radius: 999px; padding: 12px 28px; font-weight: 600; font-size: .95rem; background: var(--btn); color: #fff; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <img src="/icons/icon-192.png" alt="" />
+    <h1>You're offline</h1>
+    <p>Check your internet connection. The academy portal needs a connection to load attendance, fees and other records.</p>
+    <button onclick="location.reload()">Try again</button>
+  </main>
+</body>
+</html>

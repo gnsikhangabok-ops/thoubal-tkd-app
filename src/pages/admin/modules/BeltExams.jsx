@@ -1,16 +1,12 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
-
-const BELT_RANKS = [
-  'white', 'yellow', 'green', 'blue', 'red',
-  'black_1', 'black_2', 'black_3', 'black_4_plus',
-]
-const BELT_LABELS = {
-  white: 'White Belt', yellow: 'Yellow Belt', green: 'Green Belt',
-  blue: 'Blue Belt', red: 'Red Belt', black_1: 'Black Belt 1st Dan',
-  black_2: 'Black Belt 2nd Dan', black_3: 'Black Belt 3rd Dan', black_4_plus: 'Black Belt 4th Dan+',
-}
+import { BELT_RANKS, BELT_LABELS } from '../../../lib/belts'
+import { useListTools, exportCsv, byText, byDateDesc, opts } from '../../../lib/listTools'
+import ListToolbar from '../../../components/ListToolbar'
+import DocumentModal from '../../../components/docs/DocumentModal'
+import BeltCertificate from '../../../components/docs/BeltCertificate'
+import { Award } from 'lucide-react'
 
 const emptyEventForm = { id: null, title: '', exam_date: '', location: '' }
 const emptyResultForm = {
@@ -23,6 +19,7 @@ export default function BeltExams() {
   const [events, setEvents] = useState([])
   const [students, setStudents] = useState([])
   const [selectedEvent, setSelectedEvent] = useState(null)
+  const [certificateFor, setCertificateFor] = useState(null)
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -145,21 +142,37 @@ export default function BeltExams() {
     }
   }
 
+
+  const list = useListTools(events, {
+    search: (e) => [e.title, e.location],
+    filters: { when: (e) => (e.exam_date >= new Date().toISOString().slice(0, 10) ? 'upcoming' : 'past') },
+    sorts: { newest: byDateDesc((e) => e.exam_date), title: byText((e) => e.title) },
+    defaultSort: 'newest',
+  })
+
+  function handleExport() {
+    exportCsv('belt-exams', list.result, [
+      { label: 'Exam date', value: (e) => e.exam_date },
+      { label: 'Title', value: (e) => e.title },
+      { label: 'Location', value: (e) => e.location },
+    ])
+  }
+
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       {!selectedEvent ? (
         <>
           <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-            <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">Belt Exams</h1>
+            <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Belt Exams</h1>
             <button className={btnPrimary} onClick={openAddEvent}>+ New Grading Event</button>
           </div>
-          <p className="text-[#5B6B82] mb-8">Schedule grading events and record student results.</p>
+          <p className="text-muted mb-8">Schedule grading events and record student results.</p>
 
           {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
           {showEventForm && (
-            <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[480px]">
-              <h3 className="font-semibold text-base text-pay-navy mb-4">{eventForm.id ? 'Edit Grading Event' : 'New Grading Event'}</h3>
+            <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[480px]">
+              <h3 className="font-semibold text-base text-heading mb-4">{eventForm.id ? 'Edit Grading Event' : 'New Grading Event'}</h3>
               <form onSubmit={handleEventSubmit} className="flex flex-col gap-3">
                 <input
                   type="text" placeholder="Title (e.g. Autumn Grading 2026)" required
@@ -191,19 +204,28 @@ export default function BeltExams() {
             </div>
           )}
 
+          <ListToolbar
+            list={list}
+            placeholder="Search exam, location…"
+            printTitle="Belt Exams"
+            onExport={handleExport}
+            filters={[{ key: 'when', label: 'When', options: opts(['upcoming', 'past']) }]}
+            sorts={[{ key: 'newest', label: 'Latest date first' }, { key: 'title', label: 'Title A–Z' }]}
+          />
+
           {loading ? (
             <p>Loading…</p>
-          ) : events.length === 0 ? (
-            <p className="text-charcoal">No grading events yet. Create one above.</p>
+          ) : list.result.length === 0 ? (
+            <p className="text-muted">{list.total === 0 ? <>No grading events yet. Create one above.</> : 'Nothing matches your search or filters.'}</p>
           ) : (
             <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-              {events.map((ev) => (
+              {list.result.map((ev) => (
                 <div
                   key={ev.id}
-                  className="bg-white rounded-2xl shadow-card p-6 cursor-pointer"
+                  className="bg-surface rounded-2xl shadow-card p-6 cursor-pointer"
                   onClick={() => setSelectedEvent(ev)}
                 >
-                  <h3 className="font-semibold text-base text-pay-navy mb-1.5">{ev.title}</h3>
+                  <h3 className="font-semibold text-base text-heading mb-1.5">{ev.title}</h3>
                   <p className="text-sm text-charcoal">{ev.exam_date}</p>
                   {ev.location && <p className="text-[0.85rem]">{ev.location}</p>}
                   <div className="mt-3">
@@ -225,16 +247,16 @@ export default function BeltExams() {
             ← All Grading Events
           </button>
           <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-            <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">{selectedEvent.title}</h1>
+            <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">{selectedEvent.title}</h1>
             <button className={btnPrimary} onClick={openAddResult}>+ Add Result</button>
           </div>
-          <p className="text-[#5B6B82] mb-8">{selectedEvent.exam_date} {selectedEvent.location ? `· ${selectedEvent.location}` : ''}</p>
+          <p className="text-muted mb-8">{selectedEvent.exam_date} {selectedEvent.location ? `· ${selectedEvent.location}` : ''}</p>
 
           {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
           {showResultForm && (
-            <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[480px]">
-              <h3 className="font-semibold text-base text-pay-navy mb-4">Add Result</h3>
+            <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[480px]">
+              <h3 className="font-semibold text-base text-heading mb-4">Add Result</h3>
               <form onSubmit={handleResultSubmit} className="flex flex-col gap-3">
                 <select
                   required
@@ -320,25 +342,35 @@ export default function BeltExams() {
               {results.map((r) => (
                 <div
                   key={r.id}
-                  className="bg-white rounded-2xl shadow-card p-6"
-                  style={{ borderLeftWidth: 4, borderLeftColor: r.passed ? '#047857' : '#ccc' }}
+                  className="bg-surface rounded-2xl shadow-card p-6"
+                  style={{ borderLeftWidth: 4, borderLeftColor: r.passed ? 'var(--status-ok)' : '#ccc' }}
                 >
-                  <h3 className="font-semibold text-base text-pay-navy mb-1.5">{r.students?.full_name}</h3>
+                  <h3 className="font-semibold text-base text-heading mb-1.5">{r.students?.full_name}</h3>
                   <p className="text-sm text-charcoal">{BELT_LABELS[r.from_belt]} → {BELT_LABELS[r.to_belt]}</p>
-                  <p className="text-[0.85rem] mt-1.5" style={{ color: r.passed ? '#047857' : '#999' }}>
+                  <p className="text-[0.85rem] mt-1.5" style={{ color: r.passed ? 'var(--status-ok)' : '#999' }}>
                     {r.passed ? 'Passed' : 'Did not pass'}
                   </p>
                   {r.remarks && <p className="text-[0.85rem] mt-1.5">{r.remarks}</p>}
                   {r.certificate_url && (
                     <a href={r.certificate_url} target="_blank" rel="noreferrer" className="text-[0.8rem] underline block mt-1.5">
-                      View Certificate
+                      View uploaded certificate
                     </a>
+                  )}
+                  {r.passed && (
+                    <button className={`${btnPrimary} ${btnSm} mt-3`} onClick={() => setCertificateFor(r)}>
+                      <Award size={14} /> Certificate
+                    </button>
                   )}
                 </div>
               ))}
             </div>
           )}
         </>
+      )}
+      {certificateFor && (
+        <DocumentModal title={`Certificate — ${certificateFor.students?.full_name}`} size="a4-landscape" onClose={() => setCertificateFor(null)}>
+          <BeltCertificate result={certificateFor} studentName={certificateFor.students?.full_name} exam={selectedEvent} />
+        </DocumentModal>
       )}
     </div>
   )

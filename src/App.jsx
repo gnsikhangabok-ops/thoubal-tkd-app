@@ -10,6 +10,8 @@ import RoleRedirect from './pages/public/RoleRedirect'
 import Unauthorized from './pages/public/Unauthorized'
 import Signup from './pages/public/Signup'
 import PageLoader from './components/site/PageLoader'
+import OfflineBanner from './components/OfflineBanner'
+import ChunkErrorBoundary from './components/ChunkErrorBoundary'
 
 // Admin, portal and secondary pages load on demand to keep the public bundle small
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
@@ -30,6 +32,9 @@ const Enquiries = lazy(() => import('./pages/admin/modules/Enquiries'))
 const Events = lazy(() => import('./pages/admin/modules/Events'))
 const Users = lazy(() => import('./pages/admin/modules/Users'))
 const WebsiteContent = lazy(() => import('./pages/admin/modules/WebsiteContent'))
+const Reports = lazy(() => import('./pages/admin/modules/Reports'))
+const Notices = lazy(() => import('./pages/admin/modules/Notices'))
+const ActivityLog = lazy(() => import('./pages/admin/modules/ActivityLog'))
 const NotFound = lazy(() => import('./pages/public/NotFound'))
 const PublicRules = lazy(() => import('./pages/public/PublicRules'))
 const StudentPortal = lazy(() => import('./pages/portal/StudentPortal'))
@@ -38,7 +43,9 @@ function Admin({ allowedRoles, children }) {
   return (
     <ProtectedRoute allowedRoles={allowedRoles}>
       <AdminLayout>
-        <Suspense fallback={<div className="p-12 text-charcoal">Loading…</div>}>{children}</Suspense>
+        <ChunkErrorBoundary>
+          <Suspense fallback={<div className="p-12 text-charcoal">Loading…</div>}>{children}</Suspense>
+        </ChunkErrorBoundary>
       </AdminLayout>
     </ProtectedRoute>
   )
@@ -48,6 +55,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <ChunkErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Public site */}
@@ -60,6 +68,7 @@ export default function App() {
 
             {/* Admin / Coach area — all wrapped in the persistent sidebar layout */}
             <Route path="/admin" element={<Admin allowedRoles={['super_admin', 'coach']}><AdminDashboard /></Admin>} />
+            <Route path="/admin/reports" element={<Admin allowedRoles={['super_admin', 'coach']}><Reports /></Admin>} />
             <Route path="/admin/training-centers" element={<Admin allowedRoles={['super_admin', 'coach']}><TrainingCenters /></Admin>} />
             <Route path="/admin/coaches" element={<Admin allowedRoles={['super_admin', 'coach']}><Coaches /></Admin>} />
             <Route path="/admin/students" element={<Admin allowedRoles={['super_admin', 'coach']}><Students /></Admin>} />
@@ -76,6 +85,8 @@ export default function App() {
             <Route path="/admin/enquiries" element={<Admin allowedRoles={['super_admin', 'coach']}><Enquiries /></Admin>} />
             <Route path="/admin/events" element={<Admin allowedRoles={['super_admin', 'coach']}><Events /></Admin>} />
             <Route path="/admin/users" element={<Admin allowedRoles={['super_admin']}><Users /></Admin>} />
+            <Route path="/admin/notices" element={<Admin allowedRoles={['super_admin', 'coach']}><Notices /></Admin>} />
+            <Route path="/admin/activity" element={<Admin allowedRoles={['super_admin']}><ActivityLog /></Admin>} />
             <Route path="/admin/website" element={<Admin allowedRoles={['super_admin']}><WebsiteContent /></Admin>} />
 
             {/* Student / Parent portal */}
@@ -91,6 +102,8 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
+        </ChunkErrorBoundary>
+        <OfflineBanner />
       </BrowserRouter>
     </AuthProvider>
   )

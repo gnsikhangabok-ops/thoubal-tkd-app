@@ -2,6 +2,11 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
+import { useListTools, exportCsv, byText, opts } from '../../../lib/listTools'
+import ListToolbar from '../../../components/ListToolbar'
+import DocumentModal from '../../../components/docs/DocumentModal'
+import FeeReceipt from '../../../components/docs/FeeReceipt'
+import { ReceiptText } from 'lucide-react'
 
 function currentMonthFirst() {
   const d = new Date()
@@ -30,6 +35,7 @@ export default function FeeManagement() {
   const [payingFor, setPayingFor] = useState(null)
   const [payForm, setPayForm] = useState(emptyPayForm)
   const [saving, setSaving] = useState(false)
+  const [receiptFor, setReceiptFor] = useState(null)
 
   useEffect(() => {
     loadPayments()
@@ -191,15 +197,40 @@ export default function FeeManagement() {
   const totalPaid = payments.reduce((sum, p) => sum + parseFloat(p.amount_paid || 0), 0)
   const pendingCount = payments.filter((p) => p.status === 'pending' || p.status === 'overdue').length
 
-  const statusColor = { paid: '#047857', pending: '#B45309', overdue: '#DC2626', waived: '#999' }
+  const statusColor = { paid: 'var(--status-ok)', pending: 'var(--status-warn)', overdue: 'var(--status-bad)', waived: '#999' }
+
+
+  const list = useListTools(payments, {
+    search: (p) => [p.students?.full_name, p.receipt_no, p.payment_method],
+    filters: { status: (p) => p.status },
+    sorts: {
+      name: byText((p) => p.students?.full_name),
+      due: (a, b) => ((b.amount_due || 0) - (b.amount_paid || 0)) - ((a.amount_due || 0) - (a.amount_paid || 0)),
+    },
+    defaultSort: 'name',
+  })
+
+  function handleExport() {
+    exportCsv(`fees-${monthFilter.slice(0, 7)}`, list.result, [
+      { label: 'Month', value: () => formatMonth(monthFilter) },
+      { label: 'Student', value: (p) => p.students?.full_name },
+      { label: 'Amount due (INR)', value: (p) => p.amount_due },
+      { label: 'Amount paid (INR)', value: (p) => p.amount_paid || 0 },
+      { label: 'Balance (INR)', value: (p) => (p.amount_due || 0) - (p.amount_paid || 0) },
+      { label: 'Status', value: (p) => p.status },
+      { label: 'Payment method', value: (p) => p.payment_method },
+      { label: 'Receipt no.', value: (p) => p.receipt_no },
+      { label: 'Paid on', value: (p) => p.paid_on },
+    ])
+  }
 
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">Fee Management</h1>
+        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Fee Management</h1>
         <button className={btnPrimary} onClick={openGenForm}>+ Generate Month's Fees</button>
       </div>
-      <p className="text-[#5B6B82] mb-8">
+      <p className="text-muted mb-8">
         Track monthly dues, payments, and receipts. Rates come from{' '}
         <Link to="/admin/fee-setup" className="underline">Fee Setup</Link>. Payments post automatically to{' '}
         <Link to="/admin/accounts" className="underline">Accounts</Link>.
@@ -233,8 +264,8 @@ export default function FeeManagement() {
       </div>
 
       {showGenForm && (
-        <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[460px]">
-          <h3 className="font-semibold text-base text-pay-navy mb-4">Generate Fee Records</h3>
+        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[460px]">
+          <h3 className="font-semibold text-base text-heading mb-4">Generate Fee Records</h3>
 
           <label className="text-[0.85rem] font-semibold block mb-1.5">Month</label>
           <input
@@ -286,8 +317,8 @@ export default function FeeManagement() {
       )}
 
       {payingFor && (
-        <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[420px]">
-          <h3 className="font-semibold text-base text-pay-navy mb-1.5">Record Payment</h3>
+        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[420px]">
+          <h3 className="font-semibold text-base text-heading mb-1.5">Record Payment</h3>
           <p className="text-[0.85rem] mb-4 text-charcoal">
             {payingFor.students?.full_name} — due ₹{payingFor.amount_due}, paid so far ₹{payingFor.amount_paid || 0}
           </p>
@@ -334,24 +365,38 @@ export default function FeeManagement() {
         </div>
       )}
 
+      <ListToolbar
+        list={list}
+        placeholder="Search student or receipt no.…"
+        printTitle={`Fees — ${formatMonth(monthFilter)}`}
+        onExport={handleExport}
+        filters={[{ key: 'status', label: 'Status', options: opts(['paid', 'pending', 'overdue', 'waived']) }]}
+        sorts={[{ key: 'name', label: 'Student A–Z' }, { key: 'due', label: 'Highest balance' }]}
+      />
+
       {loading ? (
         <p>Loading…</p>
-      ) : payments.length === 0 ? (
+      ) : list.result.length === 0 ? (
         <p className="text-charcoal">No fee records for {formatMonth(monthFilter)} yet. Generate them above.</p>
       ) : (
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {payments.map((p) => (
+          {list.result.map((p) => (
             <div
               key={p.id}
-              className="bg-white rounded-2xl shadow-card p-6"
+              className="bg-surface rounded-2xl shadow-card p-6"
               style={{ borderLeftWidth: 4, borderLeftColor: statusColor[p.status] }}
             >
-              <h3 className="font-semibold text-base text-pay-navy mb-1.5">{p.students?.full_name}</h3>
+              <h3 className="font-semibold text-base text-heading mb-1.5">{p.students?.full_name}</h3>
               <p className="text-sm text-charcoal">Due: ₹{p.amount_due} · Paid: ₹{p.amount_paid || 0}</p>
               <p className="text-[0.8rem] mt-1.5 uppercase font-display" style={{ color: statusColor[p.status] }}>
                 {p.status}
               </p>
               {p.receipt_no && <p className="text-[0.8rem] mt-1">Receipt: {p.receipt_no}</p>}
+              {Number(p.amount_paid) > 0 && (
+                <button className={`${btnPrimary} ${btnSm} mt-3`} onClick={() => setReceiptFor(p)}>
+                  <ReceiptText size={14} /> Receipt
+                </button>
+              )}
               {p.status !== 'paid' && p.status !== 'waived' && (
                 <div className="flex gap-2 mt-3">
                   <button className={`${btnOutline} ${btnSm}`} onClick={() => openPayForm(p)}>Record Payment</button>
@@ -361,6 +406,11 @@ export default function FeeManagement() {
             </div>
           ))}
         </div>
+      )}
+      {receiptFor && (
+        <DocumentModal title={`Fee receipt — ${receiptFor.students?.full_name}`} size="a5" onClose={() => setReceiptFor(null)}>
+          <FeeReceipt payment={receiptFor} studentName={receiptFor.students?.full_name} />
+        </DocumentModal>
       )}
     </div>
   )

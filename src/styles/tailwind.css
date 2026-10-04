@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* dark: utilities follow the theme switch (data-theme on <html>), not just the OS setting */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
 @theme {
   /* Base palette (token names kept from the original theme) */
   --color-ink: #0B2350;          /* navy — headers, sidebars, dark panels */
@@ -18,10 +21,19 @@
   --color-pay-sky: #E6F7FD;
   --color-pay-bg: #F3F7FB;
   --color-pay-line: #E3EAF3;
+  --color-pay-sky-2: #D6E6F5;
   --shadow-card: 0 2px 12px rgba(0, 46, 110, 0.08);
 
-  --font-display: 'Noto Sans', 'Segoe UI', sans-serif;
-  --font-body: 'Noto Sans', 'Segoe UI', sans-serif;
+  /* Semantic tokens — redefined for dark mode below */
+  --color-surface: #FFFFFF;      /* cards, bars, inputs */
+  --color-heading: #002E6E;      /* headings and strong labels */
+  --color-body: #4A5A73;         /* paragraph text */
+  --color-muted: #5B6B82;        /* secondary text */
+  --color-subtle: #7A889E;       /* hints, captions */
+
+  /* Devanagari (Hindi) and Meetei Mayek (Manipuri) fall through to their own Noto faces */
+  --font-display: 'Noto Sans', 'Noto Sans Devanagari', 'Noto Sans Meetei Mayek', 'Segoe UI', sans-serif;
+  --font-body: 'Noto Sans', 'Noto Sans Devanagari', 'Noto Sans Meetei Mayek', 'Segoe UI', sans-serif;
 }
 
 @layer base {
@@ -50,7 +62,7 @@
   .paytm h1, .paytm h2, .paytm h3 {
     text-transform: none;
     letter-spacing: normal;
-    color: var(--color-pay-navy);
+    color: var(--color-heading);
   }
   .paytm .uppercase { letter-spacing: 0.02em; }
 
@@ -154,3 +166,80 @@
     .admin-sidebar { width: 170px; }
   }
 }
+
+/* Status colours used in inline styles (cards' left accents, status labels) */
+:root {
+  /* Chart series (validated categorical slots 1–2, light surface) */
+  --viz-1: #2a78d6;
+  --viz-2: #eb6834;
+  --status-ok: #047857;
+  --status-bad: #DC2626;
+  --status-warn: #B45309;
+  --status-info: #0079C1;
+}
+
+/* ---------- Dark theme ---------- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-surface: #131D2E;
+  --color-heading: #E6EEF8;
+  --color-body: #B7C6D9;
+  --color-muted: #9DB0C8;
+  --color-subtle: #8597AF;
+  --color-ink: #E6EEF8;
+  --color-charcoal: #B7C6D9;
+  --color-chalk: #0B1220;
+  --color-pay-bg: #0B1220;
+  --color-pay-line: #24344D;
+  --color-pay-sky: #10304D;
+  --color-pay-sky-2: #173A5C;
+  --color-pay-action: #2AA7E6;
+  --color-pay-action-dark: #1B8CC4;
+  --shadow-card: 0 2px 14px rgba(0, 0, 0, 0.45);
+  --viz-1: #3987e5;
+  --viz-2: #d95926;
+  --status-ok: #34D399;
+  --status-bad: #F87171;
+  --status-warn: #FBBF24;
+  --status-info: #38BDF8;
+}
+/* Status tints that use Tailwind's built-in palette */
+:root[data-theme="dark"] .bg-red-50 { background-color: #3A1A1E; }
+:root[data-theme="dark"] .text-red-700, :root[data-theme="dark"] .text-red-600 { color: #FCA5A5; }
+:root[data-theme="dark"] .bg-emerald-50 { background-color: #0F3326; }
+:root[data-theme="dark"] .text-emerald-800 { color: #6EE7B7; }
+:root[data-theme="dark"] .text-amber-700 { color: #FCD34D; }
+:root[data-theme="dark"] .bg-\[\#FFF6E5\] { background-color: #3A2A10; }
+:root[data-theme="dark"] .text-\[\#6B4300\] { color: #FCD9A0; }
+
+/* ---------- Print / Save as PDF ---------- */
+@media print {
+  :root, :root[data-theme="dark"] {
+    color-scheme: light;
+    --color-surface: #fff; --color-heading: #002E6E; --color-body: #333; --color-muted: #444; --color-subtle: #555;
+    --color-ink: #111; --color-charcoal: #333; --color-pay-bg: #fff; --color-pay-line: #ccc;
+    --status-ok: #047857; --status-bad: #DC2626; --status-warn: #B45309; --status-info: #0079C1;
+    --viz-1: #2a78d6; --viz-2: #eb6834;
+  }
+  body, .paytm { background: #fff !important; }
+  aside, nav, header, .no-print, button, form { display: none !important; }
+  main { padding-top: 0 !important; }
+  .shadow-card { box-shadow: none !important; border: 1px solid #ccc; }
+  .pay-stat { background: #fff !important; color: #002E6E !important; border: 1px solid #ccc; }
+  .pay-stat * { color: #002E6E !important; }
+  .print-only { display: block !important; }
+  a { text-decoration: none; }
+}
+.print-only { display: none; }
+
+/* Printing a single document from DocumentModal: show only .print-doc, at true size */
+@media print {
+  body.printing-doc #root { display: none !important; }
+  body.printing-doc [role="dialog"] { position: static !important; display: block !important; background: none !important; backdrop-filter: none !important; }
+  body.printing-doc [role="dialog"] > div:not(.no-print) { padding: 0 !important; overflow: visible !important; display: block !important; }
+  body.printing-doc .print-doc { break-inside: avoid; }
+  body.printing-doc .print-doc { box-shadow: none !important; }
+  body.printing-doc .print-doc * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+@page { margin: 10mm; }
+

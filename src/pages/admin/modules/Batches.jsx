@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
+import { useListTools, exportCsv, byText, opts } from '../../../lib/listTools'
+import ListToolbar from '../../../components/ListToolbar'
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
@@ -138,13 +140,39 @@ export default function Batches() {
     ? coaches.filter((c) => c.training_center_id === form.training_center_id)
     : coaches
 
+
+  const list = useListTools(batches, {
+    search: (b) => [b.name, b.age_group, b.training_centers?.name, b.coaches?.full_name],
+    filters: {
+      status: (b) => (b.active ? 'active' : 'inactive'),
+      center: (b) => b.training_center_id,
+      day: { match: (b, day) => Boolean(b.schedule_days?.includes(day)) },
+    },
+    sorts: { name: byText((b) => b.name), time: byText((b) => b.start_time), center: byText((b) => b.training_centers?.name) },
+    defaultSort: 'name',
+  })
+
+  function handleExport() {
+    exportCsv('batches', list.result, [
+      { label: 'Batch', value: (b) => b.name },
+      { label: 'Training center', value: (b) => b.training_centers?.name },
+      { label: 'Coach', value: (b) => b.coaches?.full_name },
+      { label: 'Age group', value: (b) => b.age_group },
+      { label: 'Days', value: (b) => b.schedule_days?.join(' ') },
+      { label: 'Start', value: (b) => b.start_time?.slice(0, 5) },
+      { label: 'End', value: (b) => b.end_time?.slice(0, 5) },
+      { label: 'Capacity', value: (b) => b.capacity },
+      { label: 'Status', value: (b) => (b.active ? 'Active' : 'Inactive') },
+    ])
+  }
+
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">Batches</h1>
+        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Batches</h1>
         <button className={btnPrimary} onClick={openAddForm}>+ Add Batch</button>
       </div>
-      <p className="text-[#5B6B82] mb-8">Class groups with timing, coach, and center assignment.</p>
+      <p className="text-muted mb-8">Class groups with timing, coach, and center assignment.</p>
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -155,8 +183,8 @@ export default function Batches() {
       )}
 
       {showForm && (
-        <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[520px]">
-          <h3 className="font-semibold text-base text-pay-navy mb-4">{form.id ? 'Edit Batch' : 'New Batch'}</h3>
+        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[520px]">
+          <h3 className="font-semibold text-base text-heading mb-4">{form.id ? 'Edit Batch' : 'New Batch'}</h3>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <input
               type="text" placeholder="Batch name (e.g. Little Dragons - Morning)" required
@@ -204,7 +232,7 @@ export default function Batches() {
                     className={`text-[0.8rem] px-3.5 py-1.5 font-semibold rounded-full ${
                       form.schedule_days.includes(day)
                         ? 'bg-pay-action text-white border border-pay-action'
-                        : 'border border-pay-line text-pay-navy bg-white hover:bg-pay-sky'
+                        : 'border border-pay-line text-heading bg-surface hover:bg-pay-sky'
                     }`}
                   >
                     {day}
@@ -262,19 +290,32 @@ export default function Batches() {
         </div>
       )}
 
+      <ListToolbar
+        list={list}
+        placeholder="Search batch, coach, center…"
+        printTitle="Batches"
+        onExport={handleExport}
+        filters={[
+          { key: 'status', label: 'Status', options: opts(['active', 'inactive']) },
+          { key: 'center', label: 'Center', options: centers.map((c) => ({ value: c.id, label: c.name })) },
+          { key: 'day', label: 'Training day', options: opts(DAYS) },
+        ]}
+        sorts={[{ key: 'name', label: 'Name A–Z' }, { key: 'time', label: 'Start time' }, { key: 'center', label: 'Center' }]}
+      />
+
       {loading ? (
         <p>Loading…</p>
-      ) : batches.length === 0 ? (
-        <p className="text-charcoal">No batches yet. Add your first one above.</p>
+      ) : list.result.length === 0 ? (
+        <p className="text-muted">{list.total === 0 ? <>No batches yet. Add your first one above.</> : 'Nothing matches your search or filters.'}</p>
       ) : (
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {batches.map((b) => (
+          {list.result.map((b) => (
             <div
               key={b.id}
-              className="bg-white rounded-2xl shadow-card p-6"
-              style={{ borderLeftWidth: 4, borderLeftColor: b.active ? '#047857' : '#ccc' }}
+              className="bg-surface rounded-2xl shadow-card p-6"
+              style={{ borderLeftWidth: 4, borderLeftColor: b.active ? 'var(--status-ok)' : '#ccc' }}
             >
-              <h3 className="font-semibold text-base text-pay-navy mb-1.5">{b.name}</h3>
+              <h3 className="font-semibold text-base text-heading mb-1.5">{b.name}</h3>
               <p className="text-sm text-charcoal">{b.age_group ? `Ages ${b.age_group}` : 'All ages'}</p>
               <p className="text-[0.85rem] mt-1.5">{b.training_centers?.name || 'No center'}</p>
               <p className="text-[0.85rem]">{b.coaches?.full_name || 'No coach assigned'}</p>
@@ -285,7 +326,7 @@ export default function Batches() {
                 <p className="text-[0.8rem]">{b.start_time?.slice(0,5)} – {b.end_time?.slice(0,5)}</p>
               )}
               {b.capacity && <p className="text-[0.8rem]">Capacity: {b.capacity}</p>}
-              <p className="text-[0.8rem] mt-1.5" style={{ color: b.active ? '#047857' : '#999' }}>
+              <p className="text-[0.8rem] mt-1.5" style={{ color: b.active ? 'var(--status-ok)' : '#999' }}>
                 {b.active ? 'Active' : 'Inactive'}
               </p>
               <div className="flex gap-2 mt-3">

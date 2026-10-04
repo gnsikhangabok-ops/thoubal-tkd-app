@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
 import { btnPrimary, btnOutline } from '../../../lib/adminUi'
+import { useListTools, exportCsv, byText, opts } from '../../../lib/listTools'
+import ListToolbar from '../../../components/ListToolbar'
 
 function today() {
   return new Date().toISOString().slice(0, 10)
@@ -8,9 +10,9 @@ function today() {
 
 const STATUS_OPTIONS = ['present', 'absent', 'late', 'excused']
 const STATUS_COLOR = {
-  present: '#047857',
-  absent: '#DC2626',
-  late: '#B45309',
+  present: 'var(--status-ok)',
+  absent: 'var(--status-bad)',
+  late: 'var(--status-warn)',
   excused: '#999',
 }
 
@@ -142,11 +144,28 @@ export default function Attendance() {
   }
 
   const presentCount = Object.values(attendance).filter((s) => s === 'present').length
+  const batchName = batches.find((b) => b.id === selectedBatch)?.name || 'batch'
+
+  const list = useListTools(students, {
+    search: (s) => [s.full_name],
+    filters: { status: (s) => attendance[s.id] || 'unmarked' },
+    sorts: { name: byText((s) => s.full_name) },
+    defaultSort: 'name',
+  })
+
+  function handleExport() {
+    exportCsv(`attendance-${batchName.replace(/\s+/g, '-').toLowerCase()}-${sessionDate}`, list.result, [
+      { label: 'Date', value: () => sessionDate },
+      { label: 'Batch', value: () => batchName },
+      { label: 'Student', value: (s) => s.full_name },
+      { label: 'Status', value: (s) => attendance[s.id] || 'unmarked' },
+    ])
+  }
 
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
-      <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy mb-2">Attendance</h1>
-      <p className="text-[#5B6B82] mb-8">Mark daily attendance for a batch.</p>
+      <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading mb-2">Attendance</h1>
+      <p className="text-muted mb-8">Mark daily attendance for a batch.</p>
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
       {message && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{message}</p>}
@@ -196,14 +215,22 @@ export default function Attendance() {
             <button className={`${btnOutline} text-[0.8rem]`} onClick={() => markAll('absent')}>Mark all Absent</button>
           </div>
 
+          <ListToolbar
+            list={list}
+            placeholder="Find a student…"
+            printTitle={`Attendance — ${batchName} — ${sessionDate}`}
+            onExport={handleExport}
+            filters={[{ key: 'status', label: 'Marked as', options: opts([...STATUS_OPTIONS, 'unmarked']) }]}
+          />
+
           <div className="grid gap-4 mb-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-            {students.map((s) => (
+            {list.result.map((s) => (
               <div
                 key={s.id}
-                className="bg-white rounded-2xl shadow-card p-6"
+                className="bg-surface rounded-2xl shadow-card p-6"
                 style={{ borderLeftWidth: 4, borderLeftColor: STATUS_COLOR[attendance[s.id]] }}
               >
-                <h3 className="font-semibold text-base text-pay-navy">{s.full_name}</h3>
+                <h3 className="font-semibold text-base text-heading">{s.full_name}</h3>
                 <div className="flex gap-1.5 flex-wrap mt-2.5">
                   {STATUS_OPTIONS.map((opt) => (
                     <button
@@ -212,7 +239,7 @@ export default function Attendance() {
                       className={`text-[0.72rem] px-2.5 py-1.5 capitalize font-semibold rounded-full ${
                         attendance[s.id] === opt
                           ? 'bg-pay-action text-white border border-pay-action'
-                          : 'border border-pay-line text-pay-navy bg-white hover:bg-pay-sky'
+                          : 'border border-pay-line text-heading bg-surface hover:bg-pay-sky'
                       }`}
                     >
                       {opt}

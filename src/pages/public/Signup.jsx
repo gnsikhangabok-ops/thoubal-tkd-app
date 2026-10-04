@@ -6,6 +6,7 @@ import AuthShell from '../../components/site/AuthShell'
 import PageLoader from '../../components/site/PageLoader'
 import { TextField, PasswordField, Alert } from '../../components/site/FormField'
 import { primaryButton } from '../../lib/ui'
+import { useT } from '../../lib/i18n'
 
 export default function Signup() {
   const { session, loading, refreshProfile } = useAuth()
@@ -17,6 +18,7 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const { t } = useT()
 
   // Already signed in — but not while our own signup is still creating the profile.
   if (session && !submitting) return <Navigate to="/redirect" replace />
@@ -27,11 +29,11 @@ export default function Signup() {
     setError('')
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match.')
+      setError(t('Passwords do not match.'))
       return
     }
     if (password.length < 6) {
-      setError('Password must be at least 6 characters.')
+      setError(t('Password must be at least 6 characters.'))
       return
     }
 
@@ -56,7 +58,7 @@ export default function Signup() {
       setSubmitting(false)
       navigate('/login', {
         replace: true,
-        state: { notice: `Registration received. Please check ${email} for a confirmation link, then sign in.` },
+        state: { notice: t('Registration received. Please check {email} for a confirmation link, then sign in.', { email }) },
       })
       return
     }
@@ -79,38 +81,38 @@ export default function Signup() {
 
   return (
     <AuthShell
-      title="New Account Registration"
-      subtitle="For students and parents. Coaches and staff should register here too — the academy admin will then grant staff access."
+      title={t('New Account Registration')}
+      subtitle={t('For students and parents. Coaches and staff should register here too — the academy admin will then grant staff access.')}
       footer={
-        <p className="text-[#5B6B82]">
-          Already registered?{' '}
-          <Link to="/login" className="font-semibold text-pay-action hover:underline">Sign in</Link>
+        <p className="text-muted">
+          {t('Already registered?')}{' '}
+          <Link to="/login" className="font-semibold text-pay-action hover:underline">{t('Sign in')}</Link>
         </p>
       }
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <TextField
-          label="Full name" type="text" autoComplete="name" required
+          label={t('Full name')} type="text" autoComplete="name" required
           value={fullName} onChange={(e) => setFullName(e.target.value)}
         />
         <TextField
-          label="Email address" type="email" autoComplete="email" required
+          label={t('Email address')} type="email" autoComplete="email" required
           value={email} onChange={(e) => setEmail(e.target.value)}
         />
         <PasswordField
-          label="Password" autoComplete="new-password" required minLength={6}
+          label={t('Password')} autoComplete="new-password" required minLength={6}
           visible={showPassword} onToggle={() => setShowPassword((v) => !v)}
           value={password} onChange={(e) => setPassword(e.target.value)}
         />
         <PasswordField
-          label="Confirm password" autoComplete="new-password" required
+          label={t('Confirm password')} autoComplete="new-password" required
           visible={showPassword} showToggle={false}
           value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
         />
-        <p className="text-xs text-[#5B6B82] -mt-1">Minimum 6 characters. Fields marked <span className="text-red-600">*</span> are mandatory.</p>
+        <p className="text-xs text-muted -mt-1">{t('Minimum 6 characters. Fields marked * are mandatory.')}</p>
         {error && <Alert>{error}</Alert>}
         <button type="submit" className={`${primaryButton} mt-1`} disabled={submitting}>
-          {submitting ? 'Creating account…' : 'Register'}
+          {submitting ? t('Creating account…') : t('Register')}
         </button>
       </form>
     </AuthShell>

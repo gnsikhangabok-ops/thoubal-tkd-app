@@ -66,7 +66,7 @@ export default function AdminDashboard() {
         </h1>
         <p className="relative text-white/85 mt-1 text-sm md:text-base">Here's what's happening across the academy today.</p>
         <div className="relative flex gap-2.5 mt-5 flex-wrap">
-          <Link to="/admin/fees" className="rounded-full bg-white text-pay-navy text-sm font-semibold px-5 py-2 hover:bg-pay-sky">Collect Fees</Link>
+          <Link to="/admin/fees" className="rounded-full bg-surface text-heading text-sm font-semibold px-5 py-2 hover:bg-pay-sky">Collect Fees</Link>
           <Link to="/admin/attendance" className="rounded-full border border-white/60 text-white text-sm font-semibold px-5 py-2 hover:bg-white/10">Mark Attendance</Link>
         </div>
       </div>
@@ -83,13 +83,13 @@ export default function AdminDashboard() {
         {STAT_CARDS.map((s) => {
           const Icon = s.icon
           return (
-            <Link key={s.label} to={s.path} className="bg-white rounded-2xl shadow-card p-4 md:p-5 flex items-center gap-3 hover:ring-2 hover:ring-pay-sky">
+            <Link key={s.label} to={s.path} className="bg-surface rounded-2xl shadow-card p-4 md:p-5 flex items-center gap-3 hover:ring-2 hover:ring-pay-sky">
               <span className={`grid place-items-center w-11 h-11 rounded-full shrink-0 ${s.alert ? 'bg-red-50 text-red-600' : 'bg-pay-sky text-pay-action'}`}>
                 <Icon size={20} />
               </span>
               <div className="min-w-0">
-                <strong className="block text-2xl font-bold text-pay-navy leading-none">{s.value === null ? '—' : s.value}</strong>
-                <span className="text-xs text-[#5B6B82] mt-1 block">{s.label}</span>
+                <strong className="block text-2xl font-bold text-heading leading-none">{s.value === null ? '—' : s.value}</strong>
+                <span className="text-xs text-muted mt-1 block">{s.label}</span>
               </div>
             </Link>
           )
@@ -99,7 +99,7 @@ export default function AdminDashboard() {
       {/* Module tiles, grouped */}
       <div className="flex flex-col gap-4 mt-5">
         {groups.map((group) => (
-          <section key={group.label} className="bg-white rounded-2xl shadow-card p-4 md:p-6">
+          <section key={group.label} className="bg-surface rounded-2xl shadow-card p-4 md:p-6">
             <h2 className="text-base font-bold mb-4">{group.label}</h2>
             <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-6 gap-y-5 gap-x-2">
               {group.items.map((m) => {
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
                     <span className="grid place-items-center w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-pay-sky text-pay-action group-hover:bg-pay-action group-hover:text-white transition-colors">
                       <Icon size={22} strokeWidth={1.9} />
                     </span>
-                    <span className="text-[0.72rem] md:text-xs font-medium text-pay-navy leading-tight">{m.short}</span>
+                    <span className="text-[0.72rem] md:text-xs font-medium text-heading leading-tight">{m.short}</span>
                   </Link>
                 )
               })}
@@ -118,8 +118,8 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <Link to="/admin/enquiries" className="mt-4 flex items-center justify-between bg-white rounded-2xl shadow-card px-5 py-4 hover:ring-2 hover:ring-pay-sky">
-        <span className="text-sm text-pay-navy">
+      <Link to="/admin/enquiries" className="mt-4 flex items-center justify-between bg-surface rounded-2xl shadow-card px-5 py-4 hover:ring-2 hover:ring-pay-sky">
+        <span className="text-sm text-heading">
           <strong>{enquiryCount ?? '—'}</strong> new website {enquiryCount === 1 ? 'enquiry' : 'enquiries'} waiting for a reply
         </span>
         <ChevronRight size={18} className="text-pay-action" />

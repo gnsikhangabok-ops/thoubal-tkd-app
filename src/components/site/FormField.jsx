@@ -1,12 +1,13 @@
 import { useId, useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { inputClass } from '../../lib/ui'
+import { useT } from '../../lib/i18n'
 
 export function TextField({ label, hint, required, ...props }) {
   const id = useId()
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-semibold text-pay-navy">
+      <label htmlFor={id} className="text-sm font-semibold text-heading">
         {label}{required && <span className="text-brand-red"> *</span>}
       </label>
       <input id={id} required={required} className={inputClass} {...props} />
@@ -16,6 +17,7 @@ export function TextField({ label, hint, required, ...props }) {
 }
 
 export function PasswordField({ label, required, visible, onToggle, showToggle = true, ...props }) {
+  const { t } = useT()
   const id = useId()
   const [localVisible, setLocalVisible] = useState(false)
   const isVisible = visible ?? localVisible
@@ -23,7 +25,7 @@ export function PasswordField({ label, required, visible, onToggle, showToggle =
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-semibold text-pay-navy">
+      <label htmlFor={id} className="text-sm font-semibold text-heading">
         {label}{required && <span className="text-brand-red"> *</span>}
       </label>
       <div className="relative">
@@ -38,8 +40,8 @@ export function PasswordField({ label, required, visible, onToggle, showToggle =
           <button
             type="button"
             onClick={toggle}
-            className="absolute inset-y-0 right-0 px-3 text-[#7A889E] hover:text-pay-navy"
-            aria-label={isVisible ? 'Hide password' : 'Show password'}
+            className="absolute inset-y-0 right-0 px-3 text-subtle hover:text-heading"
+            aria-label={isVisible ? t('Hide password') : t('Show password')}
             aria-pressed={isVisible}
           >
             {isVisible ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -54,7 +56,7 @@ export function Alert({ tone = 'error', children }) {
   const styles = {
     error: 'bg-red-50 text-red-700',
     success: 'bg-emerald-50 text-emerald-800',
-    info: 'bg-pay-sky text-pay-navy',
+    info: 'bg-pay-sky text-heading',
   }
   return (
     <div role={tone === 'error' ? 'alert' : 'status'} className={`rounded-xl px-4 py-3 text-sm ${styles[tone]}`}>

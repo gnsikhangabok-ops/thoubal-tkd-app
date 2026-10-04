@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
+import { useListTools, exportCsv, byText, opts } from '../../../lib/listTools'
+import ListToolbar from '../../../components/ListToolbar'
 
 const emptyForm = { id: null, name: '', location: '', active: true }
 
@@ -82,19 +84,35 @@ export default function TrainingCenters() {
     }
   }
 
+
+  const list = useListTools(centers, {
+    search: (c) => [c.name, c.location],
+    filters: { status: (c) => (c.active ? 'active' : 'inactive') },
+    sorts: { name: byText((c) => c.name) },
+    defaultSort: 'name',
+  })
+
+  function handleExport() {
+    exportCsv('training-centers', list.result, [
+      { label: 'Name', value: (c) => c.name },
+      { label: 'Location', value: (c) => c.location },
+      { label: 'Status', value: (c) => (c.active ? 'Active' : 'Inactive') },
+    ])
+  }
+
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">Training Centers</h1>
+        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Training Centers</h1>
         <button className={btnPrimary} onClick={openAddForm}>+ Add Center</button>
       </div>
-      <p className="text-[#5B6B82] mb-8">Branches operating under Thoubal District Taekwondo Association.</p>
+      <p className="text-muted mb-8">Branches operating under Thoubal District Taekwondo Association.</p>
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
       {showForm && (
-        <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[480px]">
-          <h3 className="font-semibold text-base text-pay-navy mb-4">{form.id ? 'Edit Center' : 'New Training Center'}</h3>
+        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[480px]">
+          <h3 className="font-semibold text-base text-heading mb-4">{form.id ? 'Edit Center' : 'New Training Center'}</h3>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <input
               type="text"
@@ -131,21 +149,29 @@ export default function TrainingCenters() {
         </div>
       )}
 
+      <ListToolbar
+        list={list}
+        placeholder="Search center or location…"
+        printTitle="Training Centers"
+        onExport={handleExport}
+        filters={[{ key: 'status', label: 'Status', options: opts(['active', 'inactive']) }]}
+      />
+
       {loading ? (
         <p>Loading…</p>
-      ) : centers.length === 0 ? (
-        <p className="text-charcoal">No training centers yet. Add your first one above.</p>
+      ) : list.result.length === 0 ? (
+        <p className="text-muted">{list.total === 0 ? <>No training centers yet. Add your first one above.</> : 'Nothing matches your search or filters.'}</p>
       ) : (
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {centers.map((c) => (
+          {list.result.map((c) => (
             <div
               key={c.id}
-              className="bg-white rounded-2xl shadow-card p-6"
-              style={{ borderLeftWidth: 4, borderLeftColor: c.active ? '#047857' : '#ccc' }}
+              className="bg-surface rounded-2xl shadow-card p-6"
+              style={{ borderLeftWidth: 4, borderLeftColor: c.active ? 'var(--status-ok)' : '#ccc' }}
             >
-              <h3 className="font-semibold text-base text-pay-navy mb-1.5">{c.name}</h3>
+              <h3 className="font-semibold text-base text-heading mb-1.5">{c.name}</h3>
               <p className="text-sm text-charcoal">{c.location || 'No location set'}</p>
-              <p className="text-[0.8rem] mt-2" style={{ color: c.active ? '#047857' : '#999' }}>
+              <p className="text-[0.8rem] mt-2" style={{ color: c.active ? 'var(--status-ok)' : '#999' }}>
                 {c.active ? 'Active' : 'Inactive'}
               </p>
               <div className="flex gap-2 mt-3">

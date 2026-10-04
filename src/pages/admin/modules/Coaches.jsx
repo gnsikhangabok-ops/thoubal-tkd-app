@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
+import { useListTools, exportCsv, byText, opts } from '../../../lib/listTools'
+import ListToolbar from '../../../components/ListToolbar'
 
 const emptyForm = {
   id: null,
@@ -115,13 +117,32 @@ export default function Coaches() {
     }
   }
 
+
+  const list = useListTools(coaches, {
+    search: (c) => [c.full_name, c.phone, c.designation, c.dan_grade, c.training_centers?.name],
+    filters: { status: (c) => (c.active ? 'active' : 'inactive'), center: (c) => c.training_center_id },
+    sorts: { name: byText((c) => c.full_name), center: byText((c) => c.training_centers?.name) },
+    defaultSort: 'name',
+  })
+
+  function handleExport() {
+    exportCsv('coaches', list.result, [
+      { label: 'Name', value: (c) => c.full_name },
+      { label: 'Designation', value: (c) => c.designation },
+      { label: 'Dan grade', value: (c) => c.dan_grade },
+      { label: 'Phone', value: (c) => c.phone },
+      { label: 'Training center', value: (c) => c.training_centers?.name },
+      { label: 'Status', value: (c) => (c.active ? 'Active' : 'Inactive') },
+    ])
+  }
+
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">Coaches</h1>
+        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Coaches</h1>
         <button className={btnPrimary} onClick={openAddForm}>+ Add Coach</button>
       </div>
-      <p className="text-[#5B6B82] mb-8">Instructors are added by admin only. No self-registration.</p>
+      <p className="text-muted mb-8">Instructors are added by admin only. No self-registration.</p>
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -132,8 +153,8 @@ export default function Coaches() {
       )}
 
       {showForm && (
-        <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[520px]">
-          <h3 className="font-semibold text-base text-pay-navy mb-4">{form.id ? 'Edit Coach' : 'New Coach'}</h3>
+        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[520px]">
+          <h3 className="font-semibold text-base text-heading mb-4">{form.id ? 'Edit Coach' : 'New Coach'}</h3>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <input
               type="text"
@@ -201,23 +222,35 @@ export default function Coaches() {
         </div>
       )}
 
+      <ListToolbar
+        list={list}
+        placeholder="Search name, phone, designation…"
+        printTitle="Coaches"
+        onExport={handleExport}
+        filters={[
+          { key: 'status', label: 'Status', options: opts(['active', 'inactive']) },
+          { key: 'center', label: 'Center', options: centers.map((c) => ({ value: c.id, label: c.name })) },
+        ]}
+        sorts={[{ key: 'name', label: 'Name A–Z' }, { key: 'center', label: 'Center' }]}
+      />
+
       {loading ? (
         <p>Loading…</p>
-      ) : coaches.length === 0 ? (
-        <p className="text-charcoal">No coaches yet. Add your first one above.</p>
+      ) : list.result.length === 0 ? (
+        <p className="text-muted">{list.total === 0 ? <>No coaches yet. Add your first one above.</> : 'Nothing matches your search or filters.'}</p>
       ) : (
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {coaches.map((c) => (
+          {list.result.map((c) => (
             <div
               key={c.id}
-              className="bg-white rounded-2xl shadow-card p-6"
-              style={{ borderLeftWidth: 4, borderLeftColor: c.active ? '#047857' : '#ccc' }}
+              className="bg-surface rounded-2xl shadow-card p-6"
+              style={{ borderLeftWidth: 4, borderLeftColor: c.active ? 'var(--status-ok)' : '#ccc' }}
             >
-              <h3 className="font-semibold text-base text-pay-navy mb-1.5">{c.full_name}</h3>
+              <h3 className="font-semibold text-base text-heading mb-1.5">{c.full_name}</h3>
               <p className="text-sm text-charcoal">{c.designation || 'Instructor'}{c.dan_grade ? ` · ${c.dan_grade}` : ''}</p>
               <p className="text-[0.85rem] mt-1.5">{c.training_centers?.name || 'No center assigned'}</p>
               {c.phone && <p className="text-[0.85rem]">{c.phone}</p>}
-              <p className="text-[0.8rem] mt-2" style={{ color: c.active ? '#047857' : '#999' }}>
+              <p className="text-[0.8rem] mt-2" style={{ color: c.active ? 'var(--status-ok)' : '#999' }}>
                 {c.active ? 'Active' : 'Inactive'}
               </p>
               <div className="flex gap-2 mt-3">
