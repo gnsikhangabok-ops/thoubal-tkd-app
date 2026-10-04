@@ -7,6 +7,7 @@ import PublicHeader from '../../components/site/PublicHeader'
 import PublicFooter from '../../components/site/PublicFooter'
 import { Alert } from '../../components/site/FormField'
 import { useT } from '../../lib/i18n'
+import { DEFAULT_PHOTOS, DEFAULT_GALLERY } from '../../lib/defaultPhotos'
 import {
   ShieldCheck, Users2, Medal, Sparkles, Target, HeartPulse,
   GraduationCap, Globe2, Trophy, Flag, FileText,
@@ -106,6 +107,7 @@ export default function Home() {
   const setField = (key) => (e) => setEnquiryForm({ ...enquiryForm, [key]: e.target.value })
   const galleryKeys = ['gallery_1', 'gallery_2', 'gallery_3', 'gallery_4', 'gallery_5', 'gallery_6']
   const hasGalleryImages = galleryKeys.some((k) => content[k])
+  const photo = (key) => content[key] || DEFAULT_PHOTOS[key] // uploaded photo, else the bundled one
   const phoneHref = telHref(c('contact_phone'))
   const sectionCls = 'py-12 md:py-16 scroll-mt-20'
   const container = 'max-w-[1180px] mx-auto px-4 md:px-7'
@@ -116,9 +118,16 @@ export default function Home() {
 
       <main id="main">
         {/* HERO */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-pay-navy via-[#0057A8] to-pay-blue rounded-b-[2rem] md:rounded-b-[3rem]">
-          <div className="absolute -right-24 -top-24 w-96 h-96 rounded-full bg-white/10" aria-hidden="true" />
-          <div className="absolute right-40 -bottom-32 w-72 h-72 rounded-full bg-white/10" aria-hidden="true" />
+        <section className="relative overflow-hidden bg-pay-navy rounded-b-[2rem] md:rounded-b-[3rem]">
+          <img
+            src={photo('hero_image')}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover object-[center_35%]"
+            fetchPriority="high"
+          />
+          {/* navy wash: solid behind the text on the left, the team photo shows through on the right */}
+          <div className="absolute inset-0 bg-gradient-to-r from-pay-navy via-pay-navy/85 to-pay-navy/25 max-md:bg-pay-navy/75" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-t from-pay-navy/70 via-transparent to-transparent" aria-hidden="true" />
           <div className={`${container} relative pt-12 md:pt-16 pb-28 md:pb-32`}>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white mb-5">
               <BadgeCheck size={14} /> {t('Registered Academy · Olympic Sport')}
@@ -187,11 +196,12 @@ export default function Home() {
         {/* ABOUT */}
         <section id="about" className={sectionCls}>
           <div className={`${container} grid md:grid-cols-[1fr_1.2fr] gap-8 md:gap-12 items-center`}>
-            {content.about_image ? (
-              <img src={content.about_image} alt="Training at Thoubal Taekwondo Academy" className="aspect-[4/3] w-full object-cover rounded-3xl shadow-card" />
-            ) : (
-              <PhotoPlaceholder label="Academy photo" className="aspect-[4/3]" />
-            )}
+            <img
+              src={photo('about_image')}
+              alt={content.about_image ? 'Thoubal Taekwondo Academy' : DEFAULT_GALLERY[0].alt}
+              loading="lazy"
+              className="aspect-[4/3] w-full object-cover rounded-3xl shadow-card"
+            />
             <div>
               <SectionHeading kicker="About the academy" title={c('about_heading')} />
               <p className="mb-4 text-[1.02rem] text-body">{c('about_paragraph_1')}</p>
@@ -308,10 +318,18 @@ export default function Home() {
             <div className="grid gap-4 sm:grid-cols-2 max-w-[720px]">
               {[1, 2].map((n) => (
                 <div key={n} className="bg-surface rounded-3xl shadow-card p-3">
-                  {content[`coach_${n}_photo`] ? (
-                    <img src={content[`coach_${n}_photo`]} alt={c(`coach_${n}_name`)} className="aspect-[4/3] w-full object-cover rounded-2xl" />
+                  {photo(`coach_${n}_photo`) ? (
+                    <div className="aspect-[4/5] overflow-hidden rounded-2xl bg-pay-sky">
+                      <img
+                        src={photo(`coach_${n}_photo`)}
+                        alt={c(`coach_${n}_name`)}
+                        loading="lazy"
+                        // the bundled photos are full-length event shots: zoom in on head and shoulders
+                        className={`w-full h-full object-cover ${content[`coach_${n}_photo`] ? 'object-top' : 'scale-[1.7] origin-[50%_28%]'}`}
+                      />
+                    </div>
                   ) : (
-                    <PhotoPlaceholder label="Photo" className="aspect-[4/3]" />
+                    <PhotoPlaceholder label="Photo" className="aspect-[4/5]" />
                   )}
                   <div className="px-2 pt-4 pb-2">
                     <h3 className="text-lg font-bold">{c(`coach_${n}_name`)}</h3>
@@ -327,15 +345,22 @@ export default function Home() {
         <section id="gallery" className={sectionCls}>
           <div className={container}>
             <SectionHeading kicker="Photo gallery" title="From the dojang and the podium" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3" style={{ gridAutoRows: 140 }}>
-              {galleryKeys.map((key, i) => {
-                const span = `${i === 0 ? 'col-span-2 row-span-2' : ''} ${i === 5 ? 'col-span-2' : ''}`
-                return content[key] ? (
-                  <img key={key} src={content[key]} alt={`Academy gallery photo ${i + 1}`} className={`object-cover w-full h-full rounded-2xl ${span}`} />
-                ) : !hasGalleryImages ? (
-                  <div key={key} className={`rounded-2xl bg-gradient-to-br from-pay-sky to-pay-sky-2 ${span}`} />
-                ) : null
-              })}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3" style={{ gridAutoRows: 'minmax(140px, min(18vw, 230px))' }}>
+              {hasGalleryImages
+                ? galleryKeys.map((key, i) => {
+                    const span = `${i === 0 ? 'col-span-2 row-span-2' : ''} ${i === 5 ? 'col-span-2' : ''}`
+                    return content[key] ? (
+                      <img key={key} src={content[key]} alt={`Academy gallery photo ${i + 1}`} loading="lazy" className={`object-cover w-full h-full rounded-2xl ${span}`} />
+                    ) : null
+                  })
+                : DEFAULT_GALLERY.map((g) => (
+                    <figure key={g.src} className={`relative overflow-hidden rounded-2xl row-span-2 ${g.wide ? 'col-span-2' : 'col-span-1'}`}>
+                      <img src={g.src} alt={g.alt} loading="lazy" className="w-full h-full object-cover" />
+                      <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 pt-8 pb-2.5 text-xs font-semibold text-white">
+                        {g.caption}
+                      </figcaption>
+                    </figure>
+                  ))}
             </div>
           </div>
         </section>
