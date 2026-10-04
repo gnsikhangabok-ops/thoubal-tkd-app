@@ -5,6 +5,9 @@ import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { BELT_RANKS, BELT_LABELS, beltLabel } from '../../../lib/belts'
 import { useListTools, exportCsv, byText, byDateDesc, opts } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
+import DocumentModal from '../../../components/docs/DocumentModal'
+import StudentIdCard from '../../../components/docs/StudentIdCard'
+import { IdCard } from 'lucide-react'
 
 const emptyForm = {
   id: null,
@@ -33,6 +36,7 @@ export default function Students() {
   const [form, setForm] = useState(emptyForm)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [idCardFor, setIdCardFor] = useState(null)
 
   useEffect(() => {
     loadData()
@@ -363,7 +367,8 @@ export default function Students() {
               <p className="text-[0.8rem] mt-1" style={{ color: s.active ? 'var(--status-ok)' : '#999' }}>
                 {s.active ? 'Active' : 'Inactive'}
               </p>
-              <div className="flex gap-2 mt-3">
+              <div className="flex gap-2 mt-3 flex-wrap">
+                <button className={`${btnPrimary} ${btnSm}`} onClick={() => setIdCardFor(s)}><IdCard size={14} /> ID Card</button>
                 <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(s)}>Edit</button>
                 <button className={`${btnOutline} ${btnSm}`} onClick={() => toggleActive(s)}>
                   {s.active ? 'Deactivate' : 'Activate'}
@@ -372,6 +377,11 @@ export default function Students() {
             </div>
           ))}
         </div>
+      )}
+      {idCardFor && (
+        <DocumentModal title={`ID Card — ${idCardFor.full_name}`} size="card" onClose={() => setIdCardFor(null)}>
+          <StudentIdCard student={idCardFor} />
+        </DocumentModal>
       )}
     </div>
   )

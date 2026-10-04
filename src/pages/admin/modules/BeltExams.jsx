@@ -4,6 +4,9 @@ import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { BELT_RANKS, BELT_LABELS } from '../../../lib/belts'
 import { useListTools, exportCsv, byText, byDateDesc, opts } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
+import DocumentModal from '../../../components/docs/DocumentModal'
+import BeltCertificate from '../../../components/docs/BeltCertificate'
+import { Award } from 'lucide-react'
 
 const emptyEventForm = { id: null, title: '', exam_date: '', location: '' }
 const emptyResultForm = {
@@ -16,6 +19,7 @@ export default function BeltExams() {
   const [events, setEvents] = useState([])
   const [students, setStudents] = useState([])
   const [selectedEvent, setSelectedEvent] = useState(null)
+  const [certificateFor, setCertificateFor] = useState(null)
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -349,14 +353,24 @@ export default function BeltExams() {
                   {r.remarks && <p className="text-[0.85rem] mt-1.5">{r.remarks}</p>}
                   {r.certificate_url && (
                     <a href={r.certificate_url} target="_blank" rel="noreferrer" className="text-[0.8rem] underline block mt-1.5">
-                      View Certificate
+                      View uploaded certificate
                     </a>
+                  )}
+                  {r.passed && (
+                    <button className={`${btnPrimary} ${btnSm} mt-3`} onClick={() => setCertificateFor(r)}>
+                      <Award size={14} /> Certificate
+                    </button>
                   )}
                 </div>
               ))}
             </div>
           )}
         </>
+      )}
+      {certificateFor && (
+        <DocumentModal title={`Certificate — ${certificateFor.students?.full_name}`} size="a4-landscape" onClose={() => setCertificateFor(null)}>
+          <BeltCertificate result={certificateFor} studentName={certificateFor.students?.full_name} exam={selectedEvent} />
+        </DocumentModal>
       )}
     </div>
   )

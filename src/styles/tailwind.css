@@ -224,3 +224,15 @@
   a { text-decoration: none; }
 }
 .print-only { display: none; }
+
+/* Printing a single document from DocumentModal: show only .print-doc, at true size */
+@media print {
+  body.printing-doc #root { display: none !important; }
+  body.printing-doc [role="dialog"] { position: static !important; display: block !important; background: none !important; backdrop-filter: none !important; }
+  body.printing-doc [role="dialog"] > div:not(.no-print) { padding: 0 !important; overflow: visible !important; display: block !important; }
+  body.printing-doc .print-doc { break-inside: avoid; }
+  body.printing-doc .print-doc { box-shadow: none !important; }
+  body.printing-doc .print-doc * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+@page { margin: 10mm; }
+

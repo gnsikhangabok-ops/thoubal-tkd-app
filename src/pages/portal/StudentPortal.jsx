@@ -3,8 +3,12 @@ import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabaseClient'
 import logo from '../../assets/logo.png'
 import ThemeToggle from '../../components/ThemeToggle'
+import DocumentModal from '../../components/docs/DocumentModal'
+import StudentIdCard from '../../components/docs/StudentIdCard'
+import FeeReceipt from '../../components/docs/FeeReceipt'
+import BeltCertificate from '../../components/docs/BeltCertificate'
 import {
-  LayoutGrid, CalendarCheck, Wallet, Award, FileBadge, Bell, Trophy, LogOut,
+  LayoutGrid, CalendarCheck, Wallet, Award, FileBadge, Bell, Trophy, LogOut, IdCard, ReceiptText,
 } from 'lucide-react'
 import { BELT_LABELS } from '../../lib/belts'
 
@@ -25,6 +29,7 @@ export default function StudentPortal() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('Overview')
+  const [doc, setDoc] = useState(null) // { type: 'id' | 'receipt' | 'certificate', data }
 
   const [attendance, setAttendance] = useState([])
   const [fees, setFees] = useState([])
@@ -58,7 +63,7 @@ export default function StudentPortal() {
     const [attRes, feeRes, gradeRes, noticeRes, eventRes, regRes] = await Promise.all([
       supabase.from('attendance').select('*').eq('student_id', studentData.id).order('session_date', { ascending: false }).limit(30),
       supabase.from('fee_payments').select('*').eq('student_id', studentData.id).order('period_month', { ascending: false }),
-      supabase.from('grading_results').select('*, grading_events(title, exam_date)').eq('student_id', studentData.id).order('created_at', { ascending: false }),
+      supabase.from('grading_results').select('*, grading_events(title, exam_date, location)').eq('student_id', studentData.id).order('created_at', { ascending: false }),
       supabase.from('notices').select('*').order('created_at', { ascending: false }).limit(10),
       supabase.from('events').select('*').order('event_date', { ascending: false }).limit(10),
       supabase.from('event_registrations').select('*, events(title, event_date)').eq('student_id', studentData.id),
@@ -137,6 +142,12 @@ export default function StudentPortal() {
                 </p>
                 <span className="inline-block mt-2 rounded-full bg-white/20 px-3 py-0.5 text-xs font-semibold">{BELT_LABELS[student.current_belt]}</span>
               </div>
+              <button
+                onClick={() => setDoc({ type: 'id' })}
+                className="relative ml-auto shrink-0 inline-flex items-center gap-1.5 rounded-full bg-white text-[#002E6E] px-4 py-2 text-sm font-semibold hover:bg-[#E6F7FD]"
+              >
+                <IdCard size={16} /> <span className="max-sm:hidden">My</span> ID Card
+              </button>
             </div>
 
             {/* Service tiles */}
@@ -220,6 +231,14 @@ export default function StudentPortal() {
                         {f.status}
                       </p>
                       {f.receipt_no && <p className="text-[0.8rem] mt-1">Receipt: {f.receipt_no}</p>}
+                      {Number(f.amount_paid) > 0 && (
+                        <button
+                          onClick={() => setDoc({ type: 'receipt', data: f })}
+                          className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-pay-action px-3.5 py-1.5 text-xs font-semibold text-pay-action hover:bg-pay-sky"
+                        >
+                          <ReceiptText size={14} /> Download receipt
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -260,20 +279,32 @@ export default function StudentPortal() {
             )}
 
             {activeTab === 'Certificates' && (
-              gradingResults.filter((g) => g.certificate_url).length === 0 ? (
-                <p className="text-charcoal">No certificates uploaded yet.</p>
+              gradingResults.filter((g) => g.passed || g.certificate_url).length === 0 ? (
+                <p className="text-muted">No certificates yet. They appear here after you pass a belt grading.</p>
               ) : (
                 <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-                  {gradingResults.filter((g) => g.certificate_url).map((g) => (
+                  {gradingResults.filter((g) => g.passed || g.certificate_url).map((g) => (
                     <div key={g.id} className="bg-surface rounded-2xl shadow-card p-6">
                       <h3 className="font-semibold text-base text-heading mb-1.5">{g.grading_events?.title}</h3>
                       <p className="text-sm text-charcoal">{BELT_LABELS[g.to_belt]}</p>
-                      <a
-                        href={g.certificate_url} target="_blank" rel="noreferrer"
-                        className="inline-block mt-2.5 text-xs font-semibold px-3.5 py-1.5 rounded-full border border-pay-action text-pay-action hover:bg-pay-sky"
-                      >
-                        View / Download
-                      </a>
+                      <div className="flex gap-2 flex-wrap mt-3">
+                        {g.passed && (
+                          <button
+                            onClick={() => setDoc({ type: 'certificate', data: g })}
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-1.5 rounded-full bg-pay-action text-white hover:bg-pay-action-dark"
+                          >
+                            <Award size={14} /> Certificate
+                          </button>
+                        )}
+                        {g.certificate_url && (
+                          <a
+                            href={g.certificate_url} target="_blank" rel="noreferrer"
+                            className="inline-block text-xs font-semibold px-3.5 py-1.5 rounded-full border border-pay-action text-pay-action hover:bg-pay-sky"
+                          >
+                            Uploaded copy
+                          </a>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -325,6 +356,17 @@ export default function StudentPortal() {
           </>
         )}
       </div>
+      {doc && student && (
+        <DocumentModal
+          title={{ id: 'Student ID card', receipt: 'Fee receipt', certificate: 'Belt certificate' }[doc.type]}
+          size={{ id: 'card', receipt: 'a5', certificate: 'a4-landscape' }[doc.type]}
+          onClose={() => setDoc(null)}
+        >
+          {doc.type === 'id' && <StudentIdCard student={student} />}
+          {doc.type === 'receipt' && <FeeReceipt payment={doc.data} studentName={student.full_name} />}
+          {doc.type === 'certificate' && <BeltCertificate result={doc.data} studentName={student.full_name} exam={doc.data.grading_events} />}
+        </DocumentModal>
+      )}
     </div>
   )
 }

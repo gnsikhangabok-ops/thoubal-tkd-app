@@ -4,6 +4,9 @@ import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byText, opts } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
+import DocumentModal from '../../../components/docs/DocumentModal'
+import FeeReceipt from '../../../components/docs/FeeReceipt'
+import { ReceiptText } from 'lucide-react'
 
 function currentMonthFirst() {
   const d = new Date()
@@ -32,6 +35,7 @@ export default function FeeManagement() {
   const [payingFor, setPayingFor] = useState(null)
   const [payForm, setPayForm] = useState(emptyPayForm)
   const [saving, setSaving] = useState(false)
+  const [receiptFor, setReceiptFor] = useState(null)
 
   useEffect(() => {
     loadPayments()
@@ -388,6 +392,11 @@ export default function FeeManagement() {
                 {p.status}
               </p>
               {p.receipt_no && <p className="text-[0.8rem] mt-1">Receipt: {p.receipt_no}</p>}
+              {Number(p.amount_paid) > 0 && (
+                <button className={`${btnPrimary} ${btnSm} mt-3`} onClick={() => setReceiptFor(p)}>
+                  <ReceiptText size={14} /> Receipt
+                </button>
+              )}
               {p.status !== 'paid' && p.status !== 'waived' && (
                 <div className="flex gap-2 mt-3">
                   <button className={`${btnOutline} ${btnSm}`} onClick={() => openPayForm(p)}>Record Payment</button>
@@ -397,6 +406,11 @@ export default function FeeManagement() {
             </div>
           ))}
         </div>
+      )}
+      {receiptFor && (
+        <DocumentModal title={`Fee receipt — ${receiptFor.students?.full_name}`} size="a5" onClose={() => setReceiptFor(null)}>
+          <FeeReceipt payment={receiptFor} studentName={receiptFor.students?.full_name} />
+        </DocumentModal>
       )}
     </div>
   )
