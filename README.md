@@ -40,6 +40,15 @@ npm run dev
 Translations live in `src/i18n/` (keys are the English text). The Manipuri (Meitei Mayek) file is a
 draft and should be reviewed by a native speaker.
 
+## Photos
+
+Default website photos live in `src/assets/photos/` and are wired up in `src/lib/defaultPhotos.js`
+(banner, About, coach portraits, gallery). An admin can replace any of them from Website Content.
+They were prepared with `scripts/process-photos.cjs` (crop phone-camera stamps, gentle sharpening
+and colour, full + small sizes, blurred previews). The coach portraits are by Naoboy Photography;
+keep the on-card credit if you reuse them. For sharper results, re-run the script on the original
+camera files.
+
 ## Database
 
 Run these in the Supabase SQL editor, in order, after checking them against your existing policies:
