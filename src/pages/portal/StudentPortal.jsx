@@ -3,6 +3,8 @@ import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabaseClient'
 import logo from '../../assets/logo.png'
 import ThemeToggle from '../../components/ThemeToggle'
+import NotificationBell from '../../components/NotificationBell'
+import { timeAgo } from '../../lib/adminNotifications'
 import DocumentModal from '../../components/docs/DocumentModal'
 import StudentIdCard from '../../components/docs/StudentIdCard'
 import FeeReceipt from '../../components/docs/FeeReceipt'
@@ -30,6 +32,9 @@ export default function StudentPortal() {
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('Overview')
   const [doc, setDoc] = useState(null) // { type: 'id' | 'receipt' | 'certificate', data }
+  const [noticesSeenAt, setNoticesSeenAt] = useState(() => {
+    try { return localStorage.getItem('tkd-notices-seen') || '' } catch { return '' }
+  })
 
   const [attendance, setAttendance] = useState([])
   const [fees, setFees] = useState([])
@@ -64,7 +69,7 @@ export default function StudentPortal() {
       supabase.from('attendance').select('*').eq('student_id', studentData.id).order('session_date', { ascending: false }).limit(30),
       supabase.from('fee_payments').select('*').eq('student_id', studentData.id).order('period_month', { ascending: false }),
       supabase.from('grading_results').select('*, grading_events(title, exam_date, location)').eq('student_id', studentData.id).order('created_at', { ascending: false }),
-      supabase.from('notices').select('*').order('created_at', { ascending: false }).limit(10),
+      supabase.from('notices').select('*').order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(20),
       supabase.from('events').select('*').order('event_date', { ascending: false }).limit(10),
       supabase.from('event_registrations').select('*, events(title, event_date)').eq('student_id', studentData.id),
     ])
@@ -84,6 +89,15 @@ export default function StudentPortal() {
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- loader only uses state setters
   }, [profileId])
 
+  // Opening the bell clears the badge; the "new" dots stay for this session's list
+  const [dotsSince, setDotsSince] = useState(null)
+  function markNoticesSeen() {
+    const now = new Date().toISOString()
+    try { localStorage.setItem('tkd-notices-seen', now) } catch { /* private mode: badge resets next visit */ }
+    setDotsSince((prev) => prev ?? noticesSeenAt)
+    setNoticesSeenAt(now)
+  }
+
   const presentCount = attendance.filter((a) => a.status === 'present').length
   const attendanceRate = attendance.length > 0 ? Math.round((presentCount / attendance.length) * 100) : null
   const pendingFees = fees.filter((f) => f.status === 'pending' || f.status === 'overdue')
@@ -101,12 +115,22 @@ export default function StudentPortal() {
             </div>
           </div>
           <div className="flex items-center gap-1.5">
+          <NotificationBell
+            items={notices.slice(0, 6).map((n) => ({
+              id: n.id, icon: Bell, title: n.title, body: n.body, time: timeAgo(n.created_at),
+              unread: n.created_at > (dotsSince ?? noticesSeenAt), onClick: () => setActiveTab('Notices'),
+            }))}
+            unread={notices.filter((n) => n.created_at > noticesSeenAt).length}
+            onOpen={markNoticesSeen}
+            viewAll={notices.length ? { label: 'All notices', onClick: () => setActiveTab('Notices') } : null}
+            emptyText="No notices from the academy yet"
+          />
           <ThemeToggle />
           <button
             onClick={signOut}
-            className="inline-flex items-center gap-1.5 rounded-full border border-pay-line px-4 py-2 text-sm font-semibold text-heading hover:bg-pay-bg"
+            className="inline-flex items-center gap-1.5 rounded-full border border-pay-line px-4 max-sm:px-2.5 py-2 text-sm font-semibold text-heading hover:bg-pay-bg"
           >
-            <LogOut size={16} /> Sign out
+            <LogOut size={16} /> <span className="max-sm:sr-only">Sign out</span>
           </button>
           </div>
         </div>

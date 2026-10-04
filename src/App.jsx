@@ -31,6 +31,8 @@ const Events = lazy(() => import('./pages/admin/modules/Events'))
 const Users = lazy(() => import('./pages/admin/modules/Users'))
 const WebsiteContent = lazy(() => import('./pages/admin/modules/WebsiteContent'))
 const Reports = lazy(() => import('./pages/admin/modules/Reports'))
+const Notices = lazy(() => import('./pages/admin/modules/Notices'))
+const ActivityLog = lazy(() => import('./pages/admin/modules/ActivityLog'))
 const NotFound = lazy(() => import('./pages/public/NotFound'))
 const PublicRules = lazy(() => import('./pages/public/PublicRules'))
 const StudentPortal = lazy(() => import('./pages/portal/StudentPortal'))
@@ -78,6 +80,8 @@ export default function App() {
             <Route path="/admin/enquiries" element={<Admin allowedRoles={['super_admin', 'coach']}><Enquiries /></Admin>} />
             <Route path="/admin/events" element={<Admin allowedRoles={['super_admin', 'coach']}><Events /></Admin>} />
             <Route path="/admin/users" element={<Admin allowedRoles={['super_admin']}><Users /></Admin>} />
+            <Route path="/admin/notices" element={<Admin allowedRoles={['super_admin', 'coach']}><Notices /></Admin>} />
+            <Route path="/admin/activity" element={<Admin allowedRoles={['super_admin']}><ActivityLog /></Admin>} />
             <Route path="/admin/website" element={<Admin allowedRoles={['super_admin']}><WebsiteContent /></Admin>} />
 
             {/* Student / Parent portal */}

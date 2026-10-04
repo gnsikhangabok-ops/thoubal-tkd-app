@@ -6,10 +6,21 @@ import { Menu, X, LogOut } from 'lucide-react'
 import { roleLabel } from '../lib/roles'
 import { navForRole } from '../lib/adminNav'
 import ThemeToggle from './ThemeToggle'
+import NotificationBell from './NotificationBell'
+import { useAdminNotifications } from '../lib/adminNotifications'
 
 export default function AdminLayout({ children }) {
   const { profile, signOut } = useAuth()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const notifications = useAdminNotifications()
+  const bell = (align) => (
+    <NotificationBell
+      items={notifications.items}
+      unread={notifications.unread}
+      align={align}
+      viewAll={{ label: 'Open enquiries', to: '/admin/enquiries' }}
+    />
+  )
 
   const visibleItems = navForRole(profile?.role)
   const initials = (profile?.full_name || '?').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()
@@ -28,6 +39,7 @@ export default function AdminLayout({ children }) {
     <>
       <div className="flex items-center justify-between gap-2.5 px-5 py-4 border-b border-pay-line">
         {brand}
+        <div className="hidden md:block">{bell('left')}</div>
         <button onClick={() => setMobileOpen(false)} className="md:hidden text-heading p-1" aria-label="Close menu">
           <X size={20} />
         </button>
@@ -82,7 +94,7 @@ export default function AdminLayout({ children }) {
   return (
     <div className="paytm flex min-h-screen font-body">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-64 shrink-0 bg-surface flex-col border-r border-pay-line sticky top-0 h-screen">
+      <aside className="hidden md:flex w-64 shrink-0 bg-surface flex-col border-r border-pay-line sticky top-0 h-screen z-30">
         {sidebarContent}
       </aside>
 
@@ -90,6 +102,7 @@ export default function AdminLayout({ children }) {
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between bg-surface border-b border-pay-line shadow-card px-4 py-2.5">
         {brand}
         <div className="flex items-center gap-1">
+        {bell('right')}
         <ThemeToggle />
         <button onClick={() => setMobileOpen(true)} className="text-heading p-1.5 rounded-full hover:bg-pay-bg" aria-label="Open menu">
           <Menu size={22} />
