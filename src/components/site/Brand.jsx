@@ -5,11 +5,21 @@ import logo from '../../assets/logo.png'
 export default function Brand({ subtitle = 'Thoubal District Taekwondo Association', size = 'md' }) {
   const img = size === 'lg' ? 'w-11 h-11 md:w-12 md:h-12' : 'w-9 h-9'
   return (
-    <Link to="/" className={`flex items-center gap-2.5 min-w-0 ${size === 'lg' ? 'lg:shrink-0' : ''}`}>
+    <Link to="/" className="flex items-center gap-2.5 min-w-0">
       <img src={logo} alt="" className={`${img} object-contain shrink-0`} />
       <span className="flex flex-col leading-tight min-w-0">
         <span className="font-bold text-pay-navy text-[0.98rem] md:text-lg truncate">
-          Thoubal <span className="text-pay-blue">Taekwondo</span> Academy
+          Thoubal{' '}
+          <span className="text-pay-blue">
+            {/* Short form only where the header is tightest: full menu shown but screen < 1536px */}
+            {size === 'lg' ? (
+              <>
+                <span className="xl:hidden 2xl:inline">Taekwondo</span>
+                <span className="hidden xl:inline 2xl:hidden">TKD</span>
+              </>
+            ) : 'Taekwondo'}
+          </span>{' '}
+          Academy
         </span>
         <span className="text-[0.65rem] md:text-xs text-[#7A889E] truncate">{subtitle}</span>
       </span>

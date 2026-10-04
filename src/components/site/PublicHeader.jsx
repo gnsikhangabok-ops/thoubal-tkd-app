@@ -33,11 +33,11 @@ export default function PublicHeader() {
         <div className="max-w-[1180px] mx-auto px-4 md:px-7 py-2.5 flex items-center justify-between gap-4">
           <Brand size="lg" />
 
-          <nav aria-label="Main" className="hidden lg:flex items-center gap-0.5 min-w-0">
-            {NAV.map((item) => navLink(item, 'rounded-full px-3 py-2 text-sm font-medium whitespace-nowrap text-[#4A5A73] hover:bg-pay-bg hover:text-pay-navy'))}
+          <nav aria-label="Main" className="hidden xl:flex items-center gap-0.5 shrink-0">
+            {NAV.map((item) => navLink(item, 'rounded-full px-2.5 2xl:px-3 py-2 text-sm font-medium whitespace-nowrap text-[#4A5A73] hover:bg-pay-bg hover:text-pay-navy'))}
           </nav>
 
-          <div className="hidden lg:flex items-center gap-2 shrink-0">
+          <div className="hidden md:flex items-center gap-2 shrink-0">
             <Link to="/login" className="inline-flex items-center gap-1.5 rounded-full border border-pay-line px-4 py-2 text-sm font-semibold text-pay-navy hover:bg-pay-bg">
               <LogIn size={16} /> Login
             </Link>
@@ -49,7 +49,7 @@ export default function PublicHeader() {
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="lg:hidden p-2 rounded-full text-pay-navy hover:bg-pay-bg"
+            className="xl:hidden p-2 rounded-full text-pay-navy hover:bg-pay-bg"
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
             aria-controls="public-nav"
@@ -59,9 +59,9 @@ export default function PublicHeader() {
         </div>
 
         {open && (
-          <nav id="public-nav" aria-label="Main" className="lg:hidden border-t border-pay-line px-4 pb-4 pt-2 flex flex-col">
+          <nav id="public-nav" aria-label="Main" className="xl:hidden border-t border-pay-line px-4 pb-4 pt-2 flex flex-col">
             {NAV.map((item) => navLink(item, 'rounded-xl px-3 py-3 text-[0.95rem] font-medium text-pay-navy hover:bg-pay-bg'))}
-            <div className="grid grid-cols-2 gap-2 mt-3">
+            <div className="md:hidden grid grid-cols-2 gap-2 mt-3">
               <Link to="/login" onClick={() => setOpen(false)} className="text-center rounded-full border border-pay-action px-4 py-2.5 text-sm font-semibold text-pay-action">
                 Login
               </Link>
