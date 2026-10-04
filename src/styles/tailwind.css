@@ -69,7 +69,7 @@
   /* Gradient metric card */
   .pay-stat {
     @apply rounded-2xl px-5 py-5 text-white shadow-card;
-    background: linear-gradient(135deg, var(--color-pay-navy) 0%, #0057A8 60%, var(--color-pay-blue) 130%);
+    background: linear-gradient(135deg, var(--color-pay-navy) 0%, var(--color-pay-stat-mid, #0057A8) 60%, var(--color-pay-blue) 130%);
   }
 
   /* Scrolling "Latest Updates" line; static for users who prefer reduced motion */
@@ -211,6 +211,45 @@
 :root[data-theme="dark"] .text-amber-700 { color: #FCD34D; }
 :root[data-theme="dark"] .bg-\[\#FFF6E5\] { background-color: #3A2A10; }
 :root[data-theme="dark"] .text-\[\#6B4300\] { color: #FCD9A0; }
+
+
+/* ---------- Clinical palette: management portal only (AdminLayout adds .clinic) ----------
+   Same token names as the app-wide palette, so every module picks it up without changes.
+   Teal action colour keeps white button text at 5:1 contrast. */
+.clinic {
+  --color-pay-navy: #0B4F4E;
+  --color-pay-blue: #2BB5A8;
+  --color-pay-stat-mid: #0E7C7B;
+  --color-pay-action: #0E7C7B;
+  --color-pay-action-dark: #0A6160;
+  --color-pay-sky: #E2F3F1;
+  --color-pay-sky-2: #CBE8E4;
+  --color-pay-bg: #F3F7F7;
+  --color-pay-line: #DCE7E6;
+  --color-heading: #0B3B3A;
+  --color-body: #3F5654;
+  --color-muted: #557170;
+  --color-subtle: #6F8A88;
+  --status-info: #0E7C7B;
+  --shadow-card: 0 1px 3px rgba(11, 59, 58, 0.06), 0 4px 14px rgba(11, 59, 58, 0.06);
+}
+:root[data-theme="dark"] .clinic {
+  --color-pay-navy: #0B4F4E;
+  --color-pay-blue: #2BB5A8;
+  --color-pay-action: #0F8C86;
+  --color-pay-action-dark: #0C7470;
+  --color-pay-sky: #123C3A;
+  --color-pay-sky-2: #18504D;
+  --color-pay-bg: #0A1413;
+  --color-pay-line: #21403E;
+  --color-surface: #11201F;
+  --color-heading: #E3F1F0;
+  --color-body: #B5CCCA;
+  --color-muted: #94B1AE;
+  --color-subtle: #7E9C99;
+  --status-info: #2BB5A8;
+  --shadow-card: 0 2px 14px rgba(0, 0, 0, 0.45);
+}
 
 /* ---------- Print / Save as PDF ---------- */
 @media print {

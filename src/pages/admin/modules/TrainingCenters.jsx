@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
-import { useListTools, exportCsv, byText, opts } from '../../../lib/listTools'
+import { useListTools, exportCsv, byText } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
+import ModuleHeader from '../../../components/ModuleHeader'
+import DataTable, { StatusPill } from '../../../components/DataTable'
+import { moduleTabs } from '../../../lib/moduleTabs'
 
 const emptyForm = { id: null, name: '', location: '', active: true }
 
@@ -100,13 +103,18 @@ export default function TrainingCenters() {
     ])
   }
 
+  const tabs = moduleTabs(list, 'status', [['', 'All centres'], ['active', 'Active'], ['inactive', 'Inactive']])
+
   return (
-    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
-      <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Training Centers</h1>
-        <button className={btnPrimary} onClick={openAddForm}>+ Add Center</button>
-      </div>
-      <p className="text-muted mb-8">Branches operating under Thoubal District Taekwondo Association.</p>
+    <div className="p-8 max-md:p-4 max-w-[1240px] mx-auto">
+      <ModuleHeader
+        title="Training Centers"
+        description="Branches operating under Thoubal District Taekwondo Association."
+        actions={<button className={btnPrimary} onClick={openAddForm}>+ Add center</button>}
+        tabs={tabs.items}
+        activeTab={tabs.active}
+        onTabChange={tabs.select}
+      />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -154,35 +162,29 @@ export default function TrainingCenters() {
         placeholder="Search center or location…"
         printTitle="Training Centers"
         onExport={handleExport}
-        filters={[{ key: 'status', label: 'Status', options: opts(['active', 'inactive']) }]}
       />
 
       {loading ? (
-        <p>Loading…</p>
-      ) : list.result.length === 0 ? (
-        <p className="text-muted">{list.total === 0 ? <>No training centers yet. Add your first one above.</> : 'Nothing matches your search or filters.'}</p>
+        <p className="text-muted">Loading…</p>
       ) : (
-        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {list.result.map((c) => (
-            <div
-              key={c.id}
-              className="bg-surface rounded-2xl shadow-card p-6"
-              style={{ borderLeftWidth: 4, borderLeftColor: c.active ? 'var(--status-ok)' : '#ccc' }}
-            >
-              <h3 className="font-semibold text-base text-heading mb-1.5">{c.name}</h3>
-              <p className="text-sm text-charcoal">{c.location || 'No location set'}</p>
-              <p className="text-[0.8rem] mt-2" style={{ color: c.active ? 'var(--status-ok)' : '#999' }}>
-                {c.active ? 'Active' : 'Inactive'}
-              </p>
-              <div className="flex gap-2 mt-3">
-                <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(c)}>Edit</button>
-                <button className={`${btnOutline} ${btnSm}`} onClick={() => toggleActive(c)}>
-                  {c.active ? 'Deactivate' : 'Activate'}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <DataTable
+          caption="Training centres"
+          rows={list.result}
+          rowAccent={(c) => (c.active ? 'var(--status-ok)' : 'var(--color-pay-line)')}
+          empty={list.total === 0 ? 'No training centers yet. Add your first one above.' : 'Nothing matches this view or search.'}
+          columns={[
+            { key: 'name', header: 'Centre', primary: true, width: '35%', sortValue: (c) => c.name, render: (c) => <strong className="text-heading">{c.name}</strong> },
+            { key: 'location', header: 'Location', sortValue: (c) => c.location, render: (c) => c.location || '—' },
+            { key: 'status', header: 'Status', sortValue: (c) => (c.active ? 0 : 1),
+              render: (c) => <StatusPill tone={c.active ? 'ok' : 'neutral'}>{c.active ? 'Active' : 'Inactive'}</StatusPill> },
+          ]}
+          actions={(c) => (
+            <>
+              <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(c)}>Edit</button>
+              <button className={`${btnOutline} ${btnSm}`} onClick={() => toggleActive(c)}>{c.active ? 'Deactivate' : 'Activate'}</button>
+            </>
+          )}
+        />
       )}
     </div>
   )

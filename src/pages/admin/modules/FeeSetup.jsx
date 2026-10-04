@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 import { Wallet, Repeat, CircleDollarSign, Check } from 'lucide-react'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
+import ModuleHeader from '../../../components/ModuleHeader'
 
 
 const emptyMonthlyForm = { batch_id: '', monthly_amount: '' }
@@ -190,18 +191,20 @@ export default function FeeSetup() {
   }
 
   return (
-    <div className="p-8 max-md:p-4 max-w-[1000px] mx-auto">
-      <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading mb-2">Fee Setup</h1>
-      <p className="text-muted mb-8">
-        Define monthly rates per batch and one-time fees (admission, form). Monthly rates feed{' '}
-        <Link to="/admin/fees" className="underline">Fee Management</Link>; collected payments post to{' '}
-        <Link to="/admin/accounts" className="underline">Accounts</Link>.
-      </p>
+    <div className="p-8 max-md:p-4 max-w-[1240px] mx-auto">
+      <ModuleHeader
+        title="Fee Setup"
+        description={<>
+          Define monthly rates per batch and one-time fees (admission, form). Monthly rates feed{' '}
+          <Link to="/admin/fees" className="underline">Fee Management</Link>; collected payments post to{' '}
+          <Link to="/admin/accounts" className="underline">Accounts</Link>.
+        </>}
+      />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm">{error}</p>}
 
       {loading ? (
-        <p>Loading…</p>
+        <p className="text-muted">Loading…</p>
       ) : (
         <div className="flex flex-col gap-12">
           {/* MONTHLY RATES PER BATCH */}

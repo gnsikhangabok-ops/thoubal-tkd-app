@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
 import { btnPrimary, btnOutline } from '../../../lib/adminUi'
-import { useListTools, exportCsv, byText, opts } from '../../../lib/listTools'
+import { useListTools, exportCsv, byText } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
+import ModuleHeader from '../../../components/ModuleHeader'
+import DataTable from '../../../components/DataTable'
+import { moduleTabs } from '../../../lib/moduleTabs'
+import PersonCell from '../../../components/PersonCell'
 
 function today() {
   return new Date().toISOString().slice(0, 10)
@@ -13,7 +17,7 @@ const STATUS_COLOR = {
   present: 'var(--status-ok)',
   absent: 'var(--status-bad)',
   late: 'var(--status-warn)',
-  excused: '#999',
+  excused: 'var(--color-subtle)',
 }
 
 
@@ -162,10 +166,26 @@ export default function Attendance() {
     ])
   }
 
+  const tabs = moduleTabs(list, 'status', [['', 'Register'], ['present', 'Present'], ['absent', 'Absent'], ['late', 'Late'], ['excused', 'Excused'], ['unmarked', 'Unmarked']])
+  const countOf = (st) => students.filter((s) => (attendance[s.id] || 'unmarked') === st).length
+  const STAT_TILES = [
+    ['Present', presentCount, 'var(--status-ok)'],
+    ['Absent', countOf('absent'), 'var(--status-bad)'],
+    ['Late', countOf('late'), 'var(--status-warn)'],
+    ['Unmarked', countOf('unmarked'), 'var(--color-subtle)'],
+  ]
   return (
-    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
-      <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading mb-2">Attendance</h1>
-      <p className="text-muted mb-8">Mark daily attendance for a batch.</p>
+    <div className="p-8 max-md:p-4 max-w-[1240px] mx-auto">
+      <ModuleHeader
+        title="Attendance"
+        description={selectedBatch ? `Daily register · ${batchName} · ${sessionDate}` : 'Mark the daily register for a batch.'}
+        actions={selectedBatch && students.length > 0 && (
+          <button className={btnPrimary} onClick={handleSaveAll} disabled={saving}>{saving ? 'Saving…' : 'Save register'}</button>
+        )}
+        tabs={selectedBatch && students.length > 0 ? tabs.items : undefined}
+        activeTab={tabs.active}
+        onTabChange={tabs.select}
+      />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
       {message && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{message}</p>}
@@ -198,16 +218,18 @@ export default function Attendance() {
       {!selectedBatch ? (
         <p className="text-charcoal">Select a batch to mark attendance.</p>
       ) : loading ? (
-        <p>Loading…</p>
+        <p className="text-muted">Loading…</p>
       ) : students.length === 0 ? (
         <p className="text-charcoal">No active students in this batch.</p>
       ) : (
         <>
-          <div className="grid gap-4 mb-5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
-            <div className="pay-stat">
-              <strong className="block text-3xl font-bold text-white">{presentCount} / {students.length}</strong>
-              <span className="text-sm text-white/85">Present today</span>
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+            {STAT_TILES.map(([label, n, color]) => (
+              <div key={label} className="bg-surface rounded-xl border border-pay-line px-4 py-3" style={{ borderTopWidth: 3, borderTopColor: color }}>
+                <span className="block text-xs font-semibold uppercase tracking-wide text-muted">{label}</span>
+                <strong className="text-2xl font-bold text-heading tabular-nums">{n}<span className="text-sm font-medium text-subtle"> / {students.length}</span></strong>
+              </div>
+            ))}
           </div>
 
           <div className="flex gap-2.5 mb-5">
@@ -220,39 +242,44 @@ export default function Attendance() {
             placeholder="Find a student…"
             printTitle={`Attendance — ${batchName} — ${sessionDate}`}
             onExport={handleExport}
-            filters={[{ key: 'status', label: 'Marked as', options: opts([...STATUS_OPTIONS, 'unmarked']) }]}
           />
 
-          <div className="grid gap-4 mb-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-            {list.result.map((s) => (
-              <div
-                key={s.id}
-                className="bg-surface rounded-2xl shadow-card p-6"
-                style={{ borderLeftWidth: 4, borderLeftColor: STATUS_COLOR[attendance[s.id]] }}
-              >
-                <h3 className="font-semibold text-base text-heading">{s.full_name}</h3>
-                <div className="flex gap-1.5 flex-wrap mt-2.5">
-                  {STATUS_OPTIONS.map((opt) => (
-                    <button
-                      key={opt}
-                      onClick={() => setStatus(s.id, opt)}
-                      className={`text-[0.72rem] px-2.5 py-1.5 capitalize font-semibold rounded-full ${
-                        attendance[s.id] === opt
-                          ? 'bg-pay-action text-white border border-pay-action'
-                          : 'border border-pay-line text-heading bg-surface hover:bg-pay-sky'
-                      }`}
-                    >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+          <DataTable
+            caption={`Attendance register — ${batchName} — ${sessionDate}`}
+            rows={list.result}
+            rowAccent={(s) => STATUS_COLOR[attendance[s.id]] || 'var(--color-pay-line)'}
+            empty="No students in this view."
+            columns={[
+              { key: 'student', header: 'Student', primary: true, width: '34%', sortValue: (s) => s.full_name, render: (s) => <PersonCell name={s.full_name} /> },
+              { key: 'status', header: 'Mark', fullOnMobile: true,
+                sortValue: (s) => STATUS_OPTIONS.indexOf(attendance[s.id]),
+                render: (s) => (
+                  <div role="radiogroup" aria-label={`Attendance for ${s.full_name}`} className="grid grid-cols-4 w-full max-w-[340px] rounded-lg border border-pay-line overflow-hidden">
+                    {STATUS_OPTIONS.map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        role="radio"
+                        aria-checked={attendance[s.id] === opt}
+                        onClick={() => setStatus(s.id, opt)}
+                        className={`text-[0.75rem] px-2 py-1.5 capitalize font-semibold border-r border-pay-line last:border-r-0 ${
+                          attendance[s.id] === opt ? 'text-white' : 'text-heading bg-surface hover:bg-pay-sky'
+                        }`}
+                        style={attendance[s.id] === opt ? { background: STATUS_COLOR[opt] } : undefined}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                ) },
+            ]}
+          />
 
-          <button className={btnPrimary} onClick={handleSaveAll} disabled={saving}>
-            {saving ? 'Saving…' : 'Save Attendance'}
-          </button>
+          <div className="mt-5">
+            <button className={btnPrimary} onClick={handleSaveAll} disabled={saving}>
+              {saving ? 'Saving…' : 'Save register'}
+            </button>
+          </div>
         </>
       )}
     </div>

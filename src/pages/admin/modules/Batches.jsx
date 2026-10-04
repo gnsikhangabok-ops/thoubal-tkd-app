@@ -4,6 +4,9 @@ import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byText, opts } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
+import ModuleHeader from '../../../components/ModuleHeader'
+import DataTable, { StatusPill } from '../../../components/DataTable'
+import { moduleTabs } from '../../../lib/moduleTabs'
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
@@ -166,13 +169,18 @@ export default function Batches() {
     ])
   }
 
+  const tabs = moduleTabs(list, 'status', [['', 'All batches'], ['active', 'Active'], ['inactive', 'Inactive']])
+
   return (
-    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
-      <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Batches</h1>
-        <button className={btnPrimary} onClick={openAddForm}>+ Add Batch</button>
-      </div>
-      <p className="text-muted mb-8">Class groups with timing, coach, and center assignment.</p>
+    <div className="p-8 max-md:p-4 max-w-[1240px] mx-auto">
+      <ModuleHeader
+        title="Batches"
+        description="Class groups with timing, coach, and center assignment."
+        actions={<button className={btnPrimary} onClick={openAddForm}>+ Add batch</button>}
+        tabs={tabs.items}
+        activeTab={tabs.active}
+        onTabChange={tabs.select}
+      />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -296,7 +304,6 @@ export default function Batches() {
         printTitle="Batches"
         onExport={handleExport}
         filters={[
-          { key: 'status', label: 'Status', options: opts(['active', 'inactive']) },
           { key: 'center', label: 'Center', options: centers.map((c) => ({ value: c.id, label: c.name })) },
           { key: 'day', label: 'Training day', options: opts(DAYS) },
         ]}
@@ -304,40 +311,40 @@ export default function Batches() {
       />
 
       {loading ? (
-        <p>Loading…</p>
-      ) : list.result.length === 0 ? (
-        <p className="text-muted">{list.total === 0 ? <>No batches yet. Add your first one above.</> : 'Nothing matches your search or filters.'}</p>
+        <p className="text-muted">Loading…</p>
       ) : (
-        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {list.result.map((b) => (
-            <div
-              key={b.id}
-              className="bg-surface rounded-2xl shadow-card p-6"
-              style={{ borderLeftWidth: 4, borderLeftColor: b.active ? 'var(--status-ok)' : '#ccc' }}
-            >
-              <h3 className="font-semibold text-base text-heading mb-1.5">{b.name}</h3>
-              <p className="text-sm text-charcoal">{b.age_group ? `Ages ${b.age_group}` : 'All ages'}</p>
-              <p className="text-[0.85rem] mt-1.5">{b.training_centers?.name || 'No center'}</p>
-              <p className="text-[0.85rem]">{b.coaches?.full_name || 'No coach assigned'}</p>
-              {b.schedule_days?.length > 0 && (
-                <p className="text-[0.8rem] mt-1">{b.schedule_days.join(', ')}</p>
-              )}
-              {(b.start_time || b.end_time) && (
-                <p className="text-[0.8rem]">{b.start_time?.slice(0,5)} – {b.end_time?.slice(0,5)}</p>
-              )}
-              {b.capacity && <p className="text-[0.8rem]">Capacity: {b.capacity}</p>}
-              <p className="text-[0.8rem] mt-1.5" style={{ color: b.active ? 'var(--status-ok)' : '#999' }}>
-                {b.active ? 'Active' : 'Inactive'}
-              </p>
-              <div className="flex gap-2 mt-3">
-                <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(b)}>Edit</button>
-                <button className={`${btnOutline} ${btnSm}`} onClick={() => toggleActive(b)}>
-                  {b.active ? 'Deactivate' : 'Activate'}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <DataTable
+          caption="Batches"
+          rows={list.result}
+          rowAccent={(b) => (b.active ? 'var(--status-ok)' : 'var(--color-pay-line)')}
+          empty={list.total === 0 ? 'No batches yet. Add your first one above.' : 'Nothing matches this view, search or filters.'}
+          columns={[
+            { key: 'name', header: 'Batch', primary: true, width: '22%', sortValue: (b) => b.name,
+              render: (b) => (
+                <span className="block leading-tight">
+                  <strong className="text-heading">{b.name}</strong>
+                  <span className="block text-xs text-subtle">{b.age_group ? `Ages ${b.age_group}` : 'All ages'}</span>
+                </span>
+              ) },
+            { key: 'center', header: 'Centre', sortValue: (b) => b.training_centers?.name, render: (b) => b.training_centers?.name || '—' },
+            { key: 'coach', header: 'Coach', sortValue: (b) => b.coaches?.full_name, render: (b) => b.coaches?.full_name || 'Not assigned' },
+            { key: 'days', header: 'Days', render: (b) => (b.schedule_days?.length ? (
+              <span className="inline-flex flex-wrap gap-1">
+                {b.schedule_days.map((d) => <span key={d} className="rounded-md bg-pay-sky text-pay-action px-1.5 py-0.5 text-[0.7rem] font-semibold">{d}</span>)}
+              </span>
+            ) : '—') },
+            { key: 'time', header: 'Time', sortValue: (b) => b.start_time, render: (b) => (b.start_time ? <span className="tabular-nums whitespace-nowrap">{b.start_time.slice(0, 5)}–{b.end_time?.slice(0, 5) || ''}</span> : '—') },
+            { key: 'capacity', header: 'Capacity', align: 'right', sortValue: (b) => b.capacity ?? -1, render: (b) => b.capacity ?? '—' },
+            { key: 'status', header: 'Status', sortValue: (b) => (b.active ? 0 : 1),
+              render: (b) => <StatusPill tone={b.active ? 'ok' : 'neutral'}>{b.active ? 'Active' : 'Inactive'}</StatusPill> },
+          ]}
+          actions={(b) => (
+            <>
+              <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(b)}>Edit</button>
+              <button className={`${btnOutline} ${btnSm}`} onClick={() => toggleActive(b)}>{b.active ? 'Deactivate' : 'Activate'}</button>
+            </>
+          )}
+        />
       )}
     </div>
   )

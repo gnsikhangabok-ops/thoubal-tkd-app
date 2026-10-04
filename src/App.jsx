@@ -33,6 +33,7 @@ const Events = lazy(() => import('./pages/admin/modules/Events'))
 const Users = lazy(() => import('./pages/admin/modules/Users'))
 const WebsiteContent = lazy(() => import('./pages/admin/modules/WebsiteContent'))
 const Reports = lazy(() => import('./pages/admin/modules/Reports'))
+const StudentFile = lazy(() => import('./pages/admin/StudentFile'))
 const Notices = lazy(() => import('./pages/admin/modules/Notices'))
 const ActivityLog = lazy(() => import('./pages/admin/modules/ActivityLog'))
 const NotFound = lazy(() => import('./pages/public/NotFound'))
@@ -72,6 +73,7 @@ export default function App() {
             <Route path="/admin/training-centers" element={<Admin allowedRoles={['super_admin', 'coach']}><TrainingCenters /></Admin>} />
             <Route path="/admin/coaches" element={<Admin allowedRoles={['super_admin', 'coach']}><Coaches /></Admin>} />
             <Route path="/admin/students" element={<Admin allowedRoles={['super_admin', 'coach']}><Students /></Admin>} />
+            <Route path="/admin/students/:id" element={<Admin allowedRoles={['super_admin', 'coach']}><StudentFile /></Admin>} />
             <Route path="/admin/batches" element={<Admin allowedRoles={['super_admin', 'coach']}><Batches /></Admin>} />
             <Route path="/admin/rules" element={<Admin allowedRoles={['super_admin', 'coach']}><RulesAndRegulations /></Admin>} />
             <Route path="/admin/belt-exams" element={<Admin allowedRoles={['super_admin', 'coach']}><BeltExams /></Admin>} />

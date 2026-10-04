@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
-import { useListTools, exportCsv, byText, byDateDesc, opts } from '../../../lib/listTools'
+import { useListTools, exportCsv, byText, byDateDesc } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
+import ModuleHeader from '../../../components/ModuleHeader'
+import DataTable, { StatusPill } from '../../../components/DataTable'
+import { moduleTabs } from '../../../lib/moduleTabs'
 
 const STATUSES = ['new', 'contacted', 'enrolled', 'closed']
 const STATUS_COLOR = {
@@ -63,10 +66,18 @@ export default function Enquiries() {
     ])
   }
 
+  const tabs = moduleTabs(list, 'status', [['', 'All'], ...STATUSES.map((st) => [st, st.charAt(0).toUpperCase() + st.slice(1)])])
+  const STATUS_TONE = { new: 'info', contacted: 'warn', enrolled: 'ok', closed: 'neutral' }
+
   return (
-    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
-      <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading mb-2">Enquiries</h1>
-      <p className="text-muted mb-8">Leads submitted through the public website enrollment form.</p>
+    <div className="p-8 max-md:p-4 max-w-[1240px] mx-auto">
+      <ModuleHeader
+        title="Enquiries"
+        description="Leads submitted through the public website enrollment form."
+        tabs={tabs.items}
+        activeTab={tabs.active}
+        onTabChange={tabs.select}
+      />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -88,46 +99,48 @@ export default function Enquiries() {
         printTitle="Enquiries"
         onExport={handleExport}
         filters={[
-          { key: 'status', label: 'Status', options: opts(STATUSES) },
           { key: 'program', label: 'Program', options: programs.map((p) => ({ value: p, label: p })) },
         ]}
         sorts={[{ key: 'newest', label: 'Newest first' }, { key: 'name', label: 'Name A–Z' }]}
       />
 
       {loading ? (
-        <p>Loading…</p>
-      ) : list.result.length === 0 ? (
-        <p className="text-muted">{list.total === 0 ? <>No enquiries yet. They'll appear here when someone fills out the enrollment form on the website.</> : 'Nothing matches your search or filters.'}</p>
+        <p className="text-muted">Loading…</p>
       ) : (
-        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {list.result.map((enq) => (
-            <div
-              key={enq.id}
-              className="bg-surface rounded-2xl shadow-card p-6"
-              style={{ borderLeftWidth: 4, borderLeftColor: STATUS_COLOR[enq.status] }}
-            >
-              <h3 className="font-semibold text-base text-heading mb-1.5">{enq.child_name}</h3>
-              <p className="text-sm text-charcoal">Age {enq.age} · {enq.program_interested}</p>
-              <p className="text-[0.85rem] mt-1.5">{enq.guardian_phone}</p>
-              {enq.message && <p className="text-[0.85rem] mt-1.5 italic">"{enq.message}"</p>}
-              <p className="text-[0.8rem] mt-1.5 text-charcoal">
-                {new Date(enq.created_at).toLocaleDateString()}
-              </p>
-              <div className="mt-3">
-                <label className="text-[0.75rem] block mb-1 uppercase tracking-wide">Status</label>
-                <select
-                  value={enq.status}
-                  onChange={(e) => updateStatus(enq, e.target.value)}
-                  className="px-2 py-2 border border-pay-line rounded-xl text-[0.85rem] capitalize"
-                >
-                  {STATUSES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          ))}
-        </div>
+        <DataTable
+          caption="Enquiries"
+          rows={list.result}
+          rowAccent={(e) => STATUS_COLOR[e.status]}
+          empty={list.total === 0 ? "No enquiries yet. They'll appear here when someone fills out the enrollment form on the website." : 'Nothing matches this view, search or filters.'}
+          columns={[
+            { key: 'name', header: 'Applicant', primary: true, width: '22%', sortValue: (e) => e.child_name,
+              render: (e) => (
+                <span className="block leading-tight">
+                  <strong className="text-heading">{e.child_name}</strong>
+                  <span className="block text-xs text-subtle">Age {e.age ?? '—'}</span>
+                </span>
+              ) },
+            { key: 'program', header: 'Program', sortValue: (e) => e.program_interested, render: (e) => e.program_interested || '—' },
+            { key: 'phone', header: 'Guardian phone', render: (e) => <a href={`tel:${e.guardian_phone}`} className="tabular-nums hover:text-pay-action">{e.guardian_phone}</a> },
+            { key: 'received', header: 'Received', sortValue: (e) => e.created_at, render: (e) => <span className="tabular-nums whitespace-nowrap">{new Date(e.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span> },
+            { key: 'message', header: 'Message', render: (e) => (e.message ? <span className="italic line-clamp-2">“{e.message}”</span> : '—') },
+            { key: 'status', header: 'Status', sortValue: (e) => STATUSES.indexOf(e.status),
+              render: (e) => (
+                <label className="inline-flex items-center gap-2">
+                  <span className="sr-only">Status for {e.child_name}</span>
+                  <StatusPill tone={STATUS_TONE[e.status]}>{e.status}</StatusPill>
+                  <select
+                    value={e.status}
+                    onChange={(ev) => updateStatus(e, ev.target.value)}
+                    onClick={(ev) => ev.stopPropagation()}
+                    className="rounded-lg border border-pay-line bg-surface px-1.5 py-1 text-xs capitalize text-heading"
+                  >
+                    {STATUSES.map((st) => <option key={st} value={st}>{st}</option>)}
+                  </select>
+                </label>
+              ) },
+          ]}
+        />
       )}
     </div>
   )

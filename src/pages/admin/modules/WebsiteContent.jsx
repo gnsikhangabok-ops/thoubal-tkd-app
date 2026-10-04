@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
 import { Upload, Check, ImageIcon } from 'lucide-react'
 import { inputCls } from '../../../lib/adminUi'
+import ModuleHeader from '../../../components/ModuleHeader'
 
 // Defines every editable field on the public site.
 // type: 'text' | 'textarea' | 'image'
@@ -145,15 +146,15 @@ export default function WebsiteContent() {
 
   return (
     <div className="p-8 max-md:p-4 max-w-[900px] mx-auto">
-      <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading mb-2">Website Content</h1>
-      <p className="text-muted mb-8">
-        Edit the text and images shown on the public homepage. Changes save automatically and go live immediately.
-      </p>
+      <ModuleHeader
+        title="Website Content"
+        description="Edit the text and images shown on the public homepage. Changes save automatically and go live immediately."
+      />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm">{error}</p>}
 
       {loading ? (
-        <p>Loading…</p>
+        <p className="text-muted">Loading…</p>
       ) : (
         <div className="flex flex-col gap-12">
           {FIELD_GROUPS.map((group) => (

@@ -94,7 +94,7 @@ export default function AdminLayout({ children }) {
   )
 
   return (
-    <div className="paytm flex min-h-screen font-body">
+    <div className="paytm clinic flex min-h-screen font-body">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex w-64 shrink-0 bg-surface flex-col border-r border-pay-line sticky top-0 h-screen z-30">
         {sidebarContent}
