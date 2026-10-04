@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 import { Link2 } from 'lucide-react'
+import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 
 const INCOME_CATEGORIES = ['student_fee', 'donation', 'sponsorship', 'other']
 const EXPENSE_CATEGORIES = ['salary', 'equipment', 'rent', 'event', 'maintenance', 'other']
@@ -25,10 +26,6 @@ const emptyForm = {
   description: '',
 }
 
-const inputCls = "px-2.5 py-2.5 border border-black/10"
-const btnPrimary = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
-const btnOutline = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk"
-const btnSm = "text-[0.75rem] px-3 py-1.5"
 
 export default function Accounts() {
   const [transactions, setTransactions] = useState([])
@@ -114,36 +111,36 @@ export default function Accounts() {
   const categoryOptions = form.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
 
   return (
-    <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
+    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="font-display text-ink uppercase text-3xl">Accounts</h1>
+        <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">Accounts</h1>
         <div className="flex gap-2.5">
           <button className={btnPrimary} onClick={() => openAddForm('income')}>+ Add Income</button>
           <button className={btnOutline} onClick={() => openAddForm('expense')}>+ Add Expense</button>
         </div>
       </div>
-      <p className="text-charcoal mb-9">
+      <p className="text-[#5B6B82] mb-8">
         Income vs expenses — profit &amp; loss overview. Fee collections from{' '}
         <Link to="/admin/fees" className="underline">Fee Management</Link> and{' '}
         <Link to="/admin/fee-setup" className="underline">Fee Setup</Link> post here automatically.
       </p>
 
-      {error && <p className="text-brand-red mb-4">{error}</p>}
+      {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
       <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
-        <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
-          <strong className="block font-display text-4xl text-chalk">₹{Number(summary.total_income).toLocaleString('en-IN')}</strong>
-          <span className="text-sm text-[#C9D3E6] uppercase tracking-wide">Total Income</span>
+        <div className="pay-stat">
+          <strong className="block text-3xl font-bold text-white">₹{Number(summary.total_income).toLocaleString('en-IN')}</strong>
+          <span className="text-sm text-white/85">Total Income</span>
         </div>
-        <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
-          <strong className="block font-display text-4xl text-chalk">₹{Number(summary.total_expense).toLocaleString('en-IN')}</strong>
-          <span className="text-sm text-[#C9D3E6] uppercase tracking-wide">Total Expenses</span>
+        <div className="pay-stat">
+          <strong className="block text-3xl font-bold text-white">₹{Number(summary.total_expense).toLocaleString('en-IN')}</strong>
+          <span className="text-sm text-white/85">Total Expenses</span>
         </div>
-        <div className="bg-ink px-5 py-6 border-b-[3px]" style={{ borderBottomColor: summary.net_balance >= 0 ? '#D4A537' : '#B3282D' }}>
-          <strong className="block font-display text-4xl" style={{ color: summary.net_balance >= 0 ? '#F7F5F0' : '#ff8b8b' }}>
+        <div className="pay-stat border-b-4" style={{ borderBottomColor: summary.net_balance >= 0 ? '#34D399' : '#F87171' }}>
+          <strong className="block text-3xl font-bold" style={{ color: summary.net_balance >= 0 ? '#FFFFFF' : '#FECACA' }}>
             ₹{Number(summary.net_balance).toLocaleString('en-IN')}
           </strong>
-          <span className="text-sm text-[#C9D3E6] uppercase tracking-wide">Net Balance</span>
+          <span className="text-sm text-white/85">Net Balance</span>
         </div>
       </div>
 
@@ -169,8 +166,8 @@ export default function Accounts() {
       </div>
 
       {showForm && (
-        <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[460px]">
-          <h3 className="font-semibold text-base text-ink mb-4 capitalize">Add {form.type}</h3>
+        <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[460px]">
+          <h3 className="font-semibold text-base text-pay-navy mb-4 capitalize">Add {form.type}</h3>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <select
               value={form.category}
@@ -233,14 +230,14 @@ export default function Accounts() {
             return (
               <div
                 key={tx.id}
-                className="bg-white border border-black/10 p-6"
-                style={{ borderTopWidth: 3, borderTopColor: tx.type === 'income' ? '#B3282D' : '#8B0000' }}
+                className="bg-white rounded-2xl shadow-card p-6"
+                style={{ borderLeftWidth: 4, borderLeftColor: tx.type === 'income' ? '#047857' : '#DC2626' }}
               >
                 <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <h3 className="font-semibold text-base text-ink capitalize">{tx.type} · {CATEGORY_LABELS[tx.category] || tx.category}</h3>
+                  <h3 className="font-semibold text-base text-pay-navy capitalize">{tx.type} · {CATEGORY_LABELS[tx.category] || tx.category}</h3>
                   {isAuto && <Link2 size={14} className="text-charcoal/50 shrink-0" title="Auto-posted from fee collection" />}
                 </div>
-                <p className="text-xl font-display" style={{ color: tx.type === 'income' ? '#B3282D' : '#8B0000' }}>
+                <p className="text-xl font-display" style={{ color: tx.type === 'income' ? '#047857' : '#DC2626' }}>
                   {tx.type === 'income' ? '+' : '−'}₹{Number(tx.amount).toLocaleString('en-IN')}
                 </p>
                 <p className="text-[0.85rem] mt-1">{tx.transaction_date}</p>

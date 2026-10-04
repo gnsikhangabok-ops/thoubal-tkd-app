@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
+import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 
 const emptyForm = { id: null, name: '', location: '', active: true }
-const inputCls = "px-2.5 py-2.5 border border-black/10"
-const btnPrimary = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
-const btnOutline = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk"
-const btnSm = "text-[0.75rem] px-3 py-1.5"
 
 export default function TrainingCenters() {
   const [centers, setCenters] = useState([])
@@ -86,18 +83,18 @@ export default function TrainingCenters() {
   }
 
   return (
-    <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
+    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="font-display text-ink uppercase text-3xl">Training Centers</h1>
+        <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">Training Centers</h1>
         <button className={btnPrimary} onClick={openAddForm}>+ Add Center</button>
       </div>
-      <p className="text-charcoal mb-9">Branches operating under Thoubal District Taekwondo Association.</p>
+      <p className="text-[#5B6B82] mb-8">Branches operating under Thoubal District Taekwondo Association.</p>
 
-      {error && <p className="text-brand-red mb-4">{error}</p>}
+      {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
       {showForm && (
-        <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[480px]">
-          <h3 className="font-semibold text-base text-ink mb-4">{form.id ? 'Edit Center' : 'New Training Center'}</h3>
+        <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[480px]">
+          <h3 className="font-semibold text-base text-pay-navy mb-4">{form.id ? 'Edit Center' : 'New Training Center'}</h3>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <input
               type="text"
@@ -143,12 +140,12 @@ export default function TrainingCenters() {
           {centers.map((c) => (
             <div
               key={c.id}
-              className="bg-white border border-black/10 p-6"
-              style={{ borderTopWidth: 3, borderTopColor: c.active ? '#B3282D' : '#ccc' }}
+              className="bg-white rounded-2xl shadow-card p-6"
+              style={{ borderLeftWidth: 4, borderLeftColor: c.active ? '#047857' : '#ccc' }}
             >
-              <h3 className="font-semibold text-base text-ink mb-1.5">{c.name}</h3>
+              <h3 className="font-semibold text-base text-pay-navy mb-1.5">{c.name}</h3>
               <p className="text-sm text-charcoal">{c.location || 'No location set'}</p>
-              <p className="text-[0.8rem] mt-2" style={{ color: c.active ? '#B3282D' : '#999' }}>
+              <p className="text-[0.8rem] mt-2" style={{ color: c.active ? '#047857' : '#999' }}>
                 {c.active ? 'Active' : 'Inactive'}
               </p>
               <div className="flex gap-2 mt-3">

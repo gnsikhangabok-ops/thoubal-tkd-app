@@ -14,6 +14,16 @@
   --color-charcoal: #2E3A4D;
   --color-line: rgba(11, 35, 80, 0.14);
 
+  /* Paytm-style app palette used inside the logged-in modules (admin + student portal) */
+  --color-pay-navy: #002E6E;
+  --color-pay-blue: #00BAF2;
+  --color-pay-action: #0079C1;   /* darker blue so white button text stays readable */
+  --color-pay-action-dark: #00609A;
+  --color-pay-sky: #E6F7FD;
+  --color-pay-bg: #F3F7FB;
+  --color-pay-line: #E3EAF3;
+  --shadow-card: 0 2px 12px rgba(0, 46, 110, 0.08);
+
   --font-display: 'Roboto Condensed', 'Arial Narrow', sans-serif;
   --font-body: 'Noto Sans', 'Segoe UI', sans-serif;
 }
@@ -40,6 +50,24 @@
   .tricolor {
     @apply flex h-1 w-full;
     background: linear-gradient(to right, var(--color-saffron) 0 33.33%, #fff 33.33% 66.66%, var(--color-india-green) 66.66% 100%);
+  }
+
+  /* App shell for logged-in modules: plain sans headings instead of the condensed uppercase site style */
+  .paytm {
+    --font-display: var(--font-body);
+    background: var(--color-pay-bg);
+  }
+  .paytm h1, .paytm h2, .paytm h3 {
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--color-pay-navy);
+  }
+  .paytm .uppercase { letter-spacing: 0.02em; }
+
+  /* Gradient metric card */
+  .pay-stat {
+    @apply rounded-2xl px-5 py-5 text-white shadow-card;
+    background: linear-gradient(135deg, var(--color-pay-navy) 0%, #0057A8 60%, var(--color-pay-blue) 130%);
   }
 
   /* Scrolling "Latest Updates" line; static for users who prefer reduced motion */

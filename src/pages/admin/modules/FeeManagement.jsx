@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
+import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 
 function currentMonthFirst() {
   const d = new Date()
@@ -14,10 +15,6 @@ function formatMonth(dateStr) {
 
 const emptyPayForm = { amount_paid: '', payment_method: 'Cash', receipt_no: '', notes: '' }
 
-const inputCls = "px-2.5 py-2.5 border border-black/10"
-const btnPrimary = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
-const btnOutline = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk"
-const btnSm = "text-[0.75rem] px-3 py-1.5"
 
 export default function FeeManagement() {
   const [payments, setPayments] = useState([])
@@ -194,15 +191,15 @@ export default function FeeManagement() {
   const totalPaid = payments.reduce((sum, p) => sum + parseFloat(p.amount_paid || 0), 0)
   const pendingCount = payments.filter((p) => p.status === 'pending' || p.status === 'overdue').length
 
-  const statusColor = { paid: '#B3282D', pending: '#B8860B', overdue: '#8B0000', waived: '#999' }
+  const statusColor = { paid: '#047857', pending: '#B45309', overdue: '#DC2626', waived: '#999' }
 
   return (
-    <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
+    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="font-display text-ink uppercase text-3xl">Fee Management</h1>
+        <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">Fee Management</h1>
         <button className={btnPrimary} onClick={openGenForm}>+ Generate Month's Fees</button>
       </div>
-      <p className="text-charcoal mb-9">
+      <p className="text-[#5B6B82] mb-8">
         Track monthly dues, payments, and receipts. Rates come from{' '}
         <Link to="/admin/fee-setup" className="underline">Fee Setup</Link>. Payments post automatically to{' '}
         <Link to="/admin/accounts" className="underline">Accounts</Link>.
@@ -214,30 +211,30 @@ export default function FeeManagement() {
           type="month"
           value={monthFilter.slice(0, 7)}
           onChange={(e) => setMonthFilter(`${e.target.value}-01`)}
-          className="px-2 py-2 border border-black/10"
+          className="px-2 py-2 border border-pay-line rounded-xl"
         />
       </div>
 
-      {error && <p className="text-brand-red mb-4">{error}</p>}
+      {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
       <div className="grid gap-4 mb-9" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
-        <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
-          <strong className="block font-display text-4xl text-chalk">₹{totalDue.toLocaleString('en-IN')}</strong>
-          <span className="text-sm text-[#C9D3E6] uppercase tracking-wide">Total Due — {formatMonth(monthFilter)}</span>
+        <div className="pay-stat">
+          <strong className="block text-3xl font-bold text-white">₹{totalDue.toLocaleString('en-IN')}</strong>
+          <span className="text-sm text-white/85">Total Due — {formatMonth(monthFilter)}</span>
         </div>
-        <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
-          <strong className="block font-display text-4xl text-chalk">₹{totalPaid.toLocaleString('en-IN')}</strong>
-          <span className="text-sm text-[#C9D3E6] uppercase tracking-wide">Total Collected</span>
+        <div className="pay-stat">
+          <strong className="block text-3xl font-bold text-white">₹{totalPaid.toLocaleString('en-IN')}</strong>
+          <span className="text-sm text-white/85">Total Collected</span>
         </div>
-        <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
-          <strong className="block font-display text-4xl text-chalk">{pendingCount}</strong>
-          <span className="text-sm text-[#C9D3E6] uppercase tracking-wide">Students Pending</span>
+        <div className="pay-stat">
+          <strong className="block text-3xl font-bold text-white">{pendingCount}</strong>
+          <span className="text-sm text-white/85">Students Pending</span>
         </div>
       </div>
 
       {showGenForm && (
-        <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[460px]">
-          <h3 className="font-semibold text-base text-ink mb-4">Generate Fee Records</h3>
+        <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[460px]">
+          <h3 className="font-semibold text-base text-pay-navy mb-4">Generate Fee Records</h3>
 
           <label className="text-[0.85rem] font-semibold block mb-1.5">Month</label>
           <input
@@ -257,13 +254,13 @@ export default function FeeManagement() {
                 <strong className="text-ink">{genPreview.toCreate.length}</strong> student{genPreview.toCreate.length === 1 ? '' : 's'} will be billed using their batch's rate.
               </p>
               {genPreview.skippedNoRate.length > 0 && (
-                <p className="text-brand-red mt-2">
+                <p className="text-red-600 mt-2">
                   {genPreview.skippedNoRate.length} student(s) skipped — their batch has no rate set in{' '}
                   <Link to="/admin/fee-setup" className="underline">Fee Setup</Link>.
                 </p>
               )}
               {genPreview.skippedNoBatch.length > 0 && (
-                <p className="text-brand-red mt-2">
+                <p className="text-red-600 mt-2">
                   {genPreview.skippedNoBatch.length} student(s) skipped — not assigned to a batch yet.
                 </p>
               )}
@@ -289,8 +286,8 @@ export default function FeeManagement() {
       )}
 
       {payingFor && (
-        <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[420px]">
-          <h3 className="font-semibold text-base text-ink mb-1.5">Record Payment</h3>
+        <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[420px]">
+          <h3 className="font-semibold text-base text-pay-navy mb-1.5">Record Payment</h3>
           <p className="text-[0.85rem] mb-4 text-charcoal">
             {payingFor.students?.full_name} — due ₹{payingFor.amount_due}, paid so far ₹{payingFor.amount_paid || 0}
           </p>
@@ -346,10 +343,10 @@ export default function FeeManagement() {
           {payments.map((p) => (
             <div
               key={p.id}
-              className="bg-white border border-black/10 p-6"
-              style={{ borderTopWidth: 3, borderTopColor: statusColor[p.status] }}
+              className="bg-white rounded-2xl shadow-card p-6"
+              style={{ borderLeftWidth: 4, borderLeftColor: statusColor[p.status] }}
             >
-              <h3 className="font-semibold text-base text-ink mb-1.5">{p.students?.full_name}</h3>
+              <h3 className="font-semibold text-base text-pay-navy mb-1.5">{p.students?.full_name}</h3>
               <p className="text-sm text-charcoal">Due: ₹{p.amount_due} · Paid: ₹{p.amount_paid || 0}</p>
               <p className="text-[0.8rem] mt-1.5 uppercase font-display" style={{ color: statusColor[p.status] }}>
                 {p.status}

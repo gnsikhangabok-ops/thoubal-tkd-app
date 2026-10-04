@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
+import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 
 const BELT_RANKS = [
   'white', 'yellow', 'green', 'blue', 'red',
@@ -36,10 +37,6 @@ const emptyForm = {
   rules_acknowledged: false,
 }
 
-const inputCls = "px-2.5 py-2.5 border border-black/10"
-const btnPrimary = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
-const btnOutline = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk"
-const btnSm = "text-[0.75rem] px-3 py-1.5"
 
 export default function Students() {
   const [students, setStudents] = useState([])
@@ -166,24 +163,24 @@ export default function Students() {
   )
 
   return (
-    <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
+    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="font-display text-ink uppercase text-3xl">Students / Registration</h1>
+        <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">Students / Registration</h1>
         <button className={btnPrimary} onClick={openAddForm}>+ Register Student</button>
       </div>
-      <p className="text-charcoal mb-9">All enrolled athletes across every training center.</p>
+      <p className="text-[#5B6B82] mb-8">All enrolled athletes across every training center.</p>
 
-      {error && <p className="text-brand-red mb-4">{error}</p>}
+      {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
       {centers.length === 0 && !loading && (
-        <p className="text-brand-red mb-4 text-sm">
+        <p className="text-red-600 mb-4 text-sm">
           No active training centers found. <Link to="/admin/training-centers" className="underline">Add a training center first</Link>.
         </p>
       )}
 
       {showForm && (
-        <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[560px]">
-          <h3 className="font-semibold text-base text-ink mb-4">{form.id ? 'Edit Student' : 'New Student Registration'}</h3>
+        <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[560px]">
+          <h3 className="font-semibold text-base text-pay-navy mb-4">{form.id ? 'Edit Student' : 'New Student Registration'}</h3>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <input
               type="text" placeholder="Full name" required
@@ -327,19 +324,19 @@ export default function Students() {
           {filteredStudents.map((s) => (
             <div
               key={s.id}
-              className="bg-white border border-black/10 p-6"
-              style={{ borderTopWidth: 3, borderTopColor: s.active ? '#B3282D' : '#ccc' }}
+              className="bg-white rounded-2xl shadow-card p-6"
+              style={{ borderLeftWidth: 4, borderLeftColor: s.active ? '#047857' : '#ccc' }}
             >
-              <h3 className="font-semibold text-base text-ink mb-1.5">{s.full_name}</h3>
+              <h3 className="font-semibold text-base text-pay-navy mb-1.5">{s.full_name}</h3>
               <p className="text-sm text-charcoal">{BELT_LABELS[s.current_belt] || s.current_belt}</p>
               <p className="text-[0.85rem] mt-1.5">
                 {s.training_centers?.name || 'No center'} {s.batches?.name ? `· ${s.batches.name}` : ''}
               </p>
               {s.guardian_phone && <p className="text-[0.85rem]">{s.guardian_phone}</p>}
-              <p className="text-[0.8rem] mt-1.5" style={{ color: s.rules_acknowledged ? '#3A3A38' : '#B3282D' }}>
+              <p className="text-[0.8rem] mt-1.5" style={{ color: s.rules_acknowledged ? '#5B6B82' : '#DC2626' }}>
                 {s.rules_acknowledged ? '✓ Rules acknowledged' : '⚠ Rules not acknowledged'}
               </p>
-              <p className="text-[0.8rem] mt-1" style={{ color: s.active ? '#B3282D' : '#999' }}>
+              <p className="text-[0.8rem] mt-1" style={{ color: s.active ? '#047857' : '#999' }}>
                 {s.active ? 'Active' : 'Inactive'}
               </p>
               <div className="flex gap-2 mt-3">
