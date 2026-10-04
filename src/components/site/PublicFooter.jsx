@@ -3,6 +3,7 @@ import { MapPin, Phone, Mail } from 'lucide-react'
 import { REGISTRATION_NO, telHref } from '../../lib/siteContent'
 import logo from '../../assets/logo.png'
 import { useT } from '../../lib/i18n'
+import InstallAppButton from '../InstallAppButton'
 
 export default function PublicFooter({ c }) {
   const { t } = useT()
@@ -19,6 +20,7 @@ export default function PublicFooter({ c }) {
             </span>
             <span className="font-bold text-white">Thoubal Taekwondo Academy</span>
           </div>
+          <InstallAppButton className="mb-4 bg-white text-[#002E6E] hover:bg-[#E6F7FD]" />
           <p className="text-sm max-w-[38ch]">
             {t('Under Thoubal District Taekwondo Association. Regd. No. {reg}. Affiliated to AMTA, Taekwondo Federation of India & Asian Taekwondo Union.', { reg: REGISTRATION_NO })}
           </p>

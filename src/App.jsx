@@ -10,6 +10,8 @@ import RoleRedirect from './pages/public/RoleRedirect'
 import Unauthorized from './pages/public/Unauthorized'
 import Signup from './pages/public/Signup'
 import PageLoader from './components/site/PageLoader'
+import OfflineBanner from './components/OfflineBanner'
+import ChunkErrorBoundary from './components/ChunkErrorBoundary'
 
 // Admin, portal and secondary pages load on demand to keep the public bundle small
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
@@ -41,7 +43,9 @@ function Admin({ allowedRoles, children }) {
   return (
     <ProtectedRoute allowedRoles={allowedRoles}>
       <AdminLayout>
-        <Suspense fallback={<div className="p-12 text-charcoal">Loading…</div>}>{children}</Suspense>
+        <ChunkErrorBoundary>
+          <Suspense fallback={<div className="p-12 text-charcoal">Loading…</div>}>{children}</Suspense>
+        </ChunkErrorBoundary>
       </AdminLayout>
     </ProtectedRoute>
   )
@@ -51,6 +55,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <ChunkErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Public site */}
@@ -97,6 +102,8 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
+        </ChunkErrorBoundary>
+        <OfflineBanner />
       </BrowserRouter>
     </AuthProvider>
   )

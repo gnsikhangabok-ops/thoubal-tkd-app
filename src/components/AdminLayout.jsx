@@ -6,6 +6,7 @@ import { Menu, X, LogOut } from 'lucide-react'
 import { roleLabel } from '../lib/roles'
 import { navForRole } from '../lib/adminNav'
 import ThemeToggle from './ThemeToggle'
+import InstallAppButton from './InstallAppButton'
 import NotificationBell from './NotificationBell'
 import { useAdminNotifications } from '../lib/adminNotifications'
 
@@ -74,6 +75,7 @@ export default function AdminLayout({ children }) {
       </nav>
 
       <div className="p-3 border-t border-pay-line">
+        <InstallAppButton className="w-full justify-center mb-2 bg-pay-sky text-pay-action hover:bg-pay-bg" />
         <div className="flex items-center gap-3 rounded-xl bg-pay-bg p-3">
           <span className="grid place-items-center w-9 h-9 rounded-full bg-gradient-to-br from-pay-navy to-pay-blue text-white text-sm font-bold shrink-0">
             {initials}

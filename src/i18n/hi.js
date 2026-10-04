@@ -245,4 +245,8 @@ export default {
   'Black Belt 2nd Dan': 'ब्लैक बेल्ट द्वितीय डान',
   'Black Belt 3rd Dan': 'ब्लैक बेल्ट तृतीय डान',
   'Black Belt 4th Dan+': 'ब्लैक बेल्ट चतुर्थ डान+',
+
+  // App install / connection
+  'Install app': 'ऐप इंस्टॉल करें',
+  "You're offline. Changes can't be saved until the connection is back.": 'आप ऑफ़लाइन हैं। कनेक्शन लौटने तक बदलाव सहेजे नहीं जा सकते।',
 }

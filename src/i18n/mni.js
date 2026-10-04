@@ -246,4 +246,8 @@ export default {
   'Black Belt 2nd Dan': 'ꯕ꯭ꯂꯦꯛ ꯕꯦꯜꯇ ꯑꯅꯤꯁꯨꯕ ꯗꯥꯟ',
   'Black Belt 3rd Dan': 'ꯕ꯭ꯂꯦꯛ ꯕꯦꯜꯇ ꯑꯍꯨꯃꯁꯨꯕ ꯗꯥꯟ',
   'Black Belt 4th Dan+': 'ꯕ꯭ꯂꯦꯛ ꯕꯦꯜꯇ ꯃꯔꯤꯁꯨꯕ ꯗꯥꯟ+',
+
+  // App install / connection
+  'Install app': 'ꯑꯦꯞ ꯏꯅꯁ꯭ꯇꯣꯜ ꯇꯧꯕꯤꯌꯨ',
+  "You're offline. Changes can't be saved until the connection is back.": 'ꯅꯍꯥꯛ ꯑꯣꯐꯂꯥꯏꯟ ꯑꯣꯏꯔꯦ। ꯀꯅꯦꯛꯁꯟ ꯍꯜꯂꯛꯠꯔꯤꯐꯥꯑꯣꯕ ꯍꯣꯡꯗꯣꯛꯄꯁꯤꯡ ꯁꯦꯚ ꯇꯧꯕ ꯉꯝꯂꯣꯏ।',
 }

@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabaseClient'
 import logo from '../../assets/logo.png'
 import ThemeToggle from '../../components/ThemeToggle'
 import LanguageSwitcher from '../../components/LanguageSwitcher'
+import InstallAppButton from '../../components/InstallAppButton'
 import { useT } from '../../lib/i18n'
 import NotificationBell from '../../components/NotificationBell'
 import { timeAgo } from '../../lib/adminNotifications'
@@ -179,6 +180,8 @@ export default function StudentPortal() {
                 <IdCard size={16} /> <span className="max-sm:hidden">{t('My ID Card')}</span><span className="sm:hidden">{t('ID Card')}</span>
               </button>
             </div>
+
+            <InstallAppButton className="mt-4 w-full justify-center bg-surface shadow-card text-pay-action hover:bg-pay-sky sm:hidden" />
 
             {/* Service tiles */}
             <nav aria-label={t('Portal sections')} className="bg-surface rounded-2xl shadow-card p-4 mt-4 mb-6 grid grid-cols-4 sm:grid-cols-7 gap-y-4 gap-x-1">
