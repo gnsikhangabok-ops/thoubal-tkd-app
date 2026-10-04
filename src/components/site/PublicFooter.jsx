@@ -12,7 +12,7 @@ export default function PublicFooter({ c }) {
       <div className="max-w-[1180px] mx-auto px-4 md:px-7 pt-12 pb-8 grid gap-10 md:grid-cols-[2fr_1fr_1fr_1.4fr]">
         <div>
           <div className="flex items-center gap-2.5 mb-4">
-            <span className="grid place-items-center w-11 h-11 rounded-full bg-white shrink-0">
+            <span className="grid place-items-center w-11 h-11 rounded-full bg-[#fff] shrink-0">
               <img src={logo} alt="" className="w-8 h-8 object-contain" />
             </span>
             <span className="font-bold text-white">Thoubal Taekwondo Academy</span>

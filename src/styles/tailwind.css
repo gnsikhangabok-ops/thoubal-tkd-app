@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* dark: utilities follow the theme switch (data-theme on <html>), not just the OS setting */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
 @theme {
   /* Base palette (token names kept from the original theme) */
   --color-ink: #0B2350;          /* navy — headers, sidebars, dark panels */
@@ -18,7 +21,15 @@
   --color-pay-sky: #E6F7FD;
   --color-pay-bg: #F3F7FB;
   --color-pay-line: #E3EAF3;
+  --color-pay-sky-2: #D6E6F5;
   --shadow-card: 0 2px 12px rgba(0, 46, 110, 0.08);
+
+  /* Semantic tokens — redefined for dark mode below */
+  --color-surface: #FFFFFF;      /* cards, bars, inputs */
+  --color-heading: #002E6E;      /* headings and strong labels */
+  --color-body: #4A5A73;         /* paragraph text */
+  --color-muted: #5B6B82;        /* secondary text */
+  --color-subtle: #7A889E;       /* hints, captions */
 
   --font-display: 'Noto Sans', 'Segoe UI', sans-serif;
   --font-body: 'Noto Sans', 'Segoe UI', sans-serif;
@@ -50,7 +61,7 @@
   .paytm h1, .paytm h2, .paytm h3 {
     text-transform: none;
     letter-spacing: normal;
-    color: var(--color-pay-navy);
+    color: var(--color-heading);
   }
   .paytm .uppercase { letter-spacing: 0.02em; }
 
@@ -154,3 +165,43 @@
     .admin-sidebar { width: 170px; }
   }
 }
+
+/* Status colours used in inline styles (cards' left accents, status labels) */
+:root {
+  --status-ok: #047857;
+  --status-bad: #DC2626;
+  --status-warn: #B45309;
+  --status-info: #0079C1;
+}
+
+/* ---------- Dark theme ---------- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-surface: #131D2E;
+  --color-heading: #E6EEF8;
+  --color-body: #B7C6D9;
+  --color-muted: #9DB0C8;
+  --color-subtle: #8597AF;
+  --color-ink: #E6EEF8;
+  --color-charcoal: #B7C6D9;
+  --color-chalk: #0B1220;
+  --color-pay-bg: #0B1220;
+  --color-pay-line: #24344D;
+  --color-pay-sky: #10304D;
+  --color-pay-sky-2: #173A5C;
+  --color-pay-action: #2AA7E6;
+  --color-pay-action-dark: #1B8CC4;
+  --shadow-card: 0 2px 14px rgba(0, 0, 0, 0.45);
+  --status-ok: #34D399;
+  --status-bad: #F87171;
+  --status-warn: #FBBF24;
+  --status-info: #38BDF8;
+}
+/* Status tints that use Tailwind's built-in palette */
+:root[data-theme="dark"] .bg-red-50 { background-color: #3A1A1E; }
+:root[data-theme="dark"] .text-red-700, :root[data-theme="dark"] .text-red-600 { color: #FCA5A5; }
+:root[data-theme="dark"] .bg-emerald-50 { background-color: #0F3326; }
+:root[data-theme="dark"] .text-emerald-800 { color: #6EE7B7; }
+:root[data-theme="dark"] .text-amber-700 { color: #FCD34D; }
+:root[data-theme="dark"] .bg-\[\#FFF6E5\] { background-color: #3A2A10; }
+:root[data-theme="dark"] .text-\[\#6B4300\] { color: #FCD9A0; }

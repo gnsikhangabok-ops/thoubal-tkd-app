@@ -61,14 +61,14 @@ export default function RulesAndRegulations() {
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">Rules &amp; Regulations</h1>
+        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Rules &amp; Regulations</h1>
         {!editing && (
           <button className={btnPrimary} onClick={startEditing}>
             {current ? 'Edit (new version)' : 'Write Rules'}
           </button>
         )}
       </div>
-      <p className="text-[#5B6B82] mb-8">
+      <p className="text-muted mb-8">
         Shown to students/parents at registration and publicly on the website.
         Saving creates a new version — old versions stay in history.
       </p>
@@ -76,7 +76,7 @@ export default function RulesAndRegulations() {
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
       {editing ? (
-        <form onSubmit={handleSave} className="bg-white rounded-2xl shadow-card p-6 max-w-[720px] flex flex-col gap-3.5">
+        <form onSubmit={handleSave} className="bg-surface rounded-2xl shadow-card p-6 max-w-[720px] flex flex-col gap-3.5">
           <label className="text-[0.85rem] font-semibold">
             Rules content {current && `(will be saved as version ${current.version + 1})`}
           </label>
@@ -103,7 +103,7 @@ export default function RulesAndRegulations() {
         <p className="text-charcoal">No rules published yet. Click "Write Rules" to add the first version.</p>
       ) : (
         <>
-          <div className="bg-white rounded-2xl shadow-card p-6 max-w-[720px] mb-7">
+          <div className="bg-surface rounded-2xl shadow-card p-6 max-w-[720px] mb-7">
             <div className="flex justify-between mb-3.5 text-[0.8rem] text-charcoal">
               <span>Current version: {current.version}</span>
               <span>Effective from: {current.effective_from}</span>
@@ -118,8 +118,8 @@ export default function RulesAndRegulations() {
               <h3 className="text-lg font-display uppercase text-ink mb-3">Version History</h3>
               <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
                 {history.slice(1).map((v) => (
-                  <div key={v.id} className="bg-white rounded-2xl shadow-card p-6 opacity-80">
-                    <h3 className="font-semibold text-base text-pay-navy mb-1.5">Version {v.version}</h3>
+                  <div key={v.id} className="bg-surface rounded-2xl shadow-card p-6 opacity-80">
+                    <h3 className="font-semibold text-base text-heading mb-1.5">Version {v.version}</h3>
                     <p className="text-[0.8rem] mb-2">
                       {new Date(v.created_at).toLocaleDateString()}
                     </p>

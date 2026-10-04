@@ -165,10 +165,10 @@ export default function Students() {
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">Students / Registration</h1>
+        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Students / Registration</h1>
         <button className={btnPrimary} onClick={openAddForm}>+ Register Student</button>
       </div>
-      <p className="text-[#5B6B82] mb-8">All enrolled athletes across every training center.</p>
+      <p className="text-muted mb-8">All enrolled athletes across every training center.</p>
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -179,8 +179,8 @@ export default function Students() {
       )}
 
       {showForm && (
-        <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[560px]">
-          <h3 className="font-semibold text-base text-pay-navy mb-4">{form.id ? 'Edit Student' : 'New Student Registration'}</h3>
+        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[560px]">
+          <h3 className="font-semibold text-base text-heading mb-4">{form.id ? 'Edit Student' : 'New Student Registration'}</h3>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <input
               type="text" placeholder="Full name" required
@@ -324,19 +324,19 @@ export default function Students() {
           {filteredStudents.map((s) => (
             <div
               key={s.id}
-              className="bg-white rounded-2xl shadow-card p-6"
-              style={{ borderLeftWidth: 4, borderLeftColor: s.active ? '#047857' : '#ccc' }}
+              className="bg-surface rounded-2xl shadow-card p-6"
+              style={{ borderLeftWidth: 4, borderLeftColor: s.active ? 'var(--status-ok)' : '#ccc' }}
             >
-              <h3 className="font-semibold text-base text-pay-navy mb-1.5">{s.full_name}</h3>
+              <h3 className="font-semibold text-base text-heading mb-1.5">{s.full_name}</h3>
               <p className="text-sm text-charcoal">{BELT_LABELS[s.current_belt] || s.current_belt}</p>
               <p className="text-[0.85rem] mt-1.5">
                 {s.training_centers?.name || 'No center'} {s.batches?.name ? `· ${s.batches.name}` : ''}
               </p>
               {s.guardian_phone && <p className="text-[0.85rem]">{s.guardian_phone}</p>}
-              <p className="text-[0.8rem] mt-1.5" style={{ color: s.rules_acknowledged ? '#5B6B82' : '#DC2626' }}>
+              <p className="text-[0.8rem] mt-1.5" style={{ color: s.rules_acknowledged ? '#5B6B82' : 'var(--status-bad)' }}>
                 {s.rules_acknowledged ? '✓ Rules acknowledged' : '⚠ Rules not acknowledged'}
               </p>
-              <p className="text-[0.8rem] mt-1" style={{ color: s.active ? '#047857' : '#999' }}>
+              <p className="text-[0.8rem] mt-1" style={{ color: s.active ? 'var(--status-ok)' : '#999' }}>
                 {s.active ? 'Active' : 'Inactive'}
               </p>
               <div className="flex gap-2 mt-3">

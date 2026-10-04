@@ -45,7 +45,7 @@ export default function PublicRules() {
 
       <main id="main" className="flex-1 pb-12">
         <div className="max-w-[860px] mx-auto px-4 md:px-7 -mt-12">
-          <article className="bg-white rounded-3xl shadow-card overflow-hidden">
+          <article className="bg-surface rounded-3xl shadow-card overflow-hidden">
             <header className="flex items-center justify-between flex-wrap gap-2 px-6 md:px-8 py-4 border-b border-pay-line">
               <h2 className="text-base font-bold">Academy policy document</h2>
               {rules?.version != null && (
@@ -54,13 +54,13 @@ export default function PublicRules() {
             </header>
             <div className="px-6 md:px-8 py-6 md:py-8">
               {loading ? (
-                <p className="text-[#5B6B82]">Loading…</p>
+                <p className="text-muted">Loading…</p>
               ) : error ? (
                 <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 text-sm">Could not load rules right now. Please try again later.</p>
               ) : !rules ? (
-                <p className="text-[#5B6B82]">Rules have not been published yet. Please check back soon.</p>
+                <p className="text-muted">Rules have not been published yet. Please check back soon.</p>
               ) : (
-                <div className="whitespace-pre-wrap text-[1.02rem] leading-relaxed text-[#4A5A73]">{rules.content}</div>
+                <div className="whitespace-pre-wrap text-[1.02rem] leading-relaxed text-body">{rules.content}</div>
               )}
             </div>
           </article>

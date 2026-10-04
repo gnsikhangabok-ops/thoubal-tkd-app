@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabaseClient'
 import logo from '../../assets/logo.png'
+import ThemeToggle from '../../components/ThemeToggle'
 import {
   LayoutGrid, CalendarCheck, Wallet, Award, FileBadge, Bell, Trophy, LogOut,
 } from 'lucide-react'
@@ -90,29 +91,32 @@ export default function StudentPortal() {
 
   return (
     <div className="paytm min-h-screen font-body">
-      <header className="sticky top-0 z-30 bg-white border-b border-pay-line shadow-card">
+      <header className="sticky top-0 z-30 bg-surface border-b border-pay-line shadow-card">
         <div className="max-w-[1100px] mx-auto flex items-center justify-between gap-4 px-8 max-md:px-4 py-2.5">
           <div className="flex items-center gap-2.5">
             <img src={logo} alt="Thoubal Taekwondo Academy" className="w-9 h-9 object-contain" />
             <div className="flex flex-col leading-tight">
-              <span className="font-bold text-[0.95rem] text-pay-navy">Thoubal <span className="text-pay-blue">TKD</span></span>
-              <span className="text-[0.65rem] text-[#7A889E]">Student &amp; Parent Portal</span>
+              <span className="font-bold text-[0.95rem] text-heading">Thoubal <span className="text-pay-blue">TKD</span></span>
+              <span className="text-[0.65rem] text-subtle">Student &amp; Parent Portal</span>
             </div>
           </div>
+          <div className="flex items-center gap-1.5">
+          <ThemeToggle />
           <button
             onClick={signOut}
-            className="inline-flex items-center gap-1.5 rounded-full border border-pay-line px-4 py-2 text-sm font-semibold text-pay-navy hover:bg-pay-bg"
+            className="inline-flex items-center gap-1.5 rounded-full border border-pay-line px-4 py-2 text-sm font-semibold text-heading hover:bg-pay-bg"
           >
             <LogOut size={16} /> Sign out
           </button>
+          </div>
         </div>
       </header>
 
       <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
         {loading ? (
-          <p className="text-[#5B6B82]">Loading…</p>
+          <p className="text-muted">Loading…</p>
         ) : error === 'unlinked' ? (
-          <div className="max-w-xl bg-white rounded-2xl shadow-card border-l-4 border-l-pay-blue p-6">
+          <div className="max-w-xl bg-surface rounded-2xl shadow-card border-l-4 border-l-pay-blue p-6">
             <h1 className="text-xl mb-2">Welcome, {profile?.full_name || 'student'}</h1>
             <p className="text-sm mb-3">Your account is active, but it hasn't been linked to a student record yet.</p>
             <ol className="list-decimal pl-5 text-sm flex flex-col gap-1.5">
@@ -128,7 +132,7 @@ export default function StudentPortal() {
             {/* Profile card */}
             <div className="pay-stat relative overflow-hidden flex items-center gap-4 !p-5 md:!p-6">
               <div className="absolute -right-12 -top-16 w-52 h-52 rounded-full bg-white/10" aria-hidden="true" />
-              <span className="relative grid place-items-center w-14 h-14 rounded-full bg-white text-pay-navy text-lg font-bold shrink-0">
+              <span className="relative grid place-items-center w-14 h-14 rounded-full bg-surface text-heading text-lg font-bold shrink-0">
                 {student.full_name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
               </span>
               <div className="relative min-w-0">
@@ -141,7 +145,7 @@ export default function StudentPortal() {
             </div>
 
             {/* Service tiles */}
-            <nav aria-label="Portal sections" className="bg-white rounded-2xl shadow-card p-4 mt-4 mb-6 grid grid-cols-4 sm:grid-cols-7 gap-y-4 gap-x-1">
+            <nav aria-label="Portal sections" className="bg-surface rounded-2xl shadow-card p-4 mt-4 mb-6 grid grid-cols-4 sm:grid-cols-7 gap-y-4 gap-x-1">
               {TABS.map(({ key, icon: Icon }) => {
                 const active = activeTab === key
                 return (
@@ -154,7 +158,7 @@ export default function StudentPortal() {
                     <span className={`grid place-items-center w-12 h-12 rounded-2xl transition-colors ${active ? 'bg-pay-action text-white' : 'bg-pay-sky text-pay-action'}`}>
                       <Icon size={21} strokeWidth={1.9} />
                     </span>
-                    <span className={`text-[0.72rem] leading-tight ${active ? 'font-bold text-pay-navy' : 'font-medium text-[#4A5A73]'}`}>{key}</span>
+                    <span className={`text-[0.72rem] leading-tight ${active ? 'font-bold text-heading' : 'font-medium text-body'}`}>{key}</span>
                   </button>
                 )
               })}
@@ -192,10 +196,10 @@ export default function StudentPortal() {
                     {attendance.map((a) => (
                       <div
                         key={a.id}
-                        className="bg-white rounded-2xl shadow-card p-6"
-                        style={{ borderLeftWidth: 4, borderLeftColor: a.status === 'present' ? '#047857' : '#999' }}
+                        className="bg-surface rounded-2xl shadow-card p-6"
+                        style={{ borderLeftWidth: 4, borderLeftColor: a.status === 'present' ? 'var(--status-ok)' : '#999' }}
                       >
-                        <h3 className="capitalize font-semibold text-[0.95rem] text-pay-navy">{a.status}</h3>
+                        <h3 className="capitalize font-semibold text-[0.95rem] text-heading">{a.status}</h3>
                         <p className="text-[0.85rem] mt-1">{a.session_date}</p>
                       </div>
                     ))}
@@ -212,12 +216,12 @@ export default function StudentPortal() {
                   {fees.map((f) => (
                     <div
                       key={f.id}
-                      className="bg-white rounded-2xl shadow-card p-6"
-                      style={{ borderLeftWidth: 4, borderLeftColor: f.status === 'paid' ? '#047857' : f.status === 'waived' ? '#999' : '#B45309' }}
+                      className="bg-surface rounded-2xl shadow-card p-6"
+                      style={{ borderLeftWidth: 4, borderLeftColor: f.status === 'paid' ? 'var(--status-ok)' : f.status === 'waived' ? '#999' : 'var(--status-warn)' }}
                     >
-                      <h3 className="font-semibold text-base text-pay-navy mb-1.5">{new Date(f.period_month).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}</h3>
+                      <h3 className="font-semibold text-base text-heading mb-1.5">{new Date(f.period_month).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}</h3>
                       <p className="text-sm text-charcoal">Due: ₹{f.amount_due} · Paid: ₹{f.amount_paid || 0}</p>
-                      <p className="text-[0.8rem] uppercase font-display mt-1.5" style={{ color: f.status === 'paid' ? '#047857' : '#B45309' }}>
+                      <p className="text-[0.8rem] uppercase font-display mt-1.5" style={{ color: f.status === 'paid' ? 'var(--status-ok)' : 'var(--status-warn)' }}>
                         {f.status}
                       </p>
                       {f.receipt_no && <p className="text-[0.8rem] mt-1">Receipt: {f.receipt_no}</p>}
@@ -229,8 +233,8 @@ export default function StudentPortal() {
 
             {activeTab === 'Belt Progress' && (
               <>
-                <div className="bg-white rounded-2xl shadow-card p-6 mb-6 max-w-[400px]">
-                  <h3 className="font-semibold text-base text-pay-navy">Current Belt</h3>
+                <div className="bg-surface rounded-2xl shadow-card p-6 mb-6 max-w-[400px]">
+                  <h3 className="font-semibold text-base text-heading">Current Belt</h3>
                   <p className="text-2xl font-display text-pay-action mt-2">{BELT_LABELS[student.current_belt]}</p>
                 </div>
                 {gradingResults.length === 0 ? (
@@ -240,12 +244,12 @@ export default function StudentPortal() {
                     {gradingResults.map((g) => (
                       <div
                         key={g.id}
-                        className="bg-white rounded-2xl shadow-card p-6"
-                        style={{ borderLeftWidth: 4, borderLeftColor: g.passed ? '#047857' : '#ccc' }}
+                        className="bg-surface rounded-2xl shadow-card p-6"
+                        style={{ borderLeftWidth: 4, borderLeftColor: g.passed ? 'var(--status-ok)' : '#ccc' }}
                       >
-                        <h3 className="font-semibold text-base text-pay-navy mb-1.5">{g.grading_events?.title}</h3>
+                        <h3 className="font-semibold text-base text-heading mb-1.5">{g.grading_events?.title}</h3>
                         <p className="text-sm text-charcoal">{BELT_LABELS[g.from_belt]} → {BELT_LABELS[g.to_belt]}</p>
-                        <p className="text-[0.8rem] mt-1.5" style={{ color: g.passed ? '#047857' : '#999' }}>
+                        <p className="text-[0.8rem] mt-1.5" style={{ color: g.passed ? 'var(--status-ok)' : '#999' }}>
                           {g.passed ? 'Passed' : 'Did not pass'}
                         </p>
                         {g.certificate_url && (
@@ -266,8 +270,8 @@ export default function StudentPortal() {
               ) : (
                 <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
                   {gradingResults.filter((g) => g.certificate_url).map((g) => (
-                    <div key={g.id} className="bg-white rounded-2xl shadow-card p-6">
-                      <h3 className="font-semibold text-base text-pay-navy mb-1.5">{g.grading_events?.title}</h3>
+                    <div key={g.id} className="bg-surface rounded-2xl shadow-card p-6">
+                      <h3 className="font-semibold text-base text-heading mb-1.5">{g.grading_events?.title}</h3>
                       <p className="text-sm text-charcoal">{BELT_LABELS[g.to_belt]}</p>
                       <a
                         href={g.certificate_url} target="_blank" rel="noreferrer"
@@ -289,10 +293,10 @@ export default function StudentPortal() {
                   {notices.map((n) => (
                     <div
                       key={n.id}
-                      className="bg-white rounded-2xl shadow-card p-6"
-                      style={{ borderLeftWidth: 4, borderLeftColor: n.pinned ? '#D4A537' : '#DC2626' }}
+                      className="bg-surface rounded-2xl shadow-card p-6"
+                      style={{ borderLeftWidth: 4, borderLeftColor: n.pinned ? '#D4A537' : 'var(--status-bad)' }}
                     >
-                      <h3 className="font-semibold text-base text-pay-navy mb-1.5">{n.title}</h3>
+                      <h3 className="font-semibold text-base text-heading mb-1.5">{n.title}</h3>
                       <p className="text-sm text-charcoal mt-1.5">{n.body}</p>
                       <p className="text-[0.8rem] mt-2 text-charcoal">
                         {new Date(n.created_at).toLocaleDateString()}
@@ -309,8 +313,8 @@ export default function StudentPortal() {
               ) : (
                 <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
                   {events.map((ev) => (
-                    <div key={ev.id} className="bg-white rounded-2xl shadow-card p-6">
-                      <h3 className="font-semibold text-base text-pay-navy mb-1.5">{ev.title}</h3>
+                    <div key={ev.id} className="bg-surface rounded-2xl shadow-card p-6">
+                      <h3 className="font-semibold text-base text-heading mb-1.5">{ev.title}</h3>
                       <p className="text-sm text-charcoal capitalize">{ev.event_type}</p>
                       <p className="text-[0.85rem] mt-1.5">{ev.event_date} {ev.location ? `· ${ev.location}` : ''}</p>
                       {registeredEventIds.has(ev.id) ? (

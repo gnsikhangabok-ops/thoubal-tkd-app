@@ -3,7 +3,7 @@ import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 
 const ROLES = ['student', 'coach', 'super_admin']
-const ROLE_COLOR = { student: '#999', coach: '#D4A537', super_admin: '#DC2626' }
+const ROLE_COLOR = { student: '#999', coach: '#D4A537', super_admin: 'var(--status-bad)' }
 
 
 export default function Users() {
@@ -88,8 +88,8 @@ export default function Users() {
 
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
-      <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy mb-2">Users</h1>
-      <p className="text-[#5B6B82] mb-8">Everyone who has signed up. Assign roles and link students to their portal login.</p>
+      <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading mb-2">Users</h1>
+      <p className="text-muted mb-8">Everyone who has signed up. Assign roles and link students to their portal login.</p>
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -107,8 +107,8 @@ export default function Users() {
       </div>
 
       {linkingFor && (
-        <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[460px]">
-          <h3 className="font-semibold text-base text-pay-navy mb-1.5">Link Student Record</h3>
+        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[460px]">
+          <h3 className="font-semibold text-base text-heading mb-1.5">Link Student Record</h3>
           <p className="text-[0.85rem] mb-4 text-charcoal">
             Connect {linkingFor.full_name}'s login to their student profile, so they can see their own attendance, fees, and belt progress.
           </p>
@@ -148,10 +148,10 @@ export default function Users() {
             return (
               <div
                 key={p.id}
-                className="bg-white rounded-2xl shadow-card p-6"
+                className="bg-surface rounded-2xl shadow-card p-6"
                 style={{ borderLeftWidth: 4, borderLeftColor: ROLE_COLOR[p.role] }}
               >
-                <h3 className="font-semibold text-base text-pay-navy mb-1.5">{p.full_name}</h3>
+                <h3 className="font-semibold text-base text-heading mb-1.5">{p.full_name}</h3>
                 <p className="text-sm text-charcoal capitalize">{p.role?.replace('_', ' ')}</p>
                 {linked && <p className="text-[0.85rem] mt-1.5">Linked to: {linked}</p>}
                 {p.role === 'student' && !linked && (

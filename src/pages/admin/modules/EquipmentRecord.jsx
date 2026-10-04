@@ -167,19 +167,19 @@ export default function EquipmentRecord() {
           <button className={`${btnOutline} mb-5`} onClick={() => setViewingHistory(null)}>
             ← All Equipment
           </button>
-          <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy mb-2">{viewingHistory.name} — Issuance History</h1>
-          <p className="text-[#5B6B82] mb-8">Every time this item was given to a student.</p>
+          <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading mb-2">{viewingHistory.name} — Issuance History</h1>
+          <p className="text-muted mb-8">Every time this item was given to a student.</p>
 
           {issuedHistory.length === 0 ? (
             <p className="text-charcoal">Not issued to anyone yet.</p>
           ) : (
             <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
               {issuedHistory.map((rec) => (
-                <div key={rec.id} className="bg-white rounded-2xl shadow-card p-6">
-                  <h3 className="font-semibold text-base text-pay-navy mb-1.5">{rec.students?.full_name}</h3>
+                <div key={rec.id} className="bg-surface rounded-2xl shadow-card p-6">
+                  <h3 className="font-semibold text-base text-heading mb-1.5">{rec.students?.full_name}</h3>
                   <p className="text-sm text-charcoal">Qty: {rec.quantity}</p>
                   <p className="text-[0.85rem] mt-1">{rec.issued_on}</p>
-                  <p className="text-[0.8rem] mt-1" style={{ color: rec.paid ? '#047857' : '#999' }}>
+                  <p className="text-[0.8rem] mt-1" style={{ color: rec.paid ? 'var(--status-ok)' : '#999' }}>
                     {rec.paid ? `Paid ₹${rec.amount || 0}` : 'Not paid'}
                   </p>
                 </div>
@@ -190,16 +190,16 @@ export default function EquipmentRecord() {
       ) : (
         <>
           <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-            <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">Equipment Record</h1>
+            <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Equipment Record</h1>
             <button className={btnPrimary} onClick={openAddItem}>+ Add Item</button>
           </div>
-          <p className="text-[#5B6B82] mb-8">Uniforms, gear, and belts — stock and issuance per center.</p>
+          <p className="text-muted mb-8">Uniforms, gear, and belts — stock and issuance per center.</p>
 
           {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
           {showItemForm && (
-            <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[460px]">
-              <h3 className="font-semibold text-base text-pay-navy mb-4">{itemForm.id ? 'Edit Item' : 'New Inventory Item'}</h3>
+            <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[460px]">
+              <h3 className="font-semibold text-base text-heading mb-4">{itemForm.id ? 'Edit Item' : 'New Inventory Item'}</h3>
               <form onSubmit={handleItemSubmit} className="flex flex-col gap-3">
                 <input
                   type="text" placeholder="Item name (e.g. Dobok - Size M)" required
@@ -251,8 +251,8 @@ export default function EquipmentRecord() {
           )}
 
           {issuingFor && (
-            <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[460px]">
-              <h3 className="font-semibold text-base text-pay-navy mb-1.5">Issue: {issuingFor.name}</h3>
+            <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[460px]">
+              <h3 className="font-semibold text-base text-heading mb-1.5">Issue: {issuingFor.name}</h3>
               <p className="text-[0.85rem] mb-4 text-charcoal">In stock: {issuingFor.stock_qty}</p>
               <form onSubmit={handleIssueSubmit} className="flex flex-col gap-3">
                 <select
@@ -309,10 +309,10 @@ export default function EquipmentRecord() {
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="bg-white rounded-2xl shadow-card p-6"
-                  style={{ borderLeftWidth: 4, borderLeftColor: item.stock_qty > 0 ? '#047857' : '#999' }}
+                  className="bg-surface rounded-2xl shadow-card p-6"
+                  style={{ borderLeftWidth: 4, borderLeftColor: item.stock_qty > 0 ? 'var(--status-ok)' : '#999' }}
                 >
-                  <h3 className="font-semibold text-base text-pay-navy mb-1.5">{item.name}</h3>
+                  <h3 className="font-semibold text-base text-heading mb-1.5">{item.name}</h3>
                   <p className="text-sm text-charcoal capitalize">{item.category}</p>
                   <p className="text-[0.85rem] mt-1.5">
                     Stock: {item.stock_qty} {item.unit_price ? `· ₹${item.unit_price} each` : ''}

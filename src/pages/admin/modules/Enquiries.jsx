@@ -4,7 +4,7 @@ import { inputCls } from '../../../lib/adminUi'
 
 const STATUSES = ['new', 'contacted', 'enrolled', 'closed']
 const STATUS_COLOR = {
-  new: '#0079C1', contacted: '#B45309', enrolled: '#047857', closed: '#999',
+  new: 'var(--status-info)', contacted: 'var(--status-warn)', enrolled: 'var(--status-ok)', closed: '#999',
 }
 
 
@@ -45,8 +45,8 @@ export default function Enquiries() {
 
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
-      <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy mb-2">Enquiries</h1>
-      <p className="text-[#5B6B82] mb-8">Leads submitted through the public website enrollment form.</p>
+      <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading mb-2">Enquiries</h1>
+      <p className="text-muted mb-8">Leads submitted through the public website enrollment form.</p>
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -83,10 +83,10 @@ export default function Enquiries() {
           {filtered.map((enq) => (
             <div
               key={enq.id}
-              className="bg-white rounded-2xl shadow-card p-6"
+              className="bg-surface rounded-2xl shadow-card p-6"
               style={{ borderLeftWidth: 4, borderLeftColor: STATUS_COLOR[enq.status] }}
             >
-              <h3 className="font-semibold text-base text-pay-navy mb-1.5">{enq.child_name}</h3>
+              <h3 className="font-semibold text-base text-heading mb-1.5">{enq.child_name}</h3>
               <p className="text-sm text-charcoal">Age {enq.age} · {enq.program_interested}</p>
               <p className="text-[0.85rem] mt-1.5">{enq.guardian_phone}</p>
               {enq.message && <p className="text-[0.85rem] mt-1.5 italic">"{enq.message}"</p>}

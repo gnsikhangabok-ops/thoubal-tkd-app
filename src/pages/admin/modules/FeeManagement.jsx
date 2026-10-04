@@ -191,15 +191,15 @@ export default function FeeManagement() {
   const totalPaid = payments.reduce((sum, p) => sum + parseFloat(p.amount_paid || 0), 0)
   const pendingCount = payments.filter((p) => p.status === 'pending' || p.status === 'overdue').length
 
-  const statusColor = { paid: '#047857', pending: '#B45309', overdue: '#DC2626', waived: '#999' }
+  const statusColor = { paid: 'var(--status-ok)', pending: 'var(--status-warn)', overdue: 'var(--status-bad)', waived: '#999' }
 
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">Fee Management</h1>
+        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Fee Management</h1>
         <button className={btnPrimary} onClick={openGenForm}>+ Generate Month's Fees</button>
       </div>
-      <p className="text-[#5B6B82] mb-8">
+      <p className="text-muted mb-8">
         Track monthly dues, payments, and receipts. Rates come from{' '}
         <Link to="/admin/fee-setup" className="underline">Fee Setup</Link>. Payments post automatically to{' '}
         <Link to="/admin/accounts" className="underline">Accounts</Link>.
@@ -233,8 +233,8 @@ export default function FeeManagement() {
       </div>
 
       {showGenForm && (
-        <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[460px]">
-          <h3 className="font-semibold text-base text-pay-navy mb-4">Generate Fee Records</h3>
+        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[460px]">
+          <h3 className="font-semibold text-base text-heading mb-4">Generate Fee Records</h3>
 
           <label className="text-[0.85rem] font-semibold block mb-1.5">Month</label>
           <input
@@ -286,8 +286,8 @@ export default function FeeManagement() {
       )}
 
       {payingFor && (
-        <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[420px]">
-          <h3 className="font-semibold text-base text-pay-navy mb-1.5">Record Payment</h3>
+        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[420px]">
+          <h3 className="font-semibold text-base text-heading mb-1.5">Record Payment</h3>
           <p className="text-[0.85rem] mb-4 text-charcoal">
             {payingFor.students?.full_name} — due ₹{payingFor.amount_due}, paid so far ₹{payingFor.amount_paid || 0}
           </p>
@@ -343,10 +343,10 @@ export default function FeeManagement() {
           {payments.map((p) => (
             <div
               key={p.id}
-              className="bg-white rounded-2xl shadow-card p-6"
+              className="bg-surface rounded-2xl shadow-card p-6"
               style={{ borderLeftWidth: 4, borderLeftColor: statusColor[p.status] }}
             >
-              <h3 className="font-semibold text-base text-pay-navy mb-1.5">{p.students?.full_name}</h3>
+              <h3 className="font-semibold text-base text-heading mb-1.5">{p.students?.full_name}</h3>
               <p className="text-sm text-charcoal">Due: ₹{p.amount_due} · Paid: ₹{p.amount_paid || 0}</p>
               <p className="text-[0.8rem] mt-1.5 uppercase font-display" style={{ color: statusColor[p.status] }}>
                 {p.status}

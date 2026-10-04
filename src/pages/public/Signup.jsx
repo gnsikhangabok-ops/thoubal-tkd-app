@@ -82,7 +82,7 @@ export default function Signup() {
       title="New Account Registration"
       subtitle="For students and parents. Coaches and staff should register here too — the academy admin will then grant staff access."
       footer={
-        <p className="text-[#5B6B82]">
+        <p className="text-muted">
           Already registered?{' '}
           <Link to="/login" className="font-semibold text-pay-action hover:underline">Sign in</Link>
         </p>
@@ -107,7 +107,7 @@ export default function Signup() {
           visible={showPassword} showToggle={false}
           value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
         />
-        <p className="text-xs text-[#5B6B82] -mt-1">Minimum 6 characters. Fields marked <span className="text-red-600">*</span> are mandatory.</p>
+        <p className="text-xs text-muted -mt-1">Minimum 6 characters. Fields marked <span className="text-red-600">*</span> are mandatory.</p>
         {error && <Alert>{error}</Alert>}
         <button type="submit" className={`${primaryButton} mt-1`} disabled={submitting}>
           {submitting ? 'Creating account…' : 'Register'}

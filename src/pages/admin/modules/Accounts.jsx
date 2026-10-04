@@ -113,13 +113,13 @@ export default function Accounts() {
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">Accounts</h1>
+        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Accounts</h1>
         <div className="flex gap-2.5">
           <button className={btnPrimary} onClick={() => openAddForm('income')}>+ Add Income</button>
           <button className={btnOutline} onClick={() => openAddForm('expense')}>+ Add Expense</button>
         </div>
       </div>
-      <p className="text-[#5B6B82] mb-8">
+      <p className="text-muted mb-8">
         Income vs expenses — profit &amp; loss overview. Fee collections from{' '}
         <Link to="/admin/fees" className="underline">Fee Management</Link> and{' '}
         <Link to="/admin/fee-setup" className="underline">Fee Setup</Link> post here automatically.
@@ -166,8 +166,8 @@ export default function Accounts() {
       </div>
 
       {showForm && (
-        <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[460px]">
-          <h3 className="font-semibold text-base text-pay-navy mb-4 capitalize">Add {form.type}</h3>
+        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[460px]">
+          <h3 className="font-semibold text-base text-heading mb-4 capitalize">Add {form.type}</h3>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <select
               value={form.category}
@@ -230,14 +230,14 @@ export default function Accounts() {
             return (
               <div
                 key={tx.id}
-                className="bg-white rounded-2xl shadow-card p-6"
-                style={{ borderLeftWidth: 4, borderLeftColor: tx.type === 'income' ? '#047857' : '#DC2626' }}
+                className="bg-surface rounded-2xl shadow-card p-6"
+                style={{ borderLeftWidth: 4, borderLeftColor: tx.type === 'income' ? 'var(--status-ok)' : 'var(--status-bad)' }}
               >
                 <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <h3 className="font-semibold text-base text-pay-navy capitalize">{tx.type} · {CATEGORY_LABELS[tx.category] || tx.category}</h3>
+                  <h3 className="font-semibold text-base text-heading capitalize">{tx.type} · {CATEGORY_LABELS[tx.category] || tx.category}</h3>
                   {isAuto && <Link2 size={14} className="text-charcoal/50 shrink-0" title="Auto-posted from fee collection" />}
                 </div>
-                <p className="text-xl font-display" style={{ color: tx.type === 'income' ? '#047857' : '#DC2626' }}>
+                <p className="text-xl font-display" style={{ color: tx.type === 'income' ? 'var(--status-ok)' : 'var(--status-bad)' }}>
                   {tx.type === 'income' ? '+' : '−'}₹{Number(tx.amount).toLocaleString('en-IN')}
                 </p>
                 <p className="text-[0.85rem] mt-1">{tx.transaction_date}</p>

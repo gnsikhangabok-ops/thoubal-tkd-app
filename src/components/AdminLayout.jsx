@@ -5,6 +5,7 @@ import logo from '../assets/logo.png'
 import { Menu, X, LogOut } from 'lucide-react'
 import { roleLabel } from '../lib/roles'
 import { navForRole } from '../lib/adminNav'
+import ThemeToggle from './ThemeToggle'
 
 export default function AdminLayout({ children }) {
   const { profile, signOut } = useAuth()
@@ -17,8 +18,8 @@ export default function AdminLayout({ children }) {
     <div className="flex items-center gap-2.5">
       <img src={logo} alt="Thoubal Taekwondo Academy" className="w-9 h-9 object-contain" />
       <div className="flex flex-col leading-tight">
-        <span className="font-bold text-[0.95rem] text-pay-navy">Thoubal <span className="text-pay-blue">TKD</span></span>
-        <span className="text-[0.65rem] text-[#7A889E]">Management Portal</span>
+        <span className="font-bold text-[0.95rem] text-heading">Thoubal <span className="text-pay-blue">TKD</span></span>
+        <span className="text-[0.65rem] text-subtle">Management Portal</span>
       </div>
     </div>
   )
@@ -27,7 +28,7 @@ export default function AdminLayout({ children }) {
     <>
       <div className="flex items-center justify-between gap-2.5 px-5 py-4 border-b border-pay-line">
         {brand}
-        <button onClick={() => setMobileOpen(false)} className="md:hidden text-pay-navy p-1" aria-label="Close menu">
+        <button onClick={() => setMobileOpen(false)} className="md:hidden text-heading p-1" aria-label="Close menu">
           <X size={20} />
         </button>
       </div>
@@ -43,7 +44,7 @@ export default function AdminLayout({ children }) {
               onClick={() => setMobileOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${
-                  isActive ? 'bg-pay-sky text-pay-navy font-semibold' : 'text-[#4A5A73] hover:bg-pay-bg hover:text-pay-navy'
+                  isActive ? 'bg-pay-sky text-heading font-semibold' : 'text-body hover:bg-pay-bg hover:text-heading'
                 }`
               }
             >
@@ -66,10 +67,11 @@ export default function AdminLayout({ children }) {
             {initials}
           </span>
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-pay-navy truncate">{profile?.full_name}</div>
-            <div className="text-xs text-[#7A889E] capitalize">{roleLabel(profile?.role)}</div>
+            <div className="text-sm font-semibold text-heading truncate">{profile?.full_name}</div>
+            <div className="text-xs text-subtle capitalize">{roleLabel(profile?.role)}</div>
           </div>
-          <button onClick={signOut} className="p-2 rounded-full text-[#4A5A73] hover:bg-white hover:text-red-600" aria-label="Sign out" title="Sign out">
+          <ThemeToggle className="hidden md:grid !w-8 !h-8" />
+          <button onClick={signOut} className="p-2 rounded-full text-body hover:bg-surface hover:text-red-600" aria-label="Sign out" title="Sign out">
             <LogOut size={18} />
           </button>
         </div>
@@ -80,23 +82,26 @@ export default function AdminLayout({ children }) {
   return (
     <div className="paytm flex min-h-screen font-body">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-64 shrink-0 bg-white flex-col border-r border-pay-line sticky top-0 h-screen">
+      <aside className="hidden md:flex w-64 shrink-0 bg-surface flex-col border-r border-pay-line sticky top-0 h-screen">
         {sidebarContent}
       </aside>
 
       {/* Mobile top bar */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between bg-white border-b border-pay-line shadow-card px-4 py-2.5">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between bg-surface border-b border-pay-line shadow-card px-4 py-2.5">
         {brand}
-        <button onClick={() => setMobileOpen(true)} className="text-pay-navy p-1.5 rounded-full hover:bg-pay-bg" aria-label="Open menu">
+        <div className="flex items-center gap-1">
+        <ThemeToggle />
+        <button onClick={() => setMobileOpen(true)} className="text-heading p-1.5 rounded-full hover:bg-pay-bg" aria-label="Open menu">
           <Menu size={22} />
         </button>
+        </div>
       </div>
 
       {/* Mobile slide-over */}
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-pay-navy/40" onClick={() => setMobileOpen(false)} />
-          <aside className="relative w-72 max-w-[82vw] bg-white flex flex-col h-full overflow-y-auto rounded-r-2xl">
+          <aside className="relative w-72 max-w-[82vw] bg-surface flex flex-col h-full overflow-y-auto rounded-r-2xl">
             {sidebarContent}
           </aside>
         </div>

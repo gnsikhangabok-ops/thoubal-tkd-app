@@ -141,10 +141,10 @@ export default function Batches() {
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">Batches</h1>
+        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Batches</h1>
         <button className={btnPrimary} onClick={openAddForm}>+ Add Batch</button>
       </div>
-      <p className="text-[#5B6B82] mb-8">Class groups with timing, coach, and center assignment.</p>
+      <p className="text-muted mb-8">Class groups with timing, coach, and center assignment.</p>
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -155,8 +155,8 @@ export default function Batches() {
       )}
 
       {showForm && (
-        <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[520px]">
-          <h3 className="font-semibold text-base text-pay-navy mb-4">{form.id ? 'Edit Batch' : 'New Batch'}</h3>
+        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[520px]">
+          <h3 className="font-semibold text-base text-heading mb-4">{form.id ? 'Edit Batch' : 'New Batch'}</h3>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <input
               type="text" placeholder="Batch name (e.g. Little Dragons - Morning)" required
@@ -204,7 +204,7 @@ export default function Batches() {
                     className={`text-[0.8rem] px-3.5 py-1.5 font-semibold rounded-full ${
                       form.schedule_days.includes(day)
                         ? 'bg-pay-action text-white border border-pay-action'
-                        : 'border border-pay-line text-pay-navy bg-white hover:bg-pay-sky'
+                        : 'border border-pay-line text-heading bg-surface hover:bg-pay-sky'
                     }`}
                   >
                     {day}
@@ -271,10 +271,10 @@ export default function Batches() {
           {batches.map((b) => (
             <div
               key={b.id}
-              className="bg-white rounded-2xl shadow-card p-6"
-              style={{ borderLeftWidth: 4, borderLeftColor: b.active ? '#047857' : '#ccc' }}
+              className="bg-surface rounded-2xl shadow-card p-6"
+              style={{ borderLeftWidth: 4, borderLeftColor: b.active ? 'var(--status-ok)' : '#ccc' }}
             >
-              <h3 className="font-semibold text-base text-pay-navy mb-1.5">{b.name}</h3>
+              <h3 className="font-semibold text-base text-heading mb-1.5">{b.name}</h3>
               <p className="text-sm text-charcoal">{b.age_group ? `Ages ${b.age_group}` : 'All ages'}</p>
               <p className="text-[0.85rem] mt-1.5">{b.training_centers?.name || 'No center'}</p>
               <p className="text-[0.85rem]">{b.coaches?.full_name || 'No coach assigned'}</p>
@@ -285,7 +285,7 @@ export default function Batches() {
                 <p className="text-[0.8rem]">{b.start_time?.slice(0,5)} – {b.end_time?.slice(0,5)}</p>
               )}
               {b.capacity && <p className="text-[0.8rem]">Capacity: {b.capacity}</p>}
-              <p className="text-[0.8rem] mt-1.5" style={{ color: b.active ? '#047857' : '#999' }}>
+              <p className="text-[0.8rem] mt-1.5" style={{ color: b.active ? 'var(--status-ok)' : '#999' }}>
                 {b.active ? 'Active' : 'Inactive'}
               </p>
               <div className="flex gap-2 mt-3">

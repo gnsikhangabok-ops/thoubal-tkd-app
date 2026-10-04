@@ -5,9 +5,9 @@ import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 const CATEGORIES = ['Sparring', 'Poomsae', 'Fitness', 'Discipline', 'Technique', 'Other']
 const RATINGS = ['Excellent', 'Good', 'Satisfactory', 'Needs Improvement']
 const RATING_COLOR = {
-  Excellent: '#047857',
-  Good: '#0079C1',
-  Satisfactory: '#B45309',
+  Excellent: 'var(--status-ok)',
+  Good: 'var(--status-info)',
+  Satisfactory: 'var(--status-warn)',
   'Needs Improvement': '#999',
 }
 
@@ -115,10 +115,10 @@ export default function StudentPerformance() {
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">Student Performance</h1>
+        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Student Performance</h1>
         <button className={btnPrimary} onClick={openAddForm}>+ Add Assessment</button>
       </div>
-      <p className="text-[#5B6B82] mb-8">Ongoing coach evaluations — sparring, poomsae, fitness, discipline.</p>
+      <p className="text-muted mb-8">Ongoing coach evaluations — sparring, poomsae, fitness, discipline.</p>
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -136,8 +136,8 @@ export default function StudentPerformance() {
       </div>
 
       {showForm && (
-        <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[480px]">
-          <h3 className="font-semibold text-base text-pay-navy mb-4">{form.id ? 'Edit Assessment' : 'New Assessment'}</h3>
+        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[480px]">
+          <h3 className="font-semibold text-base text-heading mb-4">{form.id ? 'Edit Assessment' : 'New Assessment'}</h3>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <select
               required
@@ -204,10 +204,10 @@ export default function StudentPerformance() {
           {filtered.map((r) => (
             <div
               key={r.id}
-              className="bg-white rounded-2xl shadow-card p-6"
-              style={{ borderLeftWidth: 4, borderLeftColor: RATING_COLOR[r.rating] || '#0079C1' }}
+              className="bg-surface rounded-2xl shadow-card p-6"
+              style={{ borderLeftWidth: 4, borderLeftColor: RATING_COLOR[r.rating] || 'var(--status-info)' }}
             >
-              <h3 className="font-semibold text-base text-pay-navy mb-1.5">{r.students?.full_name}</h3>
+              <h3 className="font-semibold text-base text-heading mb-1.5">{r.students?.full_name}</h3>
               <p className="text-sm text-charcoal">{r.category} · {r.rating}</p>
               <p className="text-[0.8rem] mt-1">{r.recorded_on}</p>
               {r.remarks && <p className="text-[0.85rem] mt-1.5">{r.remarks}</p>}

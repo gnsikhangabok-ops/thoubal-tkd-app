@@ -116,10 +116,10 @@ export default function Achievements() {
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">Achievements</h1>
+        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Achievements</h1>
         <button className={btnPrimary} onClick={openAddForm}>+ Add Achievement</button>
       </div>
-      <p className="text-[#5B6B82] mb-8">Medals and award highlights — shown publicly on the website.</p>
+      <p className="text-muted mb-8">Medals and award highlights — shown publicly on the website.</p>
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -135,8 +135,8 @@ export default function Achievements() {
       </div>
 
       {showForm && (
-        <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[520px]">
-          <h3 className="font-semibold text-base text-pay-navy mb-4">{form.id ? 'Edit Achievement' : 'New Achievement'}</h3>
+        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[520px]">
+          <h3 className="font-semibold text-base text-heading mb-4">{form.id ? 'Edit Achievement' : 'New Achievement'}</h3>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <select
               value={form.student_id}
@@ -215,10 +215,10 @@ export default function Achievements() {
           {filtered.map((a) => (
             <div
               key={a.id}
-              className="bg-white rounded-2xl shadow-card p-6"
+              className="bg-surface rounded-2xl shadow-card p-6"
               style={{ borderLeftWidth: 4, borderLeftColor: a.medal ? MEDAL_COLOR[a.medal] : '#ccc' }}
             >
-              <h3 className="font-semibold text-base text-pay-navy mb-1.5">{a.title}</h3>
+              <h3 className="font-semibold text-base text-heading mb-1.5">{a.title}</h3>
               <p className="text-sm text-charcoal">{a.students?.full_name || 'Unnamed student'}</p>
               <p className="text-[0.85rem] mt-1.5 capitalize">
                 {a.level} {a.medal ? `· ${a.medal} medal` : ''}

@@ -144,8 +144,8 @@ export default function WebsiteContent() {
 
   return (
     <div className="p-8 max-md:p-4 max-w-[900px] mx-auto">
-      <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy mb-2">Website Content</h1>
-      <p className="text-[#5B6B82] mb-8">
+      <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading mb-2">Website Content</h1>
+      <p className="text-muted mb-8">
         Edit the text and images shown on the public homepage. Changes save automatically and go live immediately.
       </p>
 
@@ -158,7 +158,7 @@ export default function WebsiteContent() {
           {FIELD_GROUPS.map((group) => (
             <div key={group.label}>
               <div className="flex items-center gap-3 mb-4">
-                <h2 className="text-sm font-bold text-pay-navy">{group.label}</h2>
+                <h2 className="text-sm font-bold text-heading">{group.label}</h2>
                 <div className="h-px flex-1 bg-pay-line" />
               </div>
 
@@ -178,7 +178,7 @@ export default function WebsiteContent() {
                             <ImageIcon size={24} className="text-charcoal/30" />
                           )}
                         </div>
-                        <label className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-pay-action text-pay-action bg-white text-sm font-semibold cursor-pointer hover:bg-pay-sky">
+                        <label className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-pay-action text-pay-action bg-surface text-sm font-semibold cursor-pointer hover:bg-pay-sky">
                           <Upload size={15} />
                           {uploadingKey === field.key ? 'Uploading…' : 'Upload Photo'}
                           <input

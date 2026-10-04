@@ -191,8 +191,8 @@ export default function FeeSetup() {
 
   return (
     <div className="p-8 max-md:p-4 max-w-[1000px] mx-auto">
-      <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy mb-2">Fee Setup</h1>
-      <p className="text-[#5B6B82] mb-8">
+      <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading mb-2">Fee Setup</h1>
+      <p className="text-muted mb-8">
         Define monthly rates per batch and one-time fees (admission, form). Monthly rates feed{' '}
         <Link to="/admin/fees" className="underline">Fee Management</Link>; collected payments post to{' '}
         <Link to="/admin/accounts" className="underline">Accounts</Link>.
@@ -208,7 +208,7 @@ export default function FeeSetup() {
           <div>
             <div className="flex items-center gap-3 mb-4">
               <Repeat size={16} className="text-pay-action" />
-              <h2 className="text-sm font-bold text-pay-navy">Monthly Rates by Batch</h2>
+              <h2 className="text-sm font-bold text-heading">Monthly Rates by Batch</h2>
               <div className="h-px flex-1 bg-pay-line" />
             </div>
 
@@ -221,10 +221,10 @@ export default function FeeSetup() {
                   return (
                     <div
                       key={b.id}
-                      className="bg-white rounded-2xl shadow-card p-6"
-                      style={{ borderLeftWidth: 4, borderLeftColor: rate ? '#047857' : '#ccc' }}
+                      className="bg-surface rounded-2xl shadow-card p-6"
+                      style={{ borderLeftWidth: 4, borderLeftColor: rate ? 'var(--status-ok)' : '#ccc' }}
                     >
-                      <h3 className="font-semibold text-base text-pay-navy mb-1.5">{b.name}</h3>
+                      <h3 className="font-semibold text-base text-heading mb-1.5">{b.name}</h3>
                       <p className="text-sm text-charcoal">{b.training_centers?.name}</p>
                       <p className="text-2xl font-display text-pay-action mt-2.5">
                         {rate ? `₹${Number(rate.monthly_amount).toLocaleString('en-IN')}` : '— Not set —'}
@@ -240,8 +240,8 @@ export default function FeeSetup() {
             )}
 
             {showMonthlyForm && (
-              <div className="bg-white rounded-2xl shadow-card p-6 mt-6 max-w-[420px]">
-                <h3 className="font-semibold text-base text-pay-navy mb-1.5">
+              <div className="bg-surface rounded-2xl shadow-card p-6 mt-6 max-w-[420px]">
+                <h3 className="font-semibold text-base text-heading mb-1.5">
                   Set rate for {batches.find((b) => b.id === monthlyForm.batch_id)?.name}
                 </h3>
                 <p className="text-[0.85rem] mb-4 text-charcoal">
@@ -272,15 +272,15 @@ export default function FeeSetup() {
             <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
               <div className="flex items-center gap-3">
                 <CircleDollarSign size={16} className="text-pay-action" />
-                <h2 className="text-sm font-bold text-pay-navy">One-Time Fees</h2>
+                <h2 className="text-sm font-bold text-heading">One-Time Fees</h2>
               </div>
               <button className={`${btnPrimary} ${btnSm}`} onClick={openAddOneTime}>+ Add Fee Type</button>
             </div>
             <div className="h-px bg-black/10 mb-4" />
 
             {showOneTimeForm && (
-              <div className="bg-white rounded-2xl shadow-card p-6 mb-6 max-w-[420px]">
-                <h3 className="font-semibold text-base text-pay-navy mb-4">{oneTimeForm.id ? 'Edit Fee Type' : 'New One-Time Fee'}</h3>
+              <div className="bg-surface rounded-2xl shadow-card p-6 mb-6 max-w-[420px]">
+                <h3 className="font-semibold text-base text-heading mb-4">{oneTimeForm.id ? 'Edit Fee Type' : 'New One-Time Fee'}</h3>
                 <form onSubmit={handleOneTimeSubmit} className="flex flex-col gap-3">
                   <input
                     type="text" placeholder="Fee name (e.g. Admission Fee)" required
@@ -307,8 +307,8 @@ export default function FeeSetup() {
             )}
 
             {collectingFor && (
-              <div className="bg-white rounded-2xl shadow-card p-6 mb-6 max-w-[420px]">
-                <h3 className="font-semibold text-base text-pay-navy mb-1.5">Collect: {collectingFor.name}</h3>
+              <div className="bg-surface rounded-2xl shadow-card p-6 mb-6 max-w-[420px]">
+                <h3 className="font-semibold text-base text-heading mb-1.5">Collect: {collectingFor.name}</h3>
                 <p className="text-[0.85rem] mb-4 text-charcoal">Standard amount: ₹{Number(collectingFor.amount).toLocaleString('en-IN')}</p>
                 <form onSubmit={handleCollectSubmit} className="flex flex-col gap-3">
                   <select
@@ -358,9 +358,9 @@ export default function FeeSetup() {
             )}
 
             {viewingPaidFor && (
-              <div className="bg-white rounded-2xl shadow-card border-l-4 border-l-pay-blue p-6 mb-6 max-w-[420px]">
+              <div className="bg-surface rounded-2xl shadow-card border-l-4 border-l-pay-blue p-6 mb-6 max-w-[420px]">
                 <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-semibold text-base text-pay-navy">Paid: {viewingPaidFor.name}</h3>
+                  <h3 className="font-semibold text-base text-heading">Paid: {viewingPaidFor.name}</h3>
                   <button className="text-[0.75rem] underline text-charcoal" onClick={() => setViewingPaidFor(null)}>Close</button>
                 </div>
                 {payments.filter((p) => p.fee_type_id === viewingPaidFor.id).length === 0 ? (
@@ -387,12 +387,12 @@ export default function FeeSetup() {
                   return (
                     <div
                       key={fee.id}
-                      className="bg-white rounded-2xl shadow-card p-6"
-                      style={{ borderLeftWidth: 4, borderLeftColor: fee.active ? '#047857' : '#ccc' }}
+                      className="bg-surface rounded-2xl shadow-card p-6"
+                      style={{ borderLeftWidth: 4, borderLeftColor: fee.active ? 'var(--status-ok)' : '#ccc' }}
                     >
                       <div className="flex items-center gap-2 mb-1.5">
                         <Wallet size={16} className="text-pay-action" />
-                        <h3 className="font-semibold text-base text-pay-navy">{fee.name}</h3>
+                        <h3 className="font-semibold text-base text-heading">{fee.name}</h3>
                       </div>
                       <p className="text-2xl font-display text-pay-action">₹{Number(fee.amount).toLocaleString('en-IN')}</p>
                       <button
@@ -401,7 +401,7 @@ export default function FeeSetup() {
                       >
                         {paidCount} student{paidCount === 1 ? '' : 's'} paid
                       </button>
-                      <p className="text-[0.8rem] mt-1.5" style={{ color: fee.active ? '#047857' : '#999' }}>
+                      <p className="text-[0.8rem] mt-1.5" style={{ color: fee.active ? 'var(--status-ok)' : '#999' }}>
                         {fee.active ? 'Active' : 'Inactive'}
                       </p>
                       <div className="flex gap-2 mt-3 flex-wrap">

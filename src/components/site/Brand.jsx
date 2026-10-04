@@ -8,7 +8,7 @@ export default function Brand({ subtitle = 'Thoubal District Taekwondo Associati
     <Link to="/" className="flex items-center gap-2.5 min-w-0">
       <img src={logo} alt="" className={`${img} object-contain shrink-0`} />
       <span className="flex flex-col leading-tight min-w-0">
-        <span className="font-bold text-pay-navy text-[0.98rem] md:text-lg truncate">
+        <span className="font-bold text-heading text-[0.98rem] md:text-lg truncate">
           Thoubal{' '}
           <span className="text-pay-blue">
             {/* Short form only where the header is tightest: full menu shown but screen < 1536px */}
@@ -21,7 +21,7 @@ export default function Brand({ subtitle = 'Thoubal District Taekwondo Associati
           </span>{' '}
           Academy
         </span>
-        <span className="text-[0.65rem] md:text-xs text-[#7A889E] truncate">{subtitle}</span>
+        <span className="text-[0.65rem] md:text-xs text-subtle truncate">{subtitle}</span>
       </span>
     </Link>
   )
