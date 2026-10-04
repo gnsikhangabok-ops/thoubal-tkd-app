@@ -42,7 +42,14 @@ export function useListTools(rows, { search, filters = {}, sorts = {}, defaultSo
   const activeCount = Object.values(filterValues).filter(Boolean).length + (query.trim() ? 1 : 0)
   const reset = () => { setQuery(''); setFilterValues({}) }
 
-  return { query, setQuery, filterValues, setFilter, sort, setSort, result, total: rows.length, activeCount, reset }
+  // Rows matching one filter value, ignoring search and other filters (for tab counts)
+  const countFor = (key, value) => {
+    const f = filters[key]
+    if (!value || !f) return rows.length
+    return rows.filter((row) => (typeof f === 'function' ? f(row) === value : f.match(row, value))).length
+  }
+
+  return { query, setQuery, filterValues, setFilter, sort, setSort, result, total: rows.length, activeCount, reset, countFor }
 }
 
 function csvCell(value) {

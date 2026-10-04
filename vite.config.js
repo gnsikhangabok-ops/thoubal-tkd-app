@@ -29,4 +29,17 @@ function serviceWorker() {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss(), serviceWorker()],
+  build: {
+    rolldownOptions: {
+      output: {
+        // Keep big libraries in their own files so browsers keep them cached between deploys
+        advancedChunks: {
+          groups: [
+            { name: 'supabase', test: /node_modules[\\/]@supabase/ },
+            { name: 'react', test: /node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/ },
+          ],
+        },
+      },
+    },
+  },
 })

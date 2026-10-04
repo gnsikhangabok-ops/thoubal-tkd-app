@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { BELT_RANKS, BELT_LABELS, beltLabel } from '../../../lib/belts'
@@ -7,7 +7,14 @@ import { useListTools, exportCsv, byText, byDateDesc, opts } from '../../../lib/
 import ListToolbar from '../../../components/ListToolbar'
 import DocumentModal from '../../../components/docs/DocumentModal'
 import StudentIdCard from '../../../components/docs/StudentIdCard'
-import { IdCard } from 'lucide-react'
+import { IdCard, Pencil, UserPlus } from 'lucide-react'
+import ModuleHeader from '../../../components/ModuleHeader'
+import DataTable, { StatusPill } from '../../../components/DataTable'
+import PersonCell from '../../../components/PersonCell'
+import { moduleTabs } from '../../../lib/moduleTabs'
+import { ageFrom } from '../../../lib/people'
+import { studentIdNo } from '../../../lib/documents'
+import { BELT_COLORS } from '../../../lib/belts'
 
 const emptyForm = {
   id: null,
@@ -37,6 +44,9 @@ export default function Students() {
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [idCardFor, setIdCardFor] = useState(null)
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const editId = searchParams.get('edit') // set by the Edit button on a student's file
 
   useEffect(() => {
     loadData()
@@ -72,6 +82,14 @@ export default function Students() {
 
     setLoading(false)
   }
+
+  useEffect(() => {
+    if (!editId || loading) return
+    const s = students.find((x) => x.id === editId)
+    if (s) openEditForm(s)
+    setSearchParams({}, { replace: true })
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- run once the list has loaded
+  }, [editId, loading])
 
   function openAddForm() {
     setForm(emptyForm)
@@ -133,16 +151,6 @@ export default function Students() {
     }
   }
 
-  async function toggleActive(student) {
-    const { error } = await supabase
-      .from('students')
-      .update({ active: !student.active })
-      .eq('id', student.id)
-
-    if (error) setError(error.message)
-    else loadData()
-  }
-
   const batchesForSelectedCenter = form.training_center_id
     ? batches.filter((b) => b.training_center_id === form.training_center_id)
     : batches
@@ -150,7 +158,7 @@ export default function Students() {
   const list = useListTools(students, {
     search: (s) => [s.full_name, s.guardian_name, s.guardian_phone, s.training_centers?.name, s.batches?.name],
     filters: {
-      status: (s) => (s.active ? 'active' : 'inactive'),
+      view: { match: (s, v) => (v === 'active' ? s.active : v === 'inactive' ? !s.active : v === 'rules' ? s.active && !s.rules_acknowledged : true) },
       belt: (s) => s.current_belt,
       center: (s) => s.training_center_id,
       rules: (s) => (s.rules_acknowledged ? 'yes' : 'no'),
@@ -180,13 +188,18 @@ export default function Students() {
     ])
   }
 
+  const tabs = moduleTabs(list, 'view', [['', 'All students'], ['active', 'Active'], ['inactive', 'Inactive'], ['rules', 'Rules pending']])
+
   return (
-    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
-      <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-2xl md:text-[1.7rem] font-bold text-heading">Students / Registration</h1>
-        <button className={btnPrimary} onClick={openAddForm}>+ Register Student</button>
-      </div>
-      <p className="text-muted mb-8">All enrolled athletes across every training center.</p>
+    <div className="p-8 max-md:p-4 max-w-[1240px] mx-auto">
+      <ModuleHeader
+        title="Students / Registration"
+        description="All enrolled athletes across every training center. Open a student to see their full record."
+        actions={<button className={btnPrimary} onClick={openAddForm}><UserPlus size={16} /> Register student</button>}
+        tabs={tabs.items}
+        activeTab={tabs.active}
+        onTabChange={tabs.select}
+      />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -330,10 +343,8 @@ export default function Students() {
           printTitle="Students"
           onExport={handleExport}
           filters={[
-            { key: 'status', label: 'Status', options: opts(['active', 'inactive']) },
             { key: 'center', label: 'Center', options: centers.map((c) => ({ value: c.id, label: c.name })) },
             { key: 'belt', label: 'Belt', options: opts(BELT_RANKS, BELT_LABELS) },
-            { key: 'rules', label: 'Rules acknowledged', options: opts(['yes', 'no']) },
           ]}
           sorts={[
             { key: 'name', label: 'Name A–Z' },
@@ -344,39 +355,50 @@ export default function Students() {
       )}
 
       {loading ? (
-        <p>Loading…</p>
-      ) : filteredStudents.length === 0 ? (
-        <p className="text-muted">No students match your search or filters.</p>
+        <p className="text-muted">Loading…</p>
       ) : (
-        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {filteredStudents.map((s) => (
-            <div
-              key={s.id}
-              className="bg-surface rounded-2xl shadow-card p-6"
-              style={{ borderLeftWidth: 4, borderLeftColor: s.active ? 'var(--status-ok)' : '#ccc' }}
-            >
-              <h3 className="font-semibold text-base text-heading mb-1.5">{s.full_name}</h3>
-              <p className="text-sm text-charcoal">{BELT_LABELS[s.current_belt] || s.current_belt}</p>
-              <p className="text-[0.85rem] mt-1.5">
-                {s.training_centers?.name || 'No center'} {s.batches?.name ? `· ${s.batches.name}` : ''}
-              </p>
-              {s.guardian_phone && <p className="text-[0.85rem]">{s.guardian_phone}</p>}
-              <p className="text-[0.8rem] mt-1.5" style={{ color: s.rules_acknowledged ? 'var(--color-muted)' : 'var(--status-bad)' }}>
-                {s.rules_acknowledged ? '✓ Rules acknowledged' : '⚠ Rules not acknowledged'}
-              </p>
-              <p className="text-[0.8rem] mt-1" style={{ color: s.active ? 'var(--status-ok)' : '#999' }}>
-                {s.active ? 'Active' : 'Inactive'}
-              </p>
-              <div className="flex gap-2 mt-3 flex-wrap">
-                <button className={`${btnPrimary} ${btnSm}`} onClick={() => setIdCardFor(s)}><IdCard size={14} /> ID Card</button>
-                <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(s)}>Edit</button>
-                <button className={`${btnOutline} ${btnSm}`} onClick={() => toggleActive(s)}>
-                  {s.active ? 'Deactivate' : 'Activate'}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <DataTable
+          caption="Students"
+          rows={filteredStudents}
+          onRowClick={(s) => navigate(`/admin/students/${s.id}`)}
+          rowAccent={(s) => (s.active ? 'var(--status-ok)' : 'var(--color-pay-line)')}
+          empty={list.total === 0 ? 'No students registered yet.' : 'No students match this view, search or filters.'}
+          columns={[
+            { key: 'name', header: 'Student', primary: true, width: '26%', sortValue: (s) => s.full_name,
+              render: (s) => <PersonCell name={s.full_name} sub={studentIdNo(s)} /> },
+            { key: 'belt', header: 'Belt', sortValue: (s) => BELT_RANKS.indexOf(s.current_belt),
+              render: (s) => (
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                  <span className="w-2.5 h-2.5 rounded-full ring-1 ring-black/15" style={{ background: BELT_COLORS[s.current_belt] }} aria-hidden="true" />
+                  {beltLabel(s.current_belt)}
+                </span>
+              ) },
+            { key: 'center', header: 'Centre / Batch', sortValue: (s) => s.training_centers?.name,
+              render: (s) => (
+                <span className="block leading-tight">
+                  {s.training_centers?.name || '—'}
+                  {s.batches?.name && <span className="block text-xs text-subtle">{s.batches.name}</span>}
+                </span>
+              ) },
+            { key: 'guardian', header: 'Guardian', hideOnMobile: true, sortValue: (s) => s.guardian_name,
+              render: (s) => (
+                <span className="block leading-tight">
+                  {s.guardian_name || '—'}
+                  {s.guardian_phone && <span className="block text-xs text-subtle tabular-nums">{s.guardian_phone}</span>}
+                </span>
+              ) },
+            { key: 'age', header: 'Age', align: 'right', sortValue: (s) => ageFrom(s.dob) ?? -1, render: (s) => ageFrom(s.dob) ?? '—' },
+            { key: 'rules', header: 'Rules', render: (s) => s.rules_acknowledged ? <StatusPill tone="ok">Signed</StatusPill> : <StatusPill tone="warn">Pending</StatusPill> },
+            { key: 'status', header: 'Status', sortValue: (s) => (s.active ? 0 : 1),
+              render: (s) => <StatusPill tone={s.active ? 'ok' : 'neutral'}>{s.active ? 'Active' : 'Inactive'}</StatusPill> },
+          ]}
+          actions={(s) => (
+            <>
+              <button className={`${btnOutline} ${btnSm}`} onClick={() => setIdCardFor(s)} aria-label={`ID card for ${s.full_name}`}><IdCard size={14} /> ID</button>
+              <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(s)} aria-label={`Edit ${s.full_name}`}><Pencil size={13} /> Edit</button>
+            </>
+          )}
+        />
       )}
       {idCardFor && (
         <DocumentModal title={`ID Card — ${idCardFor.full_name}`} size="card" onClose={() => setIdCardFor(null)}>
