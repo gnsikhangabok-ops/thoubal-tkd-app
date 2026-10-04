@@ -1,17 +1,42 @@
+import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { homePathForRole } from '../../lib/roles'
+import AuthShell from '../../components/site/AuthShell'
+import PageLoader from '../../components/site/PageLoader'
+import { Alert } from '../../components/site/FormField'
+import { outlineButton, primaryButton } from '../../lib/ui'
 
 // After login, this decides where each role lands.
 export default function RoleRedirect() {
-  const { role, loading } = useAuth()
+  const { session, role, loading, signOut, refreshProfile } = useAuth()
+  const [checking, setChecking] = useState(false)
 
-  if (loading) return <div style={{ padding: 40 }}>Loading…</div>
+  if (loading) return <PageLoader label="Signing you in…" />
+  if (!session) return <Navigate to="/login" replace />
 
-  if (role === 'super_admin' || role === 'coach') {
-    return <Navigate to="/admin" replace />
+  const home = homePathForRole(role)
+  if (home) return <Navigate to={home} replace />
+
+  // Signed in, but no profile/role yet — explain instead of silently bouncing to /login.
+  async function checkAgain() {
+    setChecking(true)
+    await refreshProfile()
+    setChecking(false)
   }
-  if (role === 'student') {
-    return <Navigate to="/portal" replace />
-  }
-  return <Navigate to="/login" replace />
+
+  return (
+    <AuthShell title="Account setup pending" subtitle={session.user.email}>
+      <div className="flex flex-col gap-4">
+        <Alert tone="info">
+          Your login works, but your academy profile hasn't been set up yet. Please contact the academy office
+          and ask the admin to activate your account.
+        </Alert>
+        <button type="button" onClick={checkAgain} className={primaryButton} disabled={checking}>
+          {checking ? 'Checking…' : 'Check again'}
+        </button>
+        <button type="button" onClick={signOut} className={`${outlineButton} w-full`}>Sign out</button>
+      </div>
+    </AuthShell>
+  )
 }

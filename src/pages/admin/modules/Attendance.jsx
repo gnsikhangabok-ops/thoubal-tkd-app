@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
+import { btnPrimary, btnOutline } from '../../../lib/adminUi'
 
 function today() {
   return new Date().toISOString().slice(0, 10)
@@ -7,14 +8,12 @@ function today() {
 
 const STATUS_OPTIONS = ['present', 'absent', 'late', 'excused']
 const STATUS_COLOR = {
-  present: '#B3282D',
-  absent: '#8B0000',
-  late: '#B8860B',
+  present: '#047857',
+  absent: '#DC2626',
+  late: '#B45309',
   excused: '#999',
 }
 
-const btnPrimary = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
-const btnOutline = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk"
 
 export default function Attendance() {
   const [batches, setBatches] = useState([])
@@ -34,6 +33,7 @@ export default function Attendance() {
 
   useEffect(() => {
     if (selectedBatch) loadStudentsAndAttendance()
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- reload when the batch or date changes
   }, [selectedBatch, sessionDate])
 
   async function loadBatches() {
@@ -144,12 +144,12 @@ export default function Attendance() {
   const presentCount = Object.values(attendance).filter((s) => s === 'present').length
 
   return (
-    <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
-      <h1 className="font-display text-ink uppercase text-3xl mb-2">Attendance</h1>
-      <p className="text-charcoal mb-9">Mark daily attendance for a batch.</p>
+    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
+      <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy mb-2">Attendance</h1>
+      <p className="text-[#5B6B82] mb-8">Mark daily attendance for a batch.</p>
 
-      {error && <p className="text-brand-red mb-4">{error}</p>}
-      {message && <p className="text-brand-red mb-4">{message}</p>}
+      {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
+      {message && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{message}</p>}
 
       <div className="flex gap-4 flex-wrap mb-7">
         <div>
@@ -157,7 +157,7 @@ export default function Attendance() {
           <select
             value={selectedBatch}
             onChange={(e) => setSelectedBatch(e.target.value)}
-            className="px-2.5 py-2.5 border border-black/10 min-w-[260px]"
+            className="px-2.5 py-2.5 border border-pay-line rounded-xl min-w-[260px]"
           >
             <option value="">— Select a batch —</option>
             {batches.map((b) => (
@@ -171,7 +171,7 @@ export default function Attendance() {
             type="date"
             value={sessionDate}
             onChange={(e) => setSessionDate(e.target.value)}
-            className="px-2.5 py-2.5 border border-black/10"
+            className="px-2.5 py-2.5 border border-pay-line rounded-xl"
           />
         </div>
       </div>
@@ -185,9 +185,9 @@ export default function Attendance() {
       ) : (
         <>
           <div className="grid gap-4 mb-5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
-            <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
-              <strong className="block font-display text-4xl text-chalk">{presentCount} / {students.length}</strong>
-              <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">Present today</span>
+            <div className="pay-stat">
+              <strong className="block text-3xl font-bold text-white">{presentCount} / {students.length}</strong>
+              <span className="text-sm text-white/85">Present today</span>
             </div>
           </div>
 
@@ -200,19 +200,19 @@ export default function Attendance() {
             {students.map((s) => (
               <div
                 key={s.id}
-                className="bg-white border border-black/10 p-6"
-                style={{ borderTopWidth: 3, borderTopColor: STATUS_COLOR[attendance[s.id]] }}
+                className="bg-white rounded-2xl shadow-card p-6"
+                style={{ borderLeftWidth: 4, borderLeftColor: STATUS_COLOR[attendance[s.id]] }}
               >
-                <h3 className="font-semibold text-base text-ink">{s.full_name}</h3>
+                <h3 className="font-semibold text-base text-pay-navy">{s.full_name}</h3>
                 <div className="flex gap-1.5 flex-wrap mt-2.5">
                   {STATUS_OPTIONS.map((opt) => (
                     <button
                       key={opt}
                       onClick={() => setStatus(s.id, opt)}
-                      className={`text-[0.72rem] px-2.5 py-1.5 capitalize font-display font-semibold uppercase tracking-wide ${
+                      className={`text-[0.72rem] px-2.5 py-1.5 capitalize font-semibold rounded-full ${
                         attendance[s.id] === opt
-                          ? 'bg-brand-red text-chalk'
-                          : 'border border-ink text-ink hover:bg-ink hover:text-chalk'
+                          ? 'bg-pay-action text-white border border-pay-action'
+                          : 'border border-pay-line text-pay-navy bg-white hover:bg-pay-sky'
                       }`}
                     >
                       {opt}

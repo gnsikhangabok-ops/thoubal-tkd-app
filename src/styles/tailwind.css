@@ -1,16 +1,27 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #0F0F0E;
-  --color-chalk: #F7F5F0;
-  --color-brand-red: #B3282D;
-  --color-brand-red-dark: #8f2024;
-  --color-gold: #D4A537;
-  --color-charcoal: #3A3A38;
-  --color-line: rgba(15, 15, 14, 0.12);
+  /* Base palette (token names kept from the original theme) */
+  --color-ink: #0B2350;          /* navy — headers, sidebars, dark panels */
+  --color-chalk: #F3F7FB;        /* page background */
+  --color-brand-red: #B3282D;    /* primary action (taekwondo red) */
+  --color-brand-red-dark: #8F2024;
+  --color-gold: #F2A33A;         /* saffron-gold accent on navy */
+  --color-charcoal: #2E3A4D;
+  --color-line: rgba(11, 35, 80, 0.14);
 
-  --font-display: 'Oswald', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  /* Paytm-style app palette used across the site */
+  --color-pay-navy: #002E6E;
+  --color-pay-blue: #00BAF2;
+  --color-pay-action: #0079C1;   /* darker blue so white button text stays readable */
+  --color-pay-action-dark: #00609A;
+  --color-pay-sky: #E6F7FD;
+  --color-pay-bg: #F3F7FB;
+  --color-pay-line: #E3EAF3;
+  --shadow-card: 0 2px 12px rgba(0, 46, 110, 0.08);
+
+  --font-display: 'Noto Sans', 'Segoe UI', sans-serif;
+  --font-body: 'Noto Sans', 'Segoe UI', sans-serif;
 }
 
 @layer base {
@@ -24,6 +35,46 @@
   h1, h2, h3 {
     @apply font-display text-ink uppercase tracking-wide;
   }
+  :focus-visible {
+    outline: 2px solid var(--color-pay-action);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* App shell: plain sans headings instead of the condensed uppercase base style */
+  .paytm {
+    --font-display: var(--font-body);
+    background: var(--color-pay-bg);
+  }
+  .paytm h1, .paytm h2, .paytm h3 {
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--color-pay-navy);
+  }
+  .paytm .uppercase { letter-spacing: 0.02em; }
+
+  /* Gradient metric card */
+  .pay-stat {
+    @apply rounded-2xl px-5 py-5 text-white shadow-card;
+    background: linear-gradient(135deg, var(--color-pay-navy) 0%, #0057A8 60%, var(--color-pay-blue) 130%);
+  }
+
+  /* Scrolling "Latest Updates" line; static for users who prefer reduced motion */
+  .ticker {
+    display: inline-block;
+    padding-left: 100%;
+    animation: ticker 28s linear infinite;
+  }
+  .ticker:hover { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) {
+    .ticker { padding-left: 0; animation: none; white-space: normal; }
+  }
+}
+
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
 }
 
 @layer components {
@@ -59,7 +110,7 @@
   .stat-grid { @apply grid gap-4 mb-9; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
   .stat-card { @apply bg-ink px-5 py-6 border-b-[3px] border-b-gold; }
   .stat-card strong { @apply block font-display text-4xl text-chalk; }
-  .stat-card span { @apply text-sm text-[#B8B6B0] uppercase tracking-wide; }
+  .stat-card span { @apply text-sm text-[#C9D3E6] uppercase tracking-wide; }
 
   .auth-page { @apply min-h-screen flex items-center justify-center bg-ink p-5; }
   .auth-card { @apply w-full max-w-sm bg-chalk px-9 py-10 border-t-4 border-t-brand-red; }

@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
+import { inputCls } from '../../../lib/adminUi'
 
 const STATUSES = ['new', 'contacted', 'enrolled', 'closed']
 const STATUS_COLOR = {
-  new: '#B3282D', contacted: '#D4A537', enrolled: '#4C6B4F', closed: '#999',
+  new: '#0079C1', contacted: '#B45309', enrolled: '#047857', closed: '#999',
 }
 
-const inputCls = "px-2.5 py-2.5 border border-black/10"
 
 export default function Enquiries() {
   const [enquiries, setEnquiries] = useState([])
@@ -14,12 +14,7 @@ export default function Enquiries() {
   const [error, setError] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
 
-  useEffect(() => {
-    loadEnquiries()
-  }, [])
-
   async function loadEnquiries() {
-    setLoading(true)
     const { data, error } = await supabase
       .from('enquiries')
       .select('*')
@@ -29,6 +24,11 @@ export default function Enquiries() {
     else setEnquiries(data)
     setLoading(false)
   }
+
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- state is only set after the awaited fetch
+    loadEnquiries()
+  }, [])
 
   async function updateStatus(enquiry, status) {
     const { error } = await supabase
@@ -44,20 +44,20 @@ export default function Enquiries() {
   const newCount = enquiries.filter((e) => e.status === 'new').length
 
   return (
-    <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
-      <h1 className="font-display text-ink uppercase text-3xl mb-2">Enquiries</h1>
-      <p className="text-charcoal mb-9">Leads submitted through the public website enrollment form.</p>
+    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
+      <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy mb-2">Enquiries</h1>
+      <p className="text-[#5B6B82] mb-8">Leads submitted through the public website enrollment form.</p>
 
-      {error && <p className="text-brand-red mb-4">{error}</p>}
+      {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
       <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
-        <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
-          <strong className="block font-display text-4xl text-chalk">{newCount}</strong>
-          <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">New Enquiries</span>
+        <div className="pay-stat">
+          <strong className="block text-3xl font-bold text-white">{newCount}</strong>
+          <span className="text-sm text-white/85">New Enquiries</span>
         </div>
-        <div className="bg-ink px-5 py-6 border-b-[3px] border-b-gold">
-          <strong className="block font-display text-4xl text-chalk">{enquiries.length}</strong>
-          <span className="text-sm text-[#B8B6B0] uppercase tracking-wide">Total Enquiries</span>
+        <div className="pay-stat">
+          <strong className="block text-3xl font-bold text-white">{enquiries.length}</strong>
+          <span className="text-sm text-white/85">Total Enquiries</span>
         </div>
       </div>
 
@@ -83,10 +83,10 @@ export default function Enquiries() {
           {filtered.map((enq) => (
             <div
               key={enq.id}
-              className="bg-white border border-black/10 p-6"
-              style={{ borderTopWidth: 3, borderTopColor: STATUS_COLOR[enq.status] }}
+              className="bg-white rounded-2xl shadow-card p-6"
+              style={{ borderLeftWidth: 4, borderLeftColor: STATUS_COLOR[enq.status] }}
             >
-              <h3 className="font-semibold text-base text-ink mb-1.5">{enq.child_name}</h3>
+              <h3 className="font-semibold text-base text-pay-navy mb-1.5">{enq.child_name}</h3>
               <p className="text-sm text-charcoal">Age {enq.age} · {enq.program_interested}</p>
               <p className="text-[0.85rem] mt-1.5">{enq.guardian_phone}</p>
               {enq.message && <p className="text-[0.85rem] mt-1.5 italic">"{enq.message}"</p>}
@@ -98,7 +98,7 @@ export default function Enquiries() {
                 <select
                   value={enq.status}
                   onChange={(e) => updateStatus(enq, e.target.value)}
-                  className="px-2 py-2 border border-black/10 text-[0.85rem] capitalize"
+                  className="px-2 py-2 border border-pay-line rounded-xl text-[0.85rem] capitalize"
                 >
                   {STATUSES.map((s) => (
                     <option key={s} value={s}>{s}</option>

@@ -1,13 +1,10 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
+import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 
 const ROLES = ['student', 'coach', 'super_admin']
-const ROLE_COLOR = { student: '#999', coach: '#D4A537', super_admin: '#B3282D' }
+const ROLE_COLOR = { student: '#999', coach: '#D4A537', super_admin: '#DC2626' }
 
-const inputCls = "px-2.5 py-2.5 border border-black/10"
-const btnPrimary = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
-const btnOutline = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk"
-const btnSm = "text-[0.75rem] px-3 py-1.5"
 
 export default function Users() {
   const [profiles, setProfiles] = useState([])
@@ -90,11 +87,11 @@ export default function Users() {
   }
 
   return (
-    <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
-      <h1 className="font-display text-ink uppercase text-3xl mb-2">Users</h1>
-      <p className="text-charcoal mb-9">Everyone who has signed up. Assign roles and link students to their portal login.</p>
+    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
+      <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy mb-2">Users</h1>
+      <p className="text-[#5B6B82] mb-8">Everyone who has signed up. Assign roles and link students to their portal login.</p>
 
-      {error && <p className="text-brand-red mb-4">{error}</p>}
+      {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
       <div className="mb-6">
         <select
@@ -110,8 +107,8 @@ export default function Users() {
       </div>
 
       {linkingFor && (
-        <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[460px]">
-          <h3 className="font-semibold text-base text-ink mb-1.5">Link Student Record</h3>
+        <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[460px]">
+          <h3 className="font-semibold text-base text-pay-navy mb-1.5">Link Student Record</h3>
           <p className="text-[0.85rem] mb-4 text-charcoal">
             Connect {linkingFor.full_name}'s login to their student profile, so they can see their own attendance, fees, and belt progress.
           </p>
@@ -151,14 +148,14 @@ export default function Users() {
             return (
               <div
                 key={p.id}
-                className="bg-white border border-black/10 p-6"
-                style={{ borderTopWidth: 3, borderTopColor: ROLE_COLOR[p.role] }}
+                className="bg-white rounded-2xl shadow-card p-6"
+                style={{ borderLeftWidth: 4, borderLeftColor: ROLE_COLOR[p.role] }}
               >
-                <h3 className="font-semibold text-base text-ink mb-1.5">{p.full_name}</h3>
+                <h3 className="font-semibold text-base text-pay-navy mb-1.5">{p.full_name}</h3>
                 <p className="text-sm text-charcoal capitalize">{p.role?.replace('_', ' ')}</p>
                 {linked && <p className="text-[0.85rem] mt-1.5">Linked to: {linked}</p>}
                 {p.role === 'student' && !linked && (
-                  <p className="text-[0.8rem] mt-1.5 text-brand-red">⚠ Not linked to a student record yet</p>
+                  <p className="text-[0.8rem] mt-1.5 text-amber-700">⚠ Not linked to a student record yet</p>
                 )}
 
                 <div className="mt-3">
@@ -166,7 +163,7 @@ export default function Users() {
                   <select
                     value={p.role}
                     onChange={(e) => updateRole(p, e.target.value)}
-                    className="px-2 py-2 border border-black/10 text-[0.85rem] capitalize mb-2.5"
+                    className="px-2 py-2 border border-pay-line rounded-xl text-[0.85rem] capitalize mb-2.5"
                   >
                     {ROLES.map((r) => (
                       <option key={r} value={r}>{r.replace('_', ' ')}</option>

@@ -1,16 +1,33 @@
-# React + Vite
+# Thoubal Taekwondo Academy
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Public website, admin/coach management portal and student/parent portal for Thoubal Taekwondo Academy.
+React + Vite + Tailwind CSS, backed by Supabase.
 
-Currently, two official plugins are available:
+## Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+cp .env.example .env   # fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+npm install
+npm run dev
+```
 
-## React Compiler
+`npm run lint` runs oxlint; `npm run build` produces the production bundle in `dist/`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## User flow
 
-## Expanding the Oxlint configuration
+| Route | Who | Notes |
+| --- | --- | --- |
+| `/` | Public | Homepage, admission enquiry form |
+| `/rules` | Public | Latest published rules & regulations |
+| `/signup` | Public | Creates a **student** account; staff are upgraded by a super admin |
+| `/login` | Public | Signed-in users are sent on to `/redirect` |
+| `/redirect` | Signed in | Sends `super_admin`/`coach` → `/admin`, `student` → `/portal`; shows "Account setup pending" if no profile exists |
+| `/admin/*` | `super_admin`, `coach` | Fee Setup, Website Content and Users are super-admin only |
+| `/portal` | `student` | Shows next steps until an admin links the login to a student record (Users module) |
+| `/unauthorized`, `*` | Anyone | 403 and 404 pages |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Database
+
+`supabase/migrations/20261004_profile_on_signup.sql` creates profiles server-side on signup and
+prevents users from choosing their own role. Run it in the Supabase SQL editor after checking it
+against your existing `profiles` policies.

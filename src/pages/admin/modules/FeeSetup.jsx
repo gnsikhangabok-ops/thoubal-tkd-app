@@ -2,11 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 import { Wallet, Repeat, CircleDollarSign, Check } from 'lucide-react'
+import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 
-const inputCls = "px-2.5 py-2.5 border border-black/10"
-const btnPrimary = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
-const btnOutline = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk"
-const btnSm = "text-[0.75rem] px-3 py-1.5"
 
 const emptyMonthlyForm = { batch_id: '', monthly_amount: '' }
 const emptyOneTimeForm = { id: null, name: '', amount: '' }
@@ -193,15 +190,15 @@ export default function FeeSetup() {
   }
 
   return (
-    <div className="p-12 max-md:p-6 max-w-[1000px] mx-auto">
-      <h1 className="font-display text-ink uppercase text-3xl mb-2">Fee Setup</h1>
-      <p className="text-charcoal mb-9">
+    <div className="p-8 max-md:p-4 max-w-[1000px] mx-auto">
+      <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy mb-2">Fee Setup</h1>
+      <p className="text-[#5B6B82] mb-8">
         Define monthly rates per batch and one-time fees (admission, form). Monthly rates feed{' '}
         <Link to="/admin/fees" className="underline">Fee Management</Link>; collected payments post to{' '}
         <Link to="/admin/accounts" className="underline">Accounts</Link>.
       </p>
 
-      {error && <p className="text-brand-red mb-6">{error}</p>}
+      {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm">{error}</p>}
 
       {loading ? (
         <p>Loading…</p>
@@ -210,9 +207,9 @@ export default function FeeSetup() {
           {/* MONTHLY RATES PER BATCH */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <Repeat size={16} className="text-brand-red" />
-              <h2 className="font-display text-ink uppercase text-sm tracking-[0.08em]">Monthly Rates by Batch</h2>
-              <div className="h-px flex-1 bg-black/10" />
+              <Repeat size={16} className="text-pay-action" />
+              <h2 className="text-sm font-bold text-pay-navy">Monthly Rates by Batch</h2>
+              <div className="h-px flex-1 bg-pay-line" />
             </div>
 
             {batches.length === 0 ? (
@@ -224,12 +221,12 @@ export default function FeeSetup() {
                   return (
                     <div
                       key={b.id}
-                      className="bg-white border border-black/10 p-6"
-                      style={{ borderTopWidth: 3, borderTopColor: rate ? '#B3282D' : '#ccc' }}
+                      className="bg-white rounded-2xl shadow-card p-6"
+                      style={{ borderLeftWidth: 4, borderLeftColor: rate ? '#047857' : '#ccc' }}
                     >
-                      <h3 className="font-semibold text-base text-ink mb-1.5">{b.name}</h3>
+                      <h3 className="font-semibold text-base text-pay-navy mb-1.5">{b.name}</h3>
                       <p className="text-sm text-charcoal">{b.training_centers?.name}</p>
-                      <p className="text-2xl font-display text-brand-red mt-2.5">
+                      <p className="text-2xl font-display text-pay-action mt-2.5">
                         {rate ? `₹${Number(rate.monthly_amount).toLocaleString('en-IN')}` : '— Not set —'}
                       </p>
                       <p className="text-[0.75rem] text-charcoal mt-1">per month</p>
@@ -243,8 +240,8 @@ export default function FeeSetup() {
             )}
 
             {showMonthlyForm && (
-              <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mt-6 max-w-[420px]">
-                <h3 className="font-semibold text-base text-ink mb-1.5">
+              <div className="bg-white rounded-2xl shadow-card p-6 mt-6 max-w-[420px]">
+                <h3 className="font-semibold text-base text-pay-navy mb-1.5">
                   Set rate for {batches.find((b) => b.id === monthlyForm.batch_id)?.name}
                 </h3>
                 <p className="text-[0.85rem] mb-4 text-charcoal">
@@ -274,16 +271,16 @@ export default function FeeSetup() {
           <div>
             <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
               <div className="flex items-center gap-3">
-                <CircleDollarSign size={16} className="text-brand-red" />
-                <h2 className="font-display text-ink uppercase text-sm tracking-[0.08em]">One-Time Fees</h2>
+                <CircleDollarSign size={16} className="text-pay-action" />
+                <h2 className="text-sm font-bold text-pay-navy">One-Time Fees</h2>
               </div>
               <button className={`${btnPrimary} ${btnSm}`} onClick={openAddOneTime}>+ Add Fee Type</button>
             </div>
             <div className="h-px bg-black/10 mb-4" />
 
             {showOneTimeForm && (
-              <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-6 max-w-[420px]">
-                <h3 className="font-semibold text-base text-ink mb-4">{oneTimeForm.id ? 'Edit Fee Type' : 'New One-Time Fee'}</h3>
+              <div className="bg-white rounded-2xl shadow-card p-6 mb-6 max-w-[420px]">
+                <h3 className="font-semibold text-base text-pay-navy mb-4">{oneTimeForm.id ? 'Edit Fee Type' : 'New One-Time Fee'}</h3>
                 <form onSubmit={handleOneTimeSubmit} className="flex flex-col gap-3">
                   <input
                     type="text" placeholder="Fee name (e.g. Admission Fee)" required
@@ -310,8 +307,8 @@ export default function FeeSetup() {
             )}
 
             {collectingFor && (
-              <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-6 max-w-[420px]">
-                <h3 className="font-semibold text-base text-ink mb-1.5">Collect: {collectingFor.name}</h3>
+              <div className="bg-white rounded-2xl shadow-card p-6 mb-6 max-w-[420px]">
+                <h3 className="font-semibold text-base text-pay-navy mb-1.5">Collect: {collectingFor.name}</h3>
                 <p className="text-[0.85rem] mb-4 text-charcoal">Standard amount: ₹{Number(collectingFor.amount).toLocaleString('en-IN')}</p>
                 <form onSubmit={handleCollectSubmit} className="flex flex-col gap-3">
                   <select
@@ -361,9 +358,9 @@ export default function FeeSetup() {
             )}
 
             {viewingPaidFor && (
-              <div className="bg-white border border-black/10 border-t-[3px] border-t-gold p-6 mb-6 max-w-[420px]">
+              <div className="bg-white rounded-2xl shadow-card border-l-4 border-l-pay-blue p-6 mb-6 max-w-[420px]">
                 <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-semibold text-base text-ink">Paid: {viewingPaidFor.name}</h3>
+                  <h3 className="font-semibold text-base text-pay-navy">Paid: {viewingPaidFor.name}</h3>
                   <button className="text-[0.75rem] underline text-charcoal" onClick={() => setViewingPaidFor(null)}>Close</button>
                 </div>
                 {payments.filter((p) => p.fee_type_id === viewingPaidFor.id).length === 0 ? (
@@ -371,8 +368,8 @@ export default function FeeSetup() {
                 ) : (
                   <ul className="flex flex-col gap-2">
                     {payments.filter((p) => p.fee_type_id === viewingPaidFor.id).map((p) => (
-                      <li key={p.id} className="text-sm flex justify-between items-center border-b border-black/5 pb-2">
-                        <span className="flex items-center gap-1.5"><Check size={14} className="text-brand-red" />{p.students?.full_name}</span>
+                      <li key={p.id} className="text-sm flex justify-between items-center border-b border-pay-line pb-2">
+                        <span className="flex items-center gap-1.5"><Check size={14} className="text-pay-action" />{p.students?.full_name}</span>
                         <span className="text-charcoal">₹{Number(p.amount_paid).toLocaleString('en-IN')}</span>
                       </li>
                     ))}
@@ -390,21 +387,21 @@ export default function FeeSetup() {
                   return (
                     <div
                       key={fee.id}
-                      className="bg-white border border-black/10 p-6"
-                      style={{ borderTopWidth: 3, borderTopColor: fee.active ? '#B3282D' : '#ccc' }}
+                      className="bg-white rounded-2xl shadow-card p-6"
+                      style={{ borderLeftWidth: 4, borderLeftColor: fee.active ? '#047857' : '#ccc' }}
                     >
                       <div className="flex items-center gap-2 mb-1.5">
-                        <Wallet size={16} className="text-brand-red" />
-                        <h3 className="font-semibold text-base text-ink">{fee.name}</h3>
+                        <Wallet size={16} className="text-pay-action" />
+                        <h3 className="font-semibold text-base text-pay-navy">{fee.name}</h3>
                       </div>
-                      <p className="text-2xl font-display text-brand-red">₹{Number(fee.amount).toLocaleString('en-IN')}</p>
+                      <p className="text-2xl font-display text-pay-action">₹{Number(fee.amount).toLocaleString('en-IN')}</p>
                       <button
                         className="text-[0.8rem] text-charcoal underline mt-1 block"
                         onClick={() => setViewingPaidFor(fee)}
                       >
                         {paidCount} student{paidCount === 1 ? '' : 's'} paid
                       </button>
-                      <p className="text-[0.8rem] mt-1.5" style={{ color: fee.active ? '#B3282D' : '#999' }}>
+                      <p className="text-[0.8rem] mt-1.5" style={{ color: fee.active ? '#047857' : '#999' }}>
                         {fee.active ? 'Active' : 'Inactive'}
                       </p>
                       <div className="flex gap-2 mt-3 flex-wrap">

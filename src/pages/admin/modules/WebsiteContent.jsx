@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
 import { Upload, Check, ImageIcon } from 'lucide-react'
+import { inputCls } from '../../../lib/adminUi'
 
 // Defines every editable field on the public site.
 // type: 'text' | 'textarea' | 'image'
 const FIELD_GROUPS = [
+  {
+    label: 'Latest Updates Bar',
+    fields: [
+      { key: 'announcement', label: 'Announcement text', type: 'textarea', placeholder: 'Admissions open for the new training session…' },
+    ],
+  },
   {
     label: 'Hero Section',
     fields: [
@@ -57,7 +64,6 @@ const FIELD_GROUPS = [
   },
 ]
 
-const inputCls = "px-2.5 py-2.5 border border-black/10 w-full"
 
 export default function WebsiteContent() {
   const [content, setContent] = useState({})
@@ -67,12 +73,7 @@ export default function WebsiteContent() {
   const [savedKey, setSavedKey] = useState(null)
   const [uploadingKey, setUploadingKey] = useState(null)
 
-  useEffect(() => {
-    loadContent()
-  }, [])
-
   async function loadContent() {
-    setLoading(true)
     const { data, error } = await supabase.from('site_content').select('*')
     if (error) {
       setError(error.message)
@@ -83,6 +84,11 @@ export default function WebsiteContent() {
     }
     setLoading(false)
   }
+
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- state is only set after the awaited fetch
+    loadContent()
+  }, [])
 
   async function saveField(key, value) {
     setSavingKey(key)
@@ -116,6 +122,7 @@ export default function WebsiteContent() {
     setError('')
 
     const ext = file.name.split('.').pop()
+    // oxlint-disable-next-line react/purity -- runs in an upload handler, not during render
     const path = `${key}-${Date.now()}.${ext}`
 
     const { error: uploadError } = await supabase.storage
@@ -136,13 +143,13 @@ export default function WebsiteContent() {
   }
 
   return (
-    <div className="p-12 max-md:p-6 max-w-[900px] mx-auto">
-      <h1 className="font-display text-ink uppercase text-3xl mb-2">Website Content</h1>
-      <p className="text-charcoal mb-9">
+    <div className="p-8 max-md:p-4 max-w-[900px] mx-auto">
+      <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy mb-2">Website Content</h1>
+      <p className="text-[#5B6B82] mb-8">
         Edit the text and images shown on the public homepage. Changes save automatically and go live immediately.
       </p>
 
-      {error && <p className="text-brand-red mb-6">{error}</p>}
+      {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm">{error}</p>}
 
       {loading ? (
         <p>Loading…</p>
@@ -151,8 +158,8 @@ export default function WebsiteContent() {
           {FIELD_GROUPS.map((group) => (
             <div key={group.label}>
               <div className="flex items-center gap-3 mb-4">
-                <h2 className="font-display text-ink uppercase text-sm tracking-[0.08em]">{group.label}</h2>
-                <div className="h-px flex-1 bg-black/10" />
+                <h2 className="text-sm font-bold text-pay-navy">{group.label}</h2>
+                <div className="h-px flex-1 bg-pay-line" />
               </div>
 
               <div className="flex flex-col gap-5">
@@ -164,14 +171,14 @@ export default function WebsiteContent() {
 
                     {field.type === 'image' ? (
                       <div className="flex items-center gap-4">
-                        <div className="w-28 h-28 bg-black/5 border border-black/10 flex items-center justify-center shrink-0 overflow-hidden">
+                        <div className="w-28 h-28 bg-black/5 border border-pay-line rounded-xl flex items-center justify-center shrink-0 overflow-hidden">
                           {content[field.key] ? (
                             <img src={content[field.key]} alt={field.label} className="w-full h-full object-cover" />
                           ) : (
                             <ImageIcon size={24} className="text-charcoal/30" />
                           )}
                         </div>
-                        <label className="inline-flex items-center gap-2 px-4 py-2.5 border border-ink text-ink text-sm font-display uppercase tracking-wide cursor-pointer hover:bg-ink hover:text-chalk">
+                        <label className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-pay-action text-pay-action bg-white text-sm font-semibold cursor-pointer hover:bg-pay-sky">
                           <Upload size={15} />
                           {uploadingKey === field.key ? 'Uploading…' : 'Upload Photo'}
                           <input
@@ -183,7 +190,7 @@ export default function WebsiteContent() {
                           />
                         </label>
                         {savedKey === field.key && (
-                          <span className="text-brand-red text-sm flex items-center gap-1"><Check size={14} /> Saved</span>
+                          <span className="text-pay-action text-sm flex items-center gap-1"><Check size={14} /> Saved</span>
                         )}
                       </div>
                     ) : field.type === 'textarea' ? (
@@ -197,7 +204,7 @@ export default function WebsiteContent() {
                           className={`${inputCls} font-body`}
                         />
                         {savingKey === field.key && <span className="absolute top-2 right-2 text-[0.7rem] text-charcoal">Saving…</span>}
-                        {savedKey === field.key && <span className="absolute top-2 right-2 text-[0.7rem] text-brand-red flex items-center gap-1"><Check size={12} /> Saved</span>}
+                        {savedKey === field.key && <span className="absolute top-2 right-2 text-[0.7rem] text-pay-action flex items-center gap-1"><Check size={12} /> Saved</span>}
                       </div>
                     ) : (
                       <div className="relative">
@@ -210,7 +217,7 @@ export default function WebsiteContent() {
                           className={inputCls}
                         />
                         {savingKey === field.key && <span className="absolute top-1/2 -translate-y-1/2 right-3 text-[0.7rem] text-charcoal">Saving…</span>}
-                        {savedKey === field.key && <span className="absolute top-1/2 -translate-y-1/2 right-3 text-[0.7rem] text-brand-red flex items-center gap-1"><Check size={12} /> Saved</span>}
+                        {savedKey === field.key && <span className="absolute top-1/2 -translate-y-1/2 right-3 text-[0.7rem] text-pay-action flex items-center gap-1"><Check size={12} /> Saved</span>}
                       </div>
                     )}
                   </div>

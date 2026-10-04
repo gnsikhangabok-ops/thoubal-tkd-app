@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
+import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 
 const BELT_RANKS = [
   'white', 'yellow', 'green', 'blue', 'red',
@@ -17,10 +18,6 @@ const emptyResultForm = {
   passed: true, remarks: '', certificate_url: '',
 }
 
-const inputCls = "px-2.5 py-2.5 border border-black/10"
-const btnPrimary = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
-const btnOutline = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk"
-const btnSm = "text-[0.75rem] px-3 py-1.5"
 
 export default function BeltExams() {
   const [events, setEvents] = useState([])
@@ -149,20 +146,20 @@ export default function BeltExams() {
   }
 
   return (
-    <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
+    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       {!selectedEvent ? (
         <>
           <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-            <h1 className="font-display text-ink uppercase text-3xl">Belt Exams</h1>
+            <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">Belt Exams</h1>
             <button className={btnPrimary} onClick={openAddEvent}>+ New Grading Event</button>
           </div>
-          <p className="text-charcoal mb-9">Schedule grading events and record student results.</p>
+          <p className="text-[#5B6B82] mb-8">Schedule grading events and record student results.</p>
 
-          {error && <p className="text-brand-red mb-4">{error}</p>}
+          {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
           {showEventForm && (
-            <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[480px]">
-              <h3 className="font-semibold text-base text-ink mb-4">{eventForm.id ? 'Edit Grading Event' : 'New Grading Event'}</h3>
+            <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[480px]">
+              <h3 className="font-semibold text-base text-pay-navy mb-4">{eventForm.id ? 'Edit Grading Event' : 'New Grading Event'}</h3>
               <form onSubmit={handleEventSubmit} className="flex flex-col gap-3">
                 <input
                   type="text" placeholder="Title (e.g. Autumn Grading 2026)" required
@@ -203,10 +200,10 @@ export default function BeltExams() {
               {events.map((ev) => (
                 <div
                   key={ev.id}
-                  className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 cursor-pointer"
+                  className="bg-white rounded-2xl shadow-card p-6 cursor-pointer"
                   onClick={() => setSelectedEvent(ev)}
                 >
-                  <h3 className="font-semibold text-base text-ink mb-1.5">{ev.title}</h3>
+                  <h3 className="font-semibold text-base text-pay-navy mb-1.5">{ev.title}</h3>
                   <p className="text-sm text-charcoal">{ev.exam_date}</p>
                   {ev.location && <p className="text-[0.85rem]">{ev.location}</p>}
                   <div className="mt-3">
@@ -228,16 +225,16 @@ export default function BeltExams() {
             ← All Grading Events
           </button>
           <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-            <h1 className="font-display text-ink uppercase text-3xl">{selectedEvent.title}</h1>
+            <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">{selectedEvent.title}</h1>
             <button className={btnPrimary} onClick={openAddResult}>+ Add Result</button>
           </div>
-          <p className="text-charcoal mb-9">{selectedEvent.exam_date} {selectedEvent.location ? `· ${selectedEvent.location}` : ''}</p>
+          <p className="text-[#5B6B82] mb-8">{selectedEvent.exam_date} {selectedEvent.location ? `· ${selectedEvent.location}` : ''}</p>
 
-          {error && <p className="text-brand-red mb-4">{error}</p>}
+          {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
           {showResultForm && (
-            <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[480px]">
-              <h3 className="font-semibold text-base text-ink mb-4">Add Result</h3>
+            <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[480px]">
+              <h3 className="font-semibold text-base text-pay-navy mb-4">Add Result</h3>
               <form onSubmit={handleResultSubmit} className="flex flex-col gap-3">
                 <select
                   required
@@ -323,12 +320,12 @@ export default function BeltExams() {
               {results.map((r) => (
                 <div
                   key={r.id}
-                  className="bg-white border border-black/10 p-6"
-                  style={{ borderTopWidth: 3, borderTopColor: r.passed ? '#B3282D' : '#ccc' }}
+                  className="bg-white rounded-2xl shadow-card p-6"
+                  style={{ borderLeftWidth: 4, borderLeftColor: r.passed ? '#047857' : '#ccc' }}
                 >
-                  <h3 className="font-semibold text-base text-ink mb-1.5">{r.students?.full_name}</h3>
+                  <h3 className="font-semibold text-base text-pay-navy mb-1.5">{r.students?.full_name}</h3>
                   <p className="text-sm text-charcoal">{BELT_LABELS[r.from_belt]} → {BELT_LABELS[r.to_belt]}</p>
-                  <p className="text-[0.85rem] mt-1.5" style={{ color: r.passed ? '#B3282D' : '#999' }}>
+                  <p className="text-[0.85rem] mt-1.5" style={{ color: r.passed ? '#047857' : '#999' }}>
                     {r.passed ? 'Passed' : 'Did not pass'}
                   </p>
                   {r.remarks && <p className="text-[0.85rem] mt-1.5">{r.remarks}</p>}

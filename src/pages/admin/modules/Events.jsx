@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
+import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 
 const EVENT_TYPES = ['tournament', 'grading', 'seminar', 'internal']
 const MEDALS = ['gold', 'silver', 'bronze', 'none']
@@ -9,10 +10,6 @@ const emptyEventForm = {
   id: null, title: '', event_type: 'tournament', event_date: '', location: '', description: '', registration_deadline: '',
 }
 
-const inputCls = "px-2.5 py-2.5 border border-black/10"
-const btnPrimary = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide bg-brand-red text-chalk hover:bg-brand-red-dark disabled:opacity-60"
-const btnOutline = "inline-block px-6 py-3 font-display font-semibold text-sm uppercase tracking-wide border border-ink text-ink hover:bg-ink hover:text-chalk"
-const btnSm = "text-[0.75rem] px-3 py-1.5"
 
 export default function Events() {
   const [events, setEvents] = useState([])
@@ -148,20 +145,20 @@ export default function Events() {
   const availableStudents = students.filter((s) => !registeredIds.has(s.id))
 
   return (
-    <div className="p-12 max-md:p-6 max-w-[1100px] mx-auto">
+    <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       {!selectedEvent ? (
         <>
           <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-            <h1 className="font-display text-ink uppercase text-3xl">Events</h1>
+            <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">Events</h1>
             <button className={btnPrimary} onClick={openAddEvent}>+ New Event</button>
           </div>
-          <p className="text-charcoal mb-9">Tournaments, seminars, and internal events.</p>
+          <p className="text-[#5B6B82] mb-8">Tournaments, seminars, and internal events.</p>
 
-          {error && <p className="text-brand-red mb-4">{error}</p>}
+          {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
           {showEventForm && (
-            <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[480px]">
-              <h3 className="font-semibold text-base text-ink mb-4">{eventForm.id ? 'Edit Event' : 'New Event'}</h3>
+            <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[480px]">
+              <h3 className="font-semibold text-base text-pay-navy mb-4">{eventForm.id ? 'Edit Event' : 'New Event'}</h3>
               <form onSubmit={handleEventSubmit} className="flex flex-col gap-3">
                 <input
                   type="text" placeholder="Event title" required
@@ -223,10 +220,10 @@ export default function Events() {
               {events.map((ev) => (
                 <div
                   key={ev.id}
-                  className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 cursor-pointer"
+                  className="bg-white rounded-2xl shadow-card p-6 cursor-pointer"
                   onClick={() => setSelectedEvent(ev)}
                 >
-                  <h3 className="font-semibold text-base text-ink mb-1.5">{ev.title}</h3>
+                  <h3 className="font-semibold text-base text-pay-navy mb-1.5">{ev.title}</h3>
                   <p className="text-sm text-charcoal capitalize">{ev.event_type}</p>
                   <p className="text-[0.85rem] mt-1.5">{ev.event_date} {ev.location ? `· ${ev.location}` : ''}</p>
                   <div className="mt-3">
@@ -248,18 +245,18 @@ export default function Events() {
             ← All Events
           </button>
           <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-            <h1 className="font-display text-ink uppercase text-3xl">{selectedEvent.title}</h1>
+            <h1 className="text-2xl md:text-[1.7rem] font-bold text-pay-navy">{selectedEvent.title}</h1>
             <button className={btnPrimary} onClick={() => setShowRegForm(true)}>+ Register Student</button>
           </div>
           <p className="text-charcoal mb-9 capitalize">
             {selectedEvent.event_type} · {selectedEvent.event_date} {selectedEvent.location ? `· ${selectedEvent.location}` : ''}
           </p>
 
-          {error && <p className="text-brand-red mb-4">{error}</p>}
+          {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
           {showRegForm && (
-            <div className="bg-white border border-black/10 border-t-[3px] border-t-brand-red p-6 mb-7 max-w-[420px]">
-              <h3 className="font-semibold text-base text-ink mb-4">Register Student</h3>
+            <div className="bg-white rounded-2xl shadow-card p-6 mb-7 max-w-[420px]">
+              <h3 className="font-semibold text-base text-pay-navy mb-4">Register Student</h3>
               <form onSubmit={handleRegSubmit} className="flex flex-col gap-3">
                 <select
                   required
@@ -291,10 +288,10 @@ export default function Events() {
               {registrations.map((r) => (
                 <div
                   key={r.id}
-                  className="bg-white border border-black/10 p-6"
-                  style={{ borderTopWidth: 3, borderTopColor: r.medal ? MEDAL_COLOR[r.medal] : '#ccc' }}
+                  className="bg-white rounded-2xl shadow-card p-6"
+                  style={{ borderLeftWidth: 4, borderLeftColor: r.medal ? MEDAL_COLOR[r.medal] : '#ccc' }}
                 >
-                  <h3 className="font-semibold text-base text-ink mb-1.5">{r.students?.full_name}</h3>
+                  <h3 className="font-semibold text-base text-pay-navy mb-1.5">{r.students?.full_name}</h3>
                   <div className="flex gap-2 mt-2.5 flex-wrap">
                     <div className="flex-1 min-w-[120px]">
                       <label className="text-[0.75rem] block mb-1">Result</label>
@@ -302,7 +299,7 @@ export default function Events() {
                         type="text" placeholder="e.g. Semifinal"
                         defaultValue={r.result || ''}
                         onBlur={(e) => updateResult(r, 'result', e.target.value || null)}
-                        className="px-2 py-2 border border-black/10 text-[0.85rem] w-full"
+                        className="px-2 py-2 border border-pay-line rounded-xl text-[0.85rem] w-full"
                       />
                     </div>
                     <div className="flex-1 min-w-[120px]">
@@ -310,7 +307,7 @@ export default function Events() {
                       <select
                         value={r.medal || 'none'}
                         onChange={(e) => updateResult(r, 'medal', e.target.value === 'none' ? null : e.target.value)}
-                        className="px-2 py-2 border border-black/10 text-[0.85rem] w-full capitalize"
+                        className="px-2 py-2 border border-pay-line rounded-xl text-[0.85rem] w-full capitalize"
                       >
                         {MEDALS.map((m) => <option key={m} value={m}>{m === 'none' ? 'No medal' : m}</option>)}
                       </select>
