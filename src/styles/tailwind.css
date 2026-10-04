@@ -205,3 +205,22 @@
 :root[data-theme="dark"] .text-amber-700 { color: #FCD34D; }
 :root[data-theme="dark"] .bg-\[\#FFF6E5\] { background-color: #3A2A10; }
 :root[data-theme="dark"] .text-\[\#6B4300\] { color: #FCD9A0; }
+
+/* ---------- Print / Save as PDF ---------- */
+@media print {
+  :root, :root[data-theme="dark"] {
+    color-scheme: light;
+    --color-surface: #fff; --color-heading: #002E6E; --color-body: #333; --color-muted: #444; --color-subtle: #555;
+    --color-ink: #111; --color-charcoal: #333; --color-pay-bg: #fff; --color-pay-line: #ccc;
+    --status-ok: #047857; --status-bad: #DC2626; --status-warn: #B45309; --status-info: #0079C1;
+  }
+  body, .paytm { background: #fff !important; }
+  aside, nav, header, .no-print, button, form { display: none !important; }
+  main { padding-top: 0 !important; }
+  .shadow-card { box-shadow: none !important; border: 1px solid #ccc; }
+  .pay-stat { background: #fff !important; color: #002E6E !important; border: 1px solid #ccc; }
+  .pay-stat * { color: #002E6E !important; }
+  .print-only { display: block !important; }
+  a { text-decoration: none; }
+}
+.print-only { display: none; }

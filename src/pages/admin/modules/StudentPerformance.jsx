@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
+import { useListTools, exportCsv, byText, byDateDesc, opts } from '../../../lib/listTools'
+import ListToolbar from '../../../components/ListToolbar'
 
 const CATEGORIES = ['Sparring', 'Poomsae', 'Fitness', 'Discipline', 'Technique', 'Other']
 const RATINGS = ['Excellent', 'Good', 'Satisfactory', 'Needs Improvement']
@@ -112,6 +114,24 @@ export default function StudentPerformance() {
     ? records.filter((r) => r.student_id === studentFilter)
     : records
 
+
+  const list = useListTools(filtered, {
+    search: (r) => [r.students?.full_name, r.category, r.rating, r.remarks],
+    filters: { category: (r) => r.category, rating: (r) => r.rating },
+    sorts: { newest: byDateDesc((r) => r.recorded_on), student: byText((r) => r.students?.full_name) },
+    defaultSort: 'newest',
+  })
+
+  function handleExport() {
+    exportCsv('student-performance', list.result, [
+      { label: 'Date', value: (r) => r.recorded_on },
+      { label: 'Student', value: (r) => r.students?.full_name },
+      { label: 'Category', value: (r) => r.category },
+      { label: 'Rating', value: (r) => r.rating },
+      { label: 'Remarks', value: (r) => r.remarks },
+    ])
+  }
+
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
@@ -195,13 +215,25 @@ export default function StudentPerformance() {
         </div>
       )}
 
+      <ListToolbar
+        list={list}
+        placeholder="Search student, remarks…"
+        printTitle="Student Performance"
+        onExport={handleExport}
+        filters={[
+          { key: 'category', label: 'Category', options: opts(CATEGORIES) },
+          { key: 'rating', label: 'Rating', options: opts(RATINGS) },
+        ]}
+        sorts={[{ key: 'newest', label: 'Newest first' }, { key: 'student', label: 'Student A–Z' }]}
+      />
+
       {loading ? (
         <p>Loading…</p>
-      ) : filtered.length === 0 ? (
-        <p className="text-charcoal">No performance records yet.</p>
+      ) : list.result.length === 0 ? (
+        <p className="text-muted">{list.total === 0 ? <>No performance records yet.</> : 'Nothing matches your search or filters.'}</p>
       ) : (
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {filtered.map((r) => (
+          {list.result.map((r) => (
             <div
               key={r.id}
               className="bg-surface rounded-2xl shadow-card p-6"

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
+import { useListTools, exportCsv, byText, opts } from '../../../lib/listTools'
+import ListToolbar from '../../../components/ListToolbar'
 
 const emptyForm = {
   id: null,
@@ -115,6 +117,25 @@ export default function Coaches() {
     }
   }
 
+
+  const list = useListTools(coaches, {
+    search: (c) => [c.full_name, c.phone, c.designation, c.dan_grade, c.training_centers?.name],
+    filters: { status: (c) => (c.active ? 'active' : 'inactive'), center: (c) => c.training_center_id },
+    sorts: { name: byText((c) => c.full_name), center: byText((c) => c.training_centers?.name) },
+    defaultSort: 'name',
+  })
+
+  function handleExport() {
+    exportCsv('coaches', list.result, [
+      { label: 'Name', value: (c) => c.full_name },
+      { label: 'Designation', value: (c) => c.designation },
+      { label: 'Dan grade', value: (c) => c.dan_grade },
+      { label: 'Phone', value: (c) => c.phone },
+      { label: 'Training center', value: (c) => c.training_centers?.name },
+      { label: 'Status', value: (c) => (c.active ? 'Active' : 'Inactive') },
+    ])
+  }
+
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
@@ -201,13 +222,25 @@ export default function Coaches() {
         </div>
       )}
 
+      <ListToolbar
+        list={list}
+        placeholder="Search name, phone, designation…"
+        printTitle="Coaches"
+        onExport={handleExport}
+        filters={[
+          { key: 'status', label: 'Status', options: opts(['active', 'inactive']) },
+          { key: 'center', label: 'Center', options: centers.map((c) => ({ value: c.id, label: c.name })) },
+        ]}
+        sorts={[{ key: 'name', label: 'Name A–Z' }, { key: 'center', label: 'Center' }]}
+      />
+
       {loading ? (
         <p>Loading…</p>
-      ) : coaches.length === 0 ? (
-        <p className="text-charcoal">No coaches yet. Add your first one above.</p>
+      ) : list.result.length === 0 ? (
+        <p className="text-muted">{list.total === 0 ? <>No coaches yet. Add your first one above.</> : 'Nothing matches your search or filters.'}</p>
       ) : (
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {coaches.map((c) => (
+          {list.result.map((c) => (
             <div
               key={c.id}
               className="bg-surface rounded-2xl shadow-card p-6"

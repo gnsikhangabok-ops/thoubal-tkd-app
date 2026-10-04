@@ -2,23 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
-
-const BELT_RANKS = [
-  'white', 'yellow', 'green', 'blue', 'red',
-  'black_1', 'black_2', 'black_3', 'black_4_plus',
-]
-
-const BELT_LABELS = {
-  white: 'White Belt',
-  yellow: 'Yellow Belt',
-  green: 'Green Belt',
-  blue: 'Blue Belt',
-  red: 'Red Belt',
-  black_1: 'Black Belt 1st Dan',
-  black_2: 'Black Belt 2nd Dan',
-  black_3: 'Black Belt 3rd Dan',
-  black_4_plus: 'Black Belt 4th Dan+',
-}
+import { BELT_RANKS, BELT_LABELS, beltLabel } from '../../../lib/belts'
+import { useListTools, exportCsv, byText, byDateDesc, opts } from '../../../lib/listTools'
+import ListToolbar from '../../../components/ListToolbar'
 
 const emptyForm = {
   id: null,
@@ -47,7 +33,6 @@ export default function Students() {
   const [form, setForm] = useState(emptyForm)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [search, setSearch] = useState('')
 
   useEffect(() => {
     loadData()
@@ -158,9 +143,38 @@ export default function Students() {
     ? batches.filter((b) => b.training_center_id === form.training_center_id)
     : batches
 
-  const filteredStudents = students.filter((s) =>
-    s.full_name.toLowerCase().includes(search.toLowerCase())
-  )
+  const list = useListTools(students, {
+    search: (s) => [s.full_name, s.guardian_name, s.guardian_phone, s.training_centers?.name, s.batches?.name],
+    filters: {
+      status: (s) => (s.active ? 'active' : 'inactive'),
+      belt: (s) => s.current_belt,
+      center: (s) => s.training_center_id,
+      rules: (s) => (s.rules_acknowledged ? 'yes' : 'no'),
+    },
+    sorts: {
+      name: byText((s) => s.full_name),
+      belt: (a, b) => BELT_RANKS.indexOf(b.current_belt) - BELT_RANKS.indexOf(a.current_belt),
+      newest: byDateDesc((s) => s.created_at),
+    },
+    defaultSort: 'name',
+  })
+  const filteredStudents = list.result
+
+  function handleExport() {
+    exportCsv('students', filteredStudents, [
+      { label: 'Name', value: (s) => s.full_name },
+      { label: 'Date of birth', value: (s) => s.dob },
+      { label: 'Gender', value: (s) => s.gender },
+      { label: 'Belt', value: (s) => beltLabel(s.current_belt) },
+      { label: 'Training center', value: (s) => s.training_centers?.name },
+      { label: 'Batch', value: (s) => s.batches?.name },
+      { label: 'Guardian', value: (s) => s.guardian_name },
+      { label: 'Guardian phone', value: (s) => s.guardian_phone },
+      { label: 'Address', value: (s) => s.address },
+      { label: 'Rules acknowledged', value: (s) => (s.rules_acknowledged ? 'Yes' : 'No') },
+      { label: 'Status', value: (s) => (s.active ? 'Active' : 'Inactive') },
+    ])
+  }
 
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
@@ -306,19 +320,29 @@ export default function Students() {
       )}
 
       {!showForm && (
-        <input
-          type="text"
-          placeholder="Search by name…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className={`${inputCls} mb-5 w-full max-w-[320px]`}
+        <ListToolbar
+          list={list}
+          placeholder="Search name, guardian, phone, center…"
+          printTitle="Students"
+          onExport={handleExport}
+          filters={[
+            { key: 'status', label: 'Status', options: opts(['active', 'inactive']) },
+            { key: 'center', label: 'Center', options: centers.map((c) => ({ value: c.id, label: c.name })) },
+            { key: 'belt', label: 'Belt', options: opts(BELT_RANKS, BELT_LABELS) },
+            { key: 'rules', label: 'Rules acknowledged', options: opts(['yes', 'no']) },
+          ]}
+          sorts={[
+            { key: 'name', label: 'Name A–Z' },
+            { key: 'belt', label: 'Highest belt' },
+            { key: 'newest', label: 'Newest first' },
+          ]}
         />
       )}
 
       {loading ? (
         <p>Loading…</p>
       ) : filteredStudents.length === 0 ? (
-        <p className="text-charcoal">No students found.</p>
+        <p className="text-muted">No students match your search or filters.</p>
       ) : (
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
           {filteredStudents.map((s) => (
@@ -333,7 +357,7 @@ export default function Students() {
                 {s.training_centers?.name || 'No center'} {s.batches?.name ? `· ${s.batches.name}` : ''}
               </p>
               {s.guardian_phone && <p className="text-[0.85rem]">{s.guardian_phone}</p>}
-              <p className="text-[0.8rem] mt-1.5" style={{ color: s.rules_acknowledged ? '#5B6B82' : 'var(--status-bad)' }}>
+              <p className="text-[0.8rem] mt-1.5" style={{ color: s.rules_acknowledged ? 'var(--color-muted)' : 'var(--status-bad)' }}>
                 {s.rules_acknowledged ? '✓ Rules acknowledged' : '⚠ Rules not acknowledged'}
               </p>
               <p className="text-[0.8rem] mt-1" style={{ color: s.active ? 'var(--status-ok)' : '#999' }}>

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 import { Link2 } from 'lucide-react'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
+import { useListTools, exportCsv, byDateDesc, byNumberDesc, opts } from '../../../lib/listTools'
+import ListToolbar from '../../../components/ListToolbar'
 
 const INCOME_CATEGORIES = ['student_fee', 'donation', 'sponsorship', 'other']
 const EXPENSE_CATEGORIES = ['salary', 'equipment', 'rent', 'event', 'maintenance', 'other']
@@ -36,8 +38,6 @@ export default function Accounts() {
   const [form, setForm] = useState(emptyForm)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [typeFilter, setTypeFilter] = useState('')
-  const [sourceFilter, setSourceFilter] = useState('') // '', 'auto', 'manual'
 
   useEffect(() => {
     loadData()
@@ -104,11 +104,36 @@ export default function Accounts() {
     else loadData()
   }
 
-  let filtered = typeFilter ? transactions.filter((t) => t.type === typeFilter) : transactions
-  if (sourceFilter === 'auto') filtered = filtered.filter((t) => t.related_student_id)
-  if (sourceFilter === 'manual') filtered = filtered.filter((t) => !t.related_student_id)
 
   const categoryOptions = form.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
+
+
+  const list = useListTools(transactions, {
+    search: (t) => [t.description, t.category, t.students?.full_name, t.training_centers?.name],
+    filters: {
+      type: (t) => t.type,
+      source: (t) => (t.related_student_id ? 'auto' : 'manual'),
+      category: (t) => t.category,
+    },
+    sorts: {
+      newest: byDateDesc((t) => t.transaction_date),
+      amount: byNumberDesc((t) => t.amount),
+    },
+    defaultSort: 'newest',
+  })
+
+  function handleExport() {
+    exportCsv('accounts', list.result, [
+      { label: 'Date', value: (t) => t.transaction_date },
+      { label: 'Type', value: (t) => t.type },
+      { label: 'Category', value: (t) => CATEGORY_LABELS[t.category] || t.category },
+      { label: 'Amount (INR)', value: (t) => t.amount },
+      { label: 'Description', value: (t) => t.description },
+      { label: 'Student', value: (t) => t.students?.full_name },
+      { label: 'Training center', value: (t) => t.training_centers?.name },
+      { label: 'Source', value: (t) => (t.related_student_id ? 'Auto (fees)' : 'Manual') },
+    ])
+  }
 
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
@@ -144,27 +169,7 @@ export default function Accounts() {
         </div>
       </div>
 
-      <div className="my-6 flex gap-3 flex-wrap">
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className={inputCls}
-        >
-          <option value="">All transactions</option>
-          <option value="income">Income only</option>
-          <option value="expense">Expenses only</option>
-        </select>
-        <select
-          value={sourceFilter}
-          onChange={(e) => setSourceFilter(e.target.value)}
-          className={inputCls}
-        >
-          <option value="">All sources</option>
-          <option value="auto">Auto-posted from fees</option>
-          <option value="manual">Manually entered</option>
-        </select>
-      </div>
-
+      <div className="mt-6" />
       {showForm && (
         <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[460px]">
           <h3 className="font-semibold text-base text-heading mb-4 capitalize">Add {form.type}</h3>
@@ -219,13 +224,26 @@ export default function Accounts() {
         </div>
       )}
 
+      <ListToolbar
+        list={list}
+        placeholder="Search description, category, student…"
+        printTitle="Accounts"
+        onExport={handleExport}
+        filters={[
+          { key: 'type', label: 'Type', options: opts(['income', 'expense']) },
+          { key: 'source', label: 'Source', options: opts(['auto', 'manual'], { auto: 'Auto-posted from fees', manual: 'Manual entry' }) },
+          { key: 'category', label: 'Category', options: opts([...new Set([...INCOME_CATEGORIES, ...EXPENSE_CATEGORIES])], CATEGORY_LABELS) },
+        ]}
+        sorts={[{ key: 'newest', label: 'Newest first' }, { key: 'amount', label: 'Highest amount' }]}
+      />
+
       {loading ? (
         <p>Loading…</p>
-      ) : filtered.length === 0 ? (
-        <p className="text-charcoal">No transactions recorded yet.</p>
+      ) : list.result.length === 0 ? (
+        <p className="text-muted">{list.total === 0 ? <>No transactions recorded yet.</> : 'Nothing matches your search or filters.'}</p>
       ) : (
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {filtered.map((tx) => {
+          {list.result.map((tx) => {
             const isAuto = !!tx.related_student_id
             return (
               <div

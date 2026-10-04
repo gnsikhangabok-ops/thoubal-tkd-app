@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
+import { useListTools, exportCsv, byText, byNumberDesc, opts } from '../../../lib/listTools'
+import ListToolbar from '../../../components/ListToolbar'
 
 const CATEGORIES = ['uniform', 'gear', 'belt', 'other']
 
@@ -160,6 +162,28 @@ export default function EquipmentRecord() {
     else setIssuedHistory(data)
   }
 
+
+  const list = useListTools(items, {
+    search: (i) => [i.name, i.category, i.training_centers?.name],
+    filters: {
+      category: (i) => i.category,
+      stock: (i) => (i.stock_qty > 0 ? 'in_stock' : 'out_of_stock'),
+      center: (i) => i.training_center_id,
+    },
+    sorts: { name: byText((i) => i.name), stock: (a, b) => (a.stock_qty ?? 0) - (b.stock_qty ?? 0), price: byNumberDesc((i) => i.unit_price) },
+    defaultSort: 'name',
+  })
+
+  function handleExport() {
+    exportCsv('equipment', list.result, [
+      { label: 'Item', value: (i) => i.name },
+      { label: 'Category', value: (i) => i.category },
+      { label: 'Training center', value: (i) => i.training_centers?.name },
+      { label: 'Stock', value: (i) => i.stock_qty },
+      { label: 'Unit price (INR)', value: (i) => i.unit_price },
+    ])
+  }
+
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       {viewingHistory ? (
@@ -300,13 +324,26 @@ export default function EquipmentRecord() {
             </div>
           )}
 
+          <ListToolbar
+            list={list}
+            placeholder="Search item, category, center…"
+            printTitle="Equipment Record"
+            onExport={handleExport}
+            filters={[
+              { key: 'category', label: 'Category', options: opts(CATEGORIES) },
+              { key: 'stock', label: 'Stock', options: opts(['in_stock', 'out_of_stock']) },
+              { key: 'center', label: 'Center', options: centers.map((c) => ({ value: c.id, label: c.name })) },
+            ]}
+            sorts={[{ key: 'name', label: 'Name A–Z' }, { key: 'stock', label: 'Lowest stock' }, { key: 'price', label: 'Highest price' }]}
+          />
+
           {loading ? (
             <p>Loading…</p>
-          ) : items.length === 0 ? (
-            <p className="text-charcoal">No inventory items yet. Add your first one above.</p>
+          ) : list.result.length === 0 ? (
+            <p className="text-muted">{list.total === 0 ? <>No inventory items yet. Add your first one above.</> : 'Nothing matches your search or filters.'}</p>
           ) : (
             <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-              {items.map((item) => (
+              {list.result.map((item) => (
                 <div
                   key={item.id}
                   className="bg-surface rounded-2xl shadow-card p-6"

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
+import { useListTools, exportCsv, byText, opts } from '../../../lib/listTools'
+import ListToolbar from '../../../components/ListToolbar'
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
@@ -138,6 +140,32 @@ export default function Batches() {
     ? coaches.filter((c) => c.training_center_id === form.training_center_id)
     : coaches
 
+
+  const list = useListTools(batches, {
+    search: (b) => [b.name, b.age_group, b.training_centers?.name, b.coaches?.full_name],
+    filters: {
+      status: (b) => (b.active ? 'active' : 'inactive'),
+      center: (b) => b.training_center_id,
+      day: { match: (b, day) => Boolean(b.schedule_days?.includes(day)) },
+    },
+    sorts: { name: byText((b) => b.name), time: byText((b) => b.start_time), center: byText((b) => b.training_centers?.name) },
+    defaultSort: 'name',
+  })
+
+  function handleExport() {
+    exportCsv('batches', list.result, [
+      { label: 'Batch', value: (b) => b.name },
+      { label: 'Training center', value: (b) => b.training_centers?.name },
+      { label: 'Coach', value: (b) => b.coaches?.full_name },
+      { label: 'Age group', value: (b) => b.age_group },
+      { label: 'Days', value: (b) => b.schedule_days?.join(' ') },
+      { label: 'Start', value: (b) => b.start_time?.slice(0, 5) },
+      { label: 'End', value: (b) => b.end_time?.slice(0, 5) },
+      { label: 'Capacity', value: (b) => b.capacity },
+      { label: 'Status', value: (b) => (b.active ? 'Active' : 'Inactive') },
+    ])
+  }
+
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
@@ -262,13 +290,26 @@ export default function Batches() {
         </div>
       )}
 
+      <ListToolbar
+        list={list}
+        placeholder="Search batch, coach, center…"
+        printTitle="Batches"
+        onExport={handleExport}
+        filters={[
+          { key: 'status', label: 'Status', options: opts(['active', 'inactive']) },
+          { key: 'center', label: 'Center', options: centers.map((c) => ({ value: c.id, label: c.name })) },
+          { key: 'day', label: 'Training day', options: opts(DAYS) },
+        ]}
+        sorts={[{ key: 'name', label: 'Name A–Z' }, { key: 'time', label: 'Start time' }, { key: 'center', label: 'Center' }]}
+      />
+
       {loading ? (
         <p>Loading…</p>
-      ) : batches.length === 0 ? (
-        <p className="text-charcoal">No batches yet. Add your first one above.</p>
+      ) : list.result.length === 0 ? (
+        <p className="text-muted">{list.total === 0 ? <>No batches yet. Add your first one above.</> : 'Nothing matches your search or filters.'}</p>
       ) : (
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {batches.map((b) => (
+          {list.result.map((b) => (
             <div
               key={b.id}
               className="bg-surface rounded-2xl shadow-card p-6"

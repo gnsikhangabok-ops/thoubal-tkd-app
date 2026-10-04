@@ -6,12 +6,7 @@ import ThemeToggle from '../../components/ThemeToggle'
 import {
   LayoutGrid, CalendarCheck, Wallet, Award, FileBadge, Bell, Trophy, LogOut,
 } from 'lucide-react'
-
-const BELT_LABELS = {
-  white: 'White Belt', yellow: 'Yellow Belt', green: 'Green Belt',
-  blue: 'Blue Belt', red: 'Red Belt', black_1: 'Black Belt 1st Dan',
-  black_2: 'Black Belt 2nd Dan', black_3: 'Black Belt 3rd Dan', black_4_plus: 'Black Belt 4th Dan+',
-}
+import { BELT_LABELS } from '../../lib/belts'
 
 const TABS = [
   { key: 'Overview', icon: LayoutGrid },

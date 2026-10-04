@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
+import { useListTools, exportCsv, byText, opts } from '../../../lib/listTools'
+import ListToolbar from '../../../components/ListToolbar'
 
 function currentMonthFirst() {
   const d = new Date()
@@ -193,6 +195,31 @@ export default function FeeManagement() {
 
   const statusColor = { paid: 'var(--status-ok)', pending: 'var(--status-warn)', overdue: 'var(--status-bad)', waived: '#999' }
 
+
+  const list = useListTools(payments, {
+    search: (p) => [p.students?.full_name, p.receipt_no, p.payment_method],
+    filters: { status: (p) => p.status },
+    sorts: {
+      name: byText((p) => p.students?.full_name),
+      due: (a, b) => ((b.amount_due || 0) - (b.amount_paid || 0)) - ((a.amount_due || 0) - (a.amount_paid || 0)),
+    },
+    defaultSort: 'name',
+  })
+
+  function handleExport() {
+    exportCsv(`fees-${monthFilter.slice(0, 7)}`, list.result, [
+      { label: 'Month', value: () => formatMonth(monthFilter) },
+      { label: 'Student', value: (p) => p.students?.full_name },
+      { label: 'Amount due (INR)', value: (p) => p.amount_due },
+      { label: 'Amount paid (INR)', value: (p) => p.amount_paid || 0 },
+      { label: 'Balance (INR)', value: (p) => (p.amount_due || 0) - (p.amount_paid || 0) },
+      { label: 'Status', value: (p) => p.status },
+      { label: 'Payment method', value: (p) => p.payment_method },
+      { label: 'Receipt no.', value: (p) => p.receipt_no },
+      { label: 'Paid on', value: (p) => p.paid_on },
+    ])
+  }
+
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
@@ -334,13 +361,22 @@ export default function FeeManagement() {
         </div>
       )}
 
+      <ListToolbar
+        list={list}
+        placeholder="Search student or receipt no.…"
+        printTitle={`Fees — ${formatMonth(monthFilter)}`}
+        onExport={handleExport}
+        filters={[{ key: 'status', label: 'Status', options: opts(['paid', 'pending', 'overdue', 'waived']) }]}
+        sorts={[{ key: 'name', label: 'Student A–Z' }, { key: 'due', label: 'Highest balance' }]}
+      />
+
       {loading ? (
         <p>Loading…</p>
-      ) : payments.length === 0 ? (
+      ) : list.result.length === 0 ? (
         <p className="text-charcoal">No fee records for {formatMonth(monthFilter)} yet. Generate them above.</p>
       ) : (
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {payments.map((p) => (
+          {list.result.map((p) => (
             <div
               key={p.id}
               className="bg-surface rounded-2xl shadow-card p-6"

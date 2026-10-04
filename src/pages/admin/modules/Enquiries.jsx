@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
-import { inputCls } from '../../../lib/adminUi'
+import { useListTools, exportCsv, byText, byDateDesc, opts } from '../../../lib/listTools'
+import ListToolbar from '../../../components/ListToolbar'
 
 const STATUSES = ['new', 'contacted', 'enrolled', 'closed']
 const STATUS_COLOR = {
@@ -12,7 +13,6 @@ export default function Enquiries() {
   const [enquiries, setEnquiries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
 
   async function loadEnquiries() {
     const { data, error } = await supabase
@@ -40,8 +40,28 @@ export default function Enquiries() {
     else loadEnquiries()
   }
 
-  const filtered = statusFilter ? enquiries.filter((e) => e.status === statusFilter) : enquiries
   const newCount = enquiries.filter((e) => e.status === 'new').length
+
+
+  const list = useListTools(enquiries, {
+    search: (e) => [e.child_name, e.guardian_phone, e.program_interested, e.message],
+    filters: { status: (e) => e.status, program: (e) => e.program_interested },
+    sorts: { newest: byDateDesc((e) => e.created_at), name: byText((e) => e.child_name) },
+    defaultSort: 'newest',
+  })
+  const programs = [...new Set(enquiries.map((e) => e.program_interested).filter(Boolean))]
+
+  function handleExport() {
+    exportCsv('enquiries', list.result, [
+      { label: 'Received', value: (e) => e.created_at?.slice(0, 10) },
+      { label: 'Name', value: (e) => e.child_name },
+      { label: 'Age', value: (e) => e.age },
+      { label: 'Guardian phone', value: (e) => e.guardian_phone },
+      { label: 'Program', value: (e) => e.program_interested },
+      { label: 'Status', value: (e) => e.status },
+      { label: 'Message', value: (e) => e.message },
+    ])
+  }
 
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
@@ -61,26 +81,26 @@ export default function Enquiries() {
         </div>
       </div>
 
-      <div className="my-6">
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className={inputCls}
-        >
-          <option value="">All statuses</option>
-          {STATUSES.map((s) => (
-            <option key={s} value={s} className="capitalize">{s}</option>
-          ))}
-        </select>
-      </div>
+      <div className="mt-6" />
+      <ListToolbar
+        list={list}
+        placeholder="Search name, phone, program…"
+        printTitle="Enquiries"
+        onExport={handleExport}
+        filters={[
+          { key: 'status', label: 'Status', options: opts(STATUSES) },
+          { key: 'program', label: 'Program', options: programs.map((p) => ({ value: p, label: p })) },
+        ]}
+        sorts={[{ key: 'newest', label: 'Newest first' }, { key: 'name', label: 'Name A–Z' }]}
+      />
 
       {loading ? (
         <p>Loading…</p>
-      ) : filtered.length === 0 ? (
-        <p className="text-charcoal">No enquiries yet. They'll appear here when someone fills out the enrollment form on the website.</p>
+      ) : list.result.length === 0 ? (
+        <p className="text-muted">{list.total === 0 ? <>No enquiries yet. They'll appear here when someone fills out the enrollment form on the website.</> : 'Nothing matches your search or filters.'}</p>
       ) : (
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {filtered.map((enq) => (
+          {list.result.map((enq) => (
             <div
               key={enq.id}
               className="bg-surface rounded-2xl shadow-card p-6"

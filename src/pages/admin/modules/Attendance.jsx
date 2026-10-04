@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
 import { btnPrimary, btnOutline } from '../../../lib/adminUi'
+import { useListTools, exportCsv, byText, opts } from '../../../lib/listTools'
+import ListToolbar from '../../../components/ListToolbar'
 
 function today() {
   return new Date().toISOString().slice(0, 10)
@@ -142,6 +144,23 @@ export default function Attendance() {
   }
 
   const presentCount = Object.values(attendance).filter((s) => s === 'present').length
+  const batchName = batches.find((b) => b.id === selectedBatch)?.name || 'batch'
+
+  const list = useListTools(students, {
+    search: (s) => [s.full_name],
+    filters: { status: (s) => attendance[s.id] || 'unmarked' },
+    sorts: { name: byText((s) => s.full_name) },
+    defaultSort: 'name',
+  })
+
+  function handleExport() {
+    exportCsv(`attendance-${batchName.replace(/\s+/g, '-').toLowerCase()}-${sessionDate}`, list.result, [
+      { label: 'Date', value: () => sessionDate },
+      { label: 'Batch', value: () => batchName },
+      { label: 'Student', value: (s) => s.full_name },
+      { label: 'Status', value: (s) => attendance[s.id] || 'unmarked' },
+    ])
+  }
 
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
@@ -196,8 +215,16 @@ export default function Attendance() {
             <button className={`${btnOutline} text-[0.8rem]`} onClick={() => markAll('absent')}>Mark all Absent</button>
           </div>
 
+          <ListToolbar
+            list={list}
+            placeholder="Find a student…"
+            printTitle={`Attendance — ${batchName} — ${sessionDate}`}
+            onExport={handleExport}
+            filters={[{ key: 'status', label: 'Marked as', options: opts([...STATUS_OPTIONS, 'unmarked']) }]}
+          />
+
           <div className="grid gap-4 mb-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-            {students.map((s) => (
+            {list.result.map((s) => (
               <div
                 key={s.id}
                 className="bg-surface rounded-2xl shadow-card p-6"

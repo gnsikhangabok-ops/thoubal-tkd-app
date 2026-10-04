@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
+import { useListTools, exportCsv, byText, byDateDesc, opts } from '../../../lib/listTools'
+import ListToolbar from '../../../components/ListToolbar'
 
 const EVENT_TYPES = ['tournament', 'grading', 'seminar', 'internal']
 const MEDALS = ['gold', 'silver', 'bronze', 'none']
@@ -144,6 +146,27 @@ export default function Events() {
   const registeredIds = new Set(registrations.map((r) => r.student_id))
   const availableStudents = students.filter((s) => !registeredIds.has(s.id))
 
+
+  const list = useListTools(events, {
+    search: (e) => [e.title, e.location, e.event_type, e.description],
+    filters: {
+      type: (e) => e.event_type,
+      when: (e) => (e.event_date >= new Date().toISOString().slice(0, 10) ? 'upcoming' : 'past'),
+    },
+    sorts: { newest: byDateDesc((e) => e.event_date), title: byText((e) => e.title) },
+    defaultSort: 'newest',
+  })
+
+  function handleExport() {
+    exportCsv('events', list.result, [
+      { label: 'Date', value: (e) => e.event_date },
+      { label: 'Title', value: (e) => e.title },
+      { label: 'Type', value: (e) => e.event_type },
+      { label: 'Location', value: (e) => e.location },
+      { label: 'Registration deadline', value: (e) => e.registration_deadline },
+    ])
+  }
+
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
       {!selectedEvent ? (
@@ -211,13 +234,25 @@ export default function Events() {
             </div>
           )}
 
+          <ListToolbar
+            list={list}
+            placeholder="Search event, location…"
+            printTitle="Events"
+            onExport={handleExport}
+            filters={[
+              { key: 'type', label: 'Type', options: opts(EVENT_TYPES) },
+              { key: 'when', label: 'When', options: opts(['upcoming', 'past']) },
+            ]}
+            sorts={[{ key: 'newest', label: 'Latest date first' }, { key: 'title', label: 'Title A–Z' }]}
+          />
+
           {loading ? (
             <p>Loading…</p>
-          ) : events.length === 0 ? (
-            <p className="text-charcoal">No events yet. Create one above.</p>
+          ) : list.result.length === 0 ? (
+            <p className="text-muted">{list.total === 0 ? <>No events yet. Create one above.</> : 'Nothing matches your search or filters.'}</p>
           ) : (
             <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-              {events.map((ev) => (
+              {list.result.map((ev) => (
                 <div
                   key={ev.id}
                   className="bg-surface rounded-2xl shadow-card p-6 cursor-pointer"

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
+import { useListTools, exportCsv, byText, byDateDesc, opts } from '../../../lib/listTools'
+import ListToolbar from '../../../components/ListToolbar'
 
 const LEVELS = ['district', 'state', 'national', 'international']
 const MEDALS = ['gold', 'silver', 'bronze', 'none']
@@ -26,7 +28,6 @@ export default function Achievements() {
   const [form, setForm] = useState(emptyForm)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [levelFilter, setLevelFilter] = useState('')
 
   useEffect(() => {
     loadData()
@@ -109,9 +110,25 @@ export default function Achievements() {
     else loadData()
   }
 
-  const filtered = levelFilter
-    ? achievements.filter((a) => a.level === levelFilter)
-    : achievements
+
+
+  const list = useListTools(achievements, {
+    search: (a) => [a.title, a.description, a.students?.full_name],
+    filters: { level: (a) => a.level, medal: (a) => a.medal || 'none' },
+    sorts: { newest: byDateDesc((a) => a.achievement_date), title: byText((a) => a.title) },
+    defaultSort: 'newest',
+  })
+
+  function handleExport() {
+    exportCsv('achievements', list.result, [
+      { label: 'Date', value: (a) => a.achievement_date },
+      { label: 'Title', value: (a) => a.title },
+      { label: 'Athlete', value: (a) => a.students?.full_name },
+      { label: 'Level', value: (a) => a.level },
+      { label: 'Medal', value: (a) => a.medal },
+      { label: 'Description', value: (a) => a.description },
+    ])
+  }
 
   return (
     <div className="p-8 max-md:p-4 max-w-[1100px] mx-auto">
@@ -122,17 +139,6 @@ export default function Achievements() {
       <p className="text-muted mb-8">Medals and award highlights — shown publicly on the website.</p>
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
-
-      <div className="mb-6">
-        <select
-          value={levelFilter}
-          onChange={(e) => setLevelFilter(e.target.value)}
-          className={inputCls}
-        >
-          <option value="">All levels</option>
-          {LEVELS.map((l) => <option key={l} value={l} className="capitalize">{l}</option>)}
-        </select>
-      </div>
 
       {showForm && (
         <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[520px]">
@@ -206,13 +212,25 @@ export default function Achievements() {
         </div>
       )}
 
+      <ListToolbar
+        list={list}
+        placeholder="Search title, athlete…"
+        printTitle="Achievements"
+        onExport={handleExport}
+        filters={[
+          { key: 'level', label: 'Level', options: opts(LEVELS) },
+          { key: 'medal', label: 'Medal', options: opts(MEDALS, { none: 'No medal' }) },
+        ]}
+        sorts={[{ key: 'newest', label: 'Newest first' }, { key: 'title', label: 'Title A–Z' }]}
+      />
+
       {loading ? (
         <p>Loading…</p>
-      ) : filtered.length === 0 ? (
-        <p className="text-charcoal">No achievements recorded yet.</p>
+      ) : list.result.length === 0 ? (
+        <p className="text-muted">{list.total === 0 ? <>No achievements recorded yet.</> : 'Nothing matches your search or filters.'}</p>
       ) : (
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {filtered.map((a) => (
+          {list.result.map((a) => (
             <div
               key={a.id}
               className="bg-surface rounded-2xl shadow-card p-6"
