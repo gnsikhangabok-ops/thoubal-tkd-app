@@ -345,7 +345,7 @@ export default function Home() {
         <section id="gallery" className={sectionCls}>
           <div className={container}>
             <SectionHeading kicker="Photo gallery" title="From the dojang and the podium" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3" style={{ gridAutoRows: 140 }}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3" style={{ gridAutoRows: 'minmax(140px, min(18vw, 230px))' }}>
               {hasGalleryImages
                 ? galleryKeys.map((key, i) => {
                     const span = `${i === 0 ? 'col-span-2 row-span-2' : ''} ${i === 5 ? 'col-span-2' : ''}`
@@ -354,7 +354,12 @@ export default function Home() {
                     ) : null
                   })
                 : DEFAULT_GALLERY.map((g) => (
-                    <img key={g.src} src={g.src} alt={g.alt} loading="lazy" className="object-cover w-full h-full rounded-2xl col-span-2 row-span-2" />
+                    <figure key={g.src} className={`relative overflow-hidden rounded-2xl row-span-2 ${g.wide ? 'col-span-2' : 'col-span-1'}`}>
+                      <img src={g.src} alt={g.alt} loading="lazy" className="w-full h-full object-cover" />
+                      <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 pt-8 pb-2.5 text-xs font-semibold text-white">
+                        {g.caption}
+                      </figcaption>
+                    </figure>
                   ))}
             </div>
           </div>

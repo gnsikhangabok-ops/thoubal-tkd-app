@@ -11,7 +11,7 @@ export default function AuthShell({ title, subtitle, children, footer }) {
     <div className="paytm min-h-screen flex flex-col font-body">
       <header className="bg-surface border-b border-pay-line">
         <div className="max-w-[1180px] mx-auto px-4 md:px-7 py-2.5 flex items-center justify-between gap-4">
-          <Brand />
+          <Brand size="lg" />
           <div className="flex items-center gap-1.5 shrink-0">
           <LanguageSwitcher />
           <ThemeToggle />

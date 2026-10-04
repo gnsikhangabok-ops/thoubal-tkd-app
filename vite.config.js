@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { defineConfig } from 'vite'
 
-// Writes asset-manifest.json (every built JS/CSS/font/image file) and sw.js, stamped with a
+// Writes asset-manifest.json (every built JS/CSS/font file and icon) and sw.js, stamped with a
 // build id, so the service worker caches the whole app on install and every deploy refreshes it.
 function serviceWorker() {
   return {
@@ -12,7 +12,9 @@ function serviceWorker() {
     apply: 'build',
     generateBundle(_options, bundle) {
       const files = Object.keys(bundle)
-        .filter((f) => /\.(js|css|woff2|png|jpe?g|svg|webp)$/.test(f))
+        // photos (jpg/webp) are left out: they're cached when viewed, so a first visit on
+        // mobile data doesn't download the whole gallery
+        .filter((f) => /\.(js|css|woff2|png|svg)$/.test(f))
         // only the scripts the app actually uses; skip font files for scripts we never show (e.g. Cyrillic)
         .filter((f) => !f.endsWith('.woff2') || /(latin|devanagari|meetei)/.test(f))
         .map((f) => `/${f}`)

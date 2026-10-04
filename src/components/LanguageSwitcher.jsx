@@ -26,7 +26,7 @@ export default function LanguageSwitcher({ className = '' }) {
         className="inline-flex items-center gap-1 h-9 px-2 rounded-full text-heading hover:bg-pay-bg text-sm font-semibold"
       >
         <Languages size={18} />
-        <span className="min-w-[1.4em]">{currentLang.short}</span>
+        <span className="min-w-[1.4em] max-[399px]:sr-only">{currentLang.short}</span>
       </button>
       {open && (
         <ul role="listbox" aria-label="Choose language" className="absolute right-0 top-full mt-2 z-50 w-44 bg-surface rounded-2xl shadow-card border border-pay-line py-1.5">
