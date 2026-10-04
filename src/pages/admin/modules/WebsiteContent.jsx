@@ -15,6 +15,7 @@ const FIELD_GROUPS = [
   {
     label: 'Hero Section',
     fields: [
+      { key: 'hero_image', label: 'Banner photo (behind the headline)', type: 'image' },
       { key: 'hero_kicker', label: 'Kicker text', type: 'text', placeholder: 'Khangabok, Thoubal · Manipur' },
       { key: 'hero_headline', label: 'Headline', type: 'text', placeholder: 'Discipline earns the black belt.' },
       { key: 'hero_body', label: 'Body text', type: 'textarea', placeholder: 'Thoubal Taekwondo Academy trains students...' },

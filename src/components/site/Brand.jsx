@@ -13,11 +13,11 @@ export default function Brand({ subtitle, size = 'md' }) {
         <span className="font-bold text-heading text-[0.98rem] md:text-lg truncate">
           Thoubal{' '}
           <span className="text-pay-blue">
-            {/* Short form only where the header is tightest: full menu shown but screen < 1536px */}
+            {/* Short form wherever the full desktop menu is shown (the header is capped at 1180px) */}
             {size === 'lg' ? (
               <>
-                <span className="xl:hidden 2xl:inline">Taekwondo</span>
-                <span className="hidden xl:inline 2xl:hidden">TKD</span>
+                <span className="xl:hidden">Taekwondo</span>
+                <span className="hidden xl:inline">TKD</span>
               </>
             ) : 'Taekwondo'}
           </span>{' '}

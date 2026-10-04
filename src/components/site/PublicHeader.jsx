@@ -38,14 +38,15 @@ export default function PublicHeader() {
           <Brand size="lg" />
 
           <nav aria-label="Main" className="hidden xl:flex items-center gap-0.5 shrink-0">
-            {NAV.map((item) => navLink(item, 'rounded-full px-2.5 2xl:px-3 py-2 text-sm font-medium whitespace-nowrap text-body hover:bg-pay-bg hover:text-heading'))}
+            {NAV.map((item) => navLink(item, 'rounded-full px-2.5 py-2 text-sm font-medium whitespace-nowrap text-body hover:bg-pay-bg hover:text-heading'))}
           </nav>
 
-          <div className="hidden md:flex items-center gap-2 shrink-0">
+          <div className="hidden lg:flex items-center gap-2 shrink-0">
             <LanguageSwitcher className="hidden xl:block" />
             <ThemeToggle className="hidden xl:grid" />
-            <Link to="/login" className="inline-flex items-center gap-1.5 rounded-full border border-pay-line px-4 py-2 text-sm font-semibold text-heading hover:bg-pay-bg">
-              <LogIn size={16} /> {t('Login')}
+            {/* icon-only wherever the full desktop menu is shown, to leave room for it */}
+            <Link to="/login" aria-label={t('Login')} className="inline-flex items-center gap-1.5 rounded-full border border-pay-line px-4 xl:px-2.5 py-2 text-sm font-semibold text-heading hover:bg-pay-bg">
+              <LogIn size={16} /> <span className="xl:sr-only">{t('Login')}</span>
             </Link>
             <a href="/#enquiry" className="rounded-full bg-pay-action px-5 py-2 text-sm font-semibold text-white hover:bg-pay-action-dark">
               {t('Enroll Now')}
@@ -69,7 +70,7 @@ export default function PublicHeader() {
         {open && (
           <nav id="public-nav" aria-label="Main" className="xl:hidden border-t border-pay-line px-4 pb-4 pt-2 flex flex-col">
             {NAV.map((item) => navLink(item, 'rounded-xl px-3 py-3 text-[0.95rem] font-medium text-heading hover:bg-pay-bg'))}
-            <div className="md:hidden grid grid-cols-2 gap-2 mt-3">
+            <div className="lg:hidden grid grid-cols-2 gap-2 mt-3">
               <Link to="/login" onClick={() => setOpen(false)} className="text-center rounded-full border border-pay-action px-4 py-2.5 text-sm font-semibold text-pay-action">
                 {t('Login')}
               </Link>
