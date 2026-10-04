@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Bell } from 'lucide-react'
+import { useT } from '../lib/i18n'
 
 /**
  * Bell with an unread badge and a dropdown list.
@@ -8,6 +9,7 @@ import { Bell } from 'lucide-react'
  */
 export default function NotificationBell({ items, unread = 0, onOpen, viewAll, emptyText = 'You’re all caught up', align = 'right' }) {
   const [open, setOpen] = useState(false)
+  const { t } = useT()
   const ref = useRef(null)
 
   useEffect(() => {
@@ -33,7 +35,7 @@ export default function NotificationBell({ items, unread = 0, onOpen, viewAll, e
         type="button"
         onClick={toggle}
         aria-expanded={open}
-        aria-label={unread ? `Notifications, ${unread} new` : 'Notifications'}
+        aria-label={unread ? `${t('Notifications')} (${unread})` : t('Notifications')}
         className="relative grid place-items-center w-9 h-9 rounded-full text-heading hover:bg-pay-bg"
       >
         <Bell size={18} />
@@ -48,9 +50,9 @@ export default function NotificationBell({ items, unread = 0, onOpen, viewAll, e
         <div
           className={`absolute z-50 top-full mt-2 ${align === 'left' ? 'left-0' : 'right-0'} w-[min(21rem,calc(100vw-2rem))] max-sm:fixed max-sm:inset-x-4 max-sm:top-16 max-sm:w-auto bg-surface rounded-2xl shadow-card border border-pay-line overflow-hidden`}
           role="dialog"
-          aria-label="Notifications"
+          aria-label={t('Notifications')}
         >
-          <div className="px-4 py-3 border-b border-pay-line font-bold text-heading text-sm">Notifications</div>
+          <div className="px-4 py-3 border-b border-pay-line font-bold text-heading text-sm">{t('Notifications')}</div>
           {items.length === 0 ? (
             <p className="px-4 py-6 text-sm text-muted text-center">{emptyText}</p>
           ) : (

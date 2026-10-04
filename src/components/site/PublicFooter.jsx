@@ -2,8 +2,10 @@ import { Link } from 'react-router-dom'
 import { MapPin, Phone, Mail } from 'lucide-react'
 import { REGISTRATION_NO, telHref } from '../../lib/siteContent'
 import logo from '../../assets/logo.png'
+import { useT } from '../../lib/i18n'
 
 export default function PublicFooter({ c }) {
+  const { t } = useT()
   const phoneHref = telHref(c('contact_phone'))
   const linkCls = 'block text-sm mb-2.5 text-[#C7D6EA] hover:text-white'
 
@@ -18,26 +20,25 @@ export default function PublicFooter({ c }) {
             <span className="font-bold text-white">Thoubal Taekwondo Academy</span>
           </div>
           <p className="text-sm max-w-[38ch]">
-            Under Thoubal District Taekwondo Association. Regd. No. {REGISTRATION_NO}.
-            Affiliated to AMTA, Taekwondo Federation of India &amp; Asian Taekwondo Union.
+            {t('Under Thoubal District Taekwondo Association. Regd. No. {reg}. Affiliated to AMTA, Taekwondo Federation of India & Asian Taekwondo Union.', { reg: REGISTRATION_NO })}
           </p>
         </div>
         <div>
-          <h2 className="!text-white text-sm font-bold mb-4">Explore</h2>
-          <a href="/#about" className={linkCls}>About the Academy</a>
-          <a href="/#programs" className={linkCls}>Training Programs</a>
-          <a href="/#achievements" className={linkCls}>Achievements</a>
-          <a href="/#gallery" className={linkCls}>Gallery</a>
+          <h2 className="!text-white text-sm font-bold mb-4">{t('Explore')}</h2>
+          <a href="/#about" className={linkCls}>{t('About the Academy')}</a>
+          <a href="/#programs" className={linkCls}>{t('Training Programs')}</a>
+          <a href="/#achievements" className={linkCls}>{t('Achievements')}</a>
+          <a href="/#gallery" className={linkCls}>{t('Gallery')}</a>
         </div>
         <div>
-          <h2 className="!text-white text-sm font-bold mb-4">Services</h2>
-          <a href="/#enquiry" className={linkCls}>Admission Enquiry</a>
-          <Link to="/rules" className={linkCls}>Rules &amp; Regulations</Link>
-          <Link to="/login" className={linkCls}>Student / Parent Login</Link>
-          <Link to="/signup" className={linkCls}>Create an Account</Link>
+          <h2 className="!text-white text-sm font-bold mb-4">{t('Services')}</h2>
+          <a href="/#enquiry" className={linkCls}>{t('Admission Enquiry')}</a>
+          <Link to="/rules" className={linkCls}>{t('Rules & Regulations')}</Link>
+          <Link to="/login" className={linkCls}>{t('Student / Parent Login')}</Link>
+          <Link to="/signup" className={linkCls}>{t('Create an Account')}</Link>
         </div>
         <div>
-          <h2 className="!text-white text-sm font-bold mb-4">Contact Us</h2>
+          <h2 className="!text-white text-sm font-bold mb-4">{t('Contact Us')}</h2>
           <p className="flex gap-2.5 text-sm mb-3"><MapPin size={16} className="shrink-0 mt-0.5 text-pay-blue" />{c('contact_address')}</p>
           <p className="flex gap-2.5 text-sm mb-3">
             <Phone size={16} className="shrink-0 mt-0.5 text-pay-blue" />
@@ -51,8 +52,8 @@ export default function PublicFooter({ c }) {
       </div>
       <div className="border-t border-white/10">
         <div className="max-w-[1180px] mx-auto px-4 md:px-7 py-4 text-xs text-[#8FA6C6] flex justify-between flex-wrap gap-2">
-          <span>© {new Date().getFullYear()} Thoubal Taekwondo Academy. All rights reserved.</span>
-          <span>Made for our students, parents &amp; coaches.</span>
+          <span>{t('© {year} Thoubal Taekwondo Academy. All rights reserved.', { year: new Date().getFullYear() })}</span>
+          <span>{t('Made for our students, parents & coaches.')}</span>
         </div>
       </div>
     </footer>

@@ -6,6 +6,7 @@ import { inputClass } from '../../lib/ui'
 import PublicHeader from '../../components/site/PublicHeader'
 import PublicFooter from '../../components/site/PublicFooter'
 import { Alert } from '../../components/site/FormField'
+import { useT } from '../../lib/i18n'
 import {
   ShieldCheck, Users2, Medal, Sparkles, Target, HeartPulse,
   GraduationCap, Globe2, Trophy, Flag, FileText,
@@ -45,24 +46,27 @@ const MEDAL_COLOR = { gold: '#D4A537', silver: '#A8A8A8', bronze: '#B08D57' }
 const EMPTY_ENQUIRY = { child_name: '', age: '', guardian_phone: '', program_interested: 'Little Dragons (5–8)', message: '' }
 
 function SectionHeading({ kicker, title, light = false }) {
+  const { t } = useT()
   return (
     <div className="mb-8">
-      <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold mb-2.5 ${light ? 'bg-white/15 text-white' : 'bg-pay-sky text-pay-action'}`}>{kicker}</span>
-      <h2 className={`text-2xl md:text-3xl font-bold ${light ? '!text-white' : ''}`}>{title}</h2>
+      <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold mb-2.5 ${light ? 'bg-white/15 text-white' : 'bg-pay-sky text-pay-action'}`}>{t(kicker)}</span>
+      <h2 className={`text-2xl md:text-3xl font-bold ${light ? '!text-white' : ''}`}>{t(title)}</h2>
     </div>
   )
 }
 
 function PhotoPlaceholder({ label, className = '' }) {
+  const { t } = useT()
   return (
     <div className={`bg-gradient-to-br from-pay-sky to-pay-sky-2 rounded-2xl flex items-center justify-center text-subtle text-sm font-medium ${className}`}>
-      {label}
+      {t(label)}
     </div>
   )
 }
 
 export default function Home() {
   const { content, c } = useSiteContent()
+  const { t } = useT()
   const [recentAchievements, setRecentAchievements] = useState([])
   const [enquiryForm, setEnquiryForm] = useState(EMPTY_ENQUIRY)
   const [enquirySubmitting, setEnquirySubmitting] = useState(false)
@@ -117,14 +121,14 @@ export default function Home() {
           <div className="absolute right-40 -bottom-32 w-72 h-72 rounded-full bg-white/10" aria-hidden="true" />
           <div className={`${container} relative pt-12 md:pt-16 pb-28 md:pb-32`}>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white mb-5">
-              <BadgeCheck size={14} /> Registered Academy · Olympic Sport
+              <BadgeCheck size={14} /> {t('Registered Academy · Olympic Sport')}
             </span>
             <p className="text-[#8FE3FF] font-semibold text-sm mb-2">{c('hero_kicker')}</p>
             <h1 className="!text-white font-bold leading-[1.1] max-w-[18ch] text-4xl md:text-6xl">{c('hero_headline')}</h1>
             <p className="text-white/85 text-base md:text-lg max-w-[52ch] my-6">{c('hero_body')}</p>
             <div className="flex gap-3 flex-wrap">
-              <a href="#enquiry" className="rounded-full bg-surface px-6 py-3 text-sm font-bold text-heading shadow-card hover:bg-pay-sky">Enroll Now</a>
-              <a href="#programs" className="rounded-full border border-white/60 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10">View Programs</a>
+              <a href="#enquiry" className="rounded-full bg-surface px-6 py-3 text-sm font-bold text-heading shadow-card hover:bg-pay-sky">{t('Enroll Now')}</a>
+              <a href="#programs" className="rounded-full border border-white/60 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10">{t('View Programs')}</a>
             </div>
           </div>
         </section>
@@ -132,7 +136,7 @@ export default function Home() {
         {/* QUICK SERVICES — overlaps the hero like an app service grid */}
         <div className={`${container} relative -mt-20 md:-mt-24`}>
           <div className="bg-surface rounded-3xl shadow-card p-5 md:p-7">
-            <h2 className="text-base font-bold mb-5">Quick Services</h2>
+            <h2 className="text-base font-bold mb-5">{t('Quick Services')}</h2>
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-y-6 gap-x-2">
               {QUICK_LINKS.map(({ icon: Icon, label, href, to }) => {
                 const cls = 'group flex flex-col items-center text-center gap-2'
@@ -141,7 +145,7 @@ export default function Home() {
                     <span className="grid place-items-center w-14 h-14 rounded-2xl bg-pay-sky text-pay-action group-hover:bg-pay-action group-hover:text-white transition-colors">
                       <Icon size={24} strokeWidth={1.9} />
                     </span>
-                    <span className="text-xs md:text-sm font-medium text-heading leading-tight">{label}</span>
+                    <span className="text-xs md:text-sm font-medium text-heading leading-tight">{t(label)}</span>
                   </>
                 )
                 return to
@@ -157,7 +161,7 @@ export default function Home() {
               <Megaphone size={17} />
             </span>
             <div className="flex-1 overflow-hidden text-sm text-[#6B4300]">
-              <p className="ticker whitespace-nowrap"><strong>Latest update:</strong> {c('announcement')}</p>
+              <p className="ticker whitespace-nowrap"><strong>{t('Latest update:')}</strong> {c('announcement')}</p>
             </div>
           </div>
 
@@ -173,7 +177,7 @@ export default function Home() {
                 <span className="grid place-items-center w-11 h-11 rounded-full bg-pay-sky text-pay-action shrink-0"><Icon size={20} /></span>
                 <div className="min-w-0">
                   <strong className="block text-2xl font-bold text-heading leading-none">{n}</strong>
-                  <span className="text-xs text-muted">{l}</span>
+                  <span className="text-xs text-muted">{t(l)}</span>
                 </div>
               </div>
             ))}
@@ -194,13 +198,13 @@ export default function Home() {
               <p className="mb-6 text-[1.02rem] text-body">{c('about_paragraph_2')}</p>
               <div className="grid sm:grid-cols-2 gap-3 text-sm">
                 {[
-                  ['Governing body', 'Thoubal District Taekwondo Association'],
+                  ['Governing body', t('Thoubal District Taekwondo Association')],
                   ['Affiliations', 'AMTA · TFI · Asian Taekwondo Union'],
-                  ['Disciplines', 'Poomsae, Kyorugi, Self-defense'],
+                  ['Disciplines', t('Poomsae, Kyorugi, Self-defense')],
                   ['Location', c('contact_address')],
                 ].map(([k, v]) => (
                   <div key={k} className="bg-surface rounded-2xl shadow-card px-4 py-3">
-                    <div className="text-xs text-subtle">{k}</div>
+                    <div className="text-xs text-subtle">{t(k)}</div>
                     <div className="font-semibold text-heading mt-0.5">{v}</div>
                   </div>
                 ))}
@@ -217,9 +221,9 @@ export default function Home() {
               {PROGRAMS.map((p, i) => (
                 <div key={p.title} className="snap-start shrink-0 w-[240px] md:w-auto bg-surface rounded-2xl shadow-card p-5 flex flex-col">
                   <span className="grid place-items-center w-11 h-11 rounded-full bg-gradient-to-br from-pay-navy to-pay-blue text-white text-sm font-bold mb-4">{i + 1}</span>
-                  <span className="self-start rounded-full bg-pay-sky text-pay-action text-xs font-semibold px-2.5 py-0.5 mb-2">{p.age}</span>
-                  <h3 className="text-lg font-bold mb-1.5">{p.title}</h3>
-                  <p className="text-sm text-muted">{p.desc}</p>
+                  <span className="self-start rounded-full bg-pay-sky text-pay-action text-xs font-semibold px-2.5 py-0.5 mb-2">{t(p.age)}</span>
+                  <h3 className="text-lg font-bold mb-1.5">{t(p.title)}</h3>
+                  <p className="text-sm text-muted">{t(p.desc)}</p>
                 </div>
               ))}
             </div>
@@ -242,7 +246,7 @@ export default function Home() {
                   ].map((s) => (
                     <div key={s.l} className="rounded-2xl bg-white/10 px-4 py-5">
                       <strong className="block text-3xl md:text-4xl font-bold text-white">{s.n}</strong>
-                      <span className="text-sm text-white/80">{s.l}</span>
+                      <span className="text-sm text-white/80">{t(s.l)}</span>
                     </div>
                   ))}
                 </div>
@@ -251,7 +255,7 @@ export default function Home() {
 
             {recentAchievements.length > 0 && (
               <div className="bg-surface rounded-2xl shadow-card mt-4 p-2 md:p-3">
-                <h3 className="text-base font-bold px-3 pt-2 pb-3">Recent results</h3>
+                <h3 className="text-base font-bold px-3 pt-2 pb-3">{t('Recent results')}</h3>
                 <ul className="divide-y divide-pay-line">
                   {recentAchievements.map((a) => (
                     <li key={a.id} className="flex items-center gap-3 px-3 py-3">
@@ -288,8 +292,8 @@ export default function Home() {
                     <span className={`grid place-items-center w-11 h-11 rounded-full ${f.national ? 'bg-[#FFF6E5] text-[#B45309]' : 'bg-pay-sky text-pay-action'}`}>
                       <Icon size={20} strokeWidth={1.9} />
                     </span>
-                    <h3 className="font-bold text-[0.95rem] leading-snug">{f.title}</h3>
-                    <p className="text-[0.82rem] text-muted leading-relaxed">{f.desc}</p>
+                    <h3 className="font-bold text-[0.95rem] leading-snug">{t(f.title)}</h3>
+                    <p className="text-[0.82rem] text-muted leading-relaxed">{t(f.desc)}</p>
                   </div>
                 )
               })}
@@ -341,57 +345,57 @@ export default function Home() {
           <div className={`${container} grid lg:grid-cols-[1.4fr_1fr] gap-4 md:gap-6`}>
             <div className="bg-surface rounded-3xl shadow-card overflow-hidden">
               <div className="bg-gradient-to-br from-pay-navy via-[#0057A8] to-pay-blue px-6 md:px-8 py-6">
-                <h2 className="!text-white text-xl md:text-2xl font-bold">Admission Enquiry</h2>
-                <p className="text-white/85 text-sm mt-1">Enroll your child, or yourself. Our team will call you back.</p>
+                <h2 className="!text-white text-xl md:text-2xl font-bold">{t('Admission Enquiry')}</h2>
+                <p className="text-white/85 text-sm mt-1">{t('Enroll your child, or yourself. Our team will call you back.')}</p>
               </div>
               <form className="grid sm:grid-cols-2 gap-4 p-6 md:p-8" onSubmit={handleEnquirySubmit}>
                 <label className="flex flex-col gap-1.5 sm:col-span-2">
-                  <span className="text-sm font-semibold text-heading">Student's full name <span className="text-red-600">*</span></span>
+                  <span className="text-sm font-semibold text-heading">{t("Student's full name")} <span className="text-red-600">*</span></span>
                   <input type="text" required value={enquiryForm.child_name} onChange={setField('child_name')} className={inputClass} />
                 </label>
                 <label className="flex flex-col gap-1.5">
-                  <span className="text-sm font-semibold text-heading">Age <span className="text-red-600">*</span></span>
+                  <span className="text-sm font-semibold text-heading">{t('Age')} <span className="text-red-600">*</span></span>
                   <input type="number" min="3" max="99" required value={enquiryForm.age} onChange={setField('age')} className={inputClass} />
                 </label>
                 <label className="flex flex-col gap-1.5">
-                  <span className="text-sm font-semibold text-heading">Parent / guardian phone <span className="text-red-600">*</span></span>
+                  <span className="text-sm font-semibold text-heading">{t('Parent / guardian phone')} <span className="text-red-600">*</span></span>
                   <input type="tel" required value={enquiryForm.guardian_phone} onChange={setField('guardian_phone')} className={inputClass} />
                 </label>
                 <label className="flex flex-col gap-1.5 sm:col-span-2">
-                  <span className="text-sm font-semibold text-heading">Program interested in</span>
+                  <span className="text-sm font-semibold text-heading">{t('Program interested in')}</span>
                   <select value={enquiryForm.program_interested} onChange={setField('program_interested')} className={inputClass}>
-                    <option>Little Dragons (5–8)</option>
-                    <option>Junior Program (9–14)</option>
-                    <option>Senior Program (15+)</option>
-                    <option>Self-Defense &amp; Fitness (Adults)</option>
+                    {/* value stays English: it is what gets saved with the enquiry */}
+                    {['Little Dragons (5–8)', 'Junior Program (9–14)', 'Senior Program (15+)', 'Self-Defense & Fitness (Adults)'].map((o) => (
+                      <option key={o} value={o}>{t(o)}</option>
+                    ))}
                   </select>
                 </label>
                 <label className="flex flex-col gap-1.5 sm:col-span-2">
-                  <span className="text-sm font-semibold text-heading">Message</span>
+                  <span className="text-sm font-semibold text-heading">{t('Message')}</span>
                   <textarea rows="3" value={enquiryForm.message} onChange={setField('message')} className={inputClass} />
                 </label>
                 <div className="sm:col-span-2 flex flex-col gap-3">
-                  {enquiryStatus === 'success' && <Alert tone="success">Thank you! Your enquiry has been received. We'll get back to you soon.</Alert>}
-                  {enquiryStatus === 'error' && <Alert>Something went wrong. Please try again or call the academy.</Alert>}
+                  {enquiryStatus === 'success' && <Alert tone="success">{t("Thank you! Your enquiry has been received. We'll get back to you soon.")}</Alert>}
+                  {enquiryStatus === 'error' && <Alert>{t('Something went wrong. Please try again or call the academy.')}</Alert>}
                   <button
                     type="submit"
                     className="w-full sm:w-auto sm:self-end rounded-full bg-pay-action px-10 py-3 text-sm font-semibold text-white hover:bg-pay-action-dark disabled:opacity-60"
                     disabled={enquirySubmitting}
                   >
-                    {enquirySubmitting ? 'Submitting…' : 'Submit Enquiry'}
+                    {enquirySubmitting ? t('Submitting…') : t('Submit Enquiry')}
                   </button>
                 </div>
               </form>
             </div>
 
             <aside className="bg-surface rounded-3xl shadow-card p-6 self-start">
-              <h2 className="text-lg font-bold mb-4">Contact the academy</h2>
+              <h2 className="text-lg font-bold mb-4">{t('Contact the academy')}</h2>
               <ul className="flex flex-col gap-4 text-sm">
                 {[
                   { icon: MapPin, body: c('contact_address') },
                   { icon: Phone, body: phoneHref ? <a href={phoneHref} className="hover:text-pay-action">{c('contact_phone')}</a> : c('contact_phone') },
                   { icon: Mail, body: <a href={`mailto:${c('contact_email')}`} className="hover:text-pay-action break-all">{c('contact_email')}</a> },
-                  { icon: Clock, body: 'Morning & evening batches. Call us for timings.' },
+                  { icon: Clock, body: t('Morning & evening batches. Call us for timings.') },
                 ].map(({ icon: Icon, body }, i) => (
                   <li key={i} className="flex items-center gap-3">
                     <span className="grid place-items-center w-10 h-10 rounded-full bg-pay-sky text-pay-action shrink-0"><Icon size={18} /></span>
@@ -400,7 +404,7 @@ export default function Home() {
                 ))}
               </ul>
               <Link to="/login" className="mt-6 flex items-center justify-between rounded-2xl bg-pay-bg px-4 py-3 text-sm font-semibold text-heading hover:bg-pay-sky">
-                Already enrolled? Open the student portal
+                {t('Already enrolled? Open the student portal')}
                 <LogIn size={16} className="text-pay-action" />
               </Link>
             </aside>

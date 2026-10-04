@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { inputClass } from '../../lib/ui'
+import { useT } from '../../lib/i18n'
 
 export function TextField({ label, hint, required, ...props }) {
   const id = useId()
@@ -16,6 +17,7 @@ export function TextField({ label, hint, required, ...props }) {
 }
 
 export function PasswordField({ label, required, visible, onToggle, showToggle = true, ...props }) {
+  const { t } = useT()
   const id = useId()
   const [localVisible, setLocalVisible] = useState(false)
   const isVisible = visible ?? localVisible
@@ -39,7 +41,7 @@ export function PasswordField({ label, required, visible, onToggle, showToggle =
             type="button"
             onClick={toggle}
             className="absolute inset-y-0 right-0 px-3 text-subtle hover:text-heading"
-            aria-label={isVisible ? 'Hide password' : 'Show password'}
+            aria-label={isVisible ? t('Hide password') : t('Show password')}
             aria-pressed={isVisible}
           >
             {isVisible ? <EyeOff size={18} /> : <Eye size={18} />}

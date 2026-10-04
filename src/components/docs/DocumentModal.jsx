@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Printer, X } from 'lucide-react'
+import { useT } from '../../lib/i18n'
 
 /**
  * Full-screen preview for a printable document. Printing hides everything except
@@ -15,6 +16,7 @@ const PAGE_CSS = {
 }
 
 export default function DocumentModal({ title, size = 'a5', onClose, children }) {
+  const { t } = useT()
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
     document.addEventListener('keydown', onKey)
@@ -44,9 +46,9 @@ export default function DocumentModal({ title, size = 'a5', onClose, children })
         <h2 className="font-bold text-heading truncate normal-case tracking-normal font-body">{title}</h2>
         <div className="flex items-center gap-2 shrink-0">
           <button type="button" onClick={handlePrint} className="inline-flex items-center gap-1.5 rounded-full bg-pay-action px-5 py-2 text-sm font-semibold text-white hover:bg-pay-action-dark">
-            <Printer size={16} /> Print / Save PDF
+            <Printer size={16} /> {t('Print / Save PDF')}
           </button>
-          <button type="button" onClick={onClose} className="grid place-items-center w-9 h-9 rounded-full text-heading hover:bg-pay-bg" aria-label="Close">
+          <button type="button" onClick={onClose} className="grid place-items-center w-9 h-9 rounded-full text-heading hover:bg-pay-bg" aria-label={t('Close')}>
             <X size={20} />
           </button>
         </div>

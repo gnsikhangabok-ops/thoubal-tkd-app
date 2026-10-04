@@ -31,8 +31,9 @@
   --color-muted: #5B6B82;        /* secondary text */
   --color-subtle: #7A889E;       /* hints, captions */
 
-  --font-display: 'Noto Sans', 'Segoe UI', sans-serif;
-  --font-body: 'Noto Sans', 'Segoe UI', sans-serif;
+  /* Devanagari (Hindi) and Meetei Mayek (Manipuri) fall through to their own Noto faces */
+  --font-display: 'Noto Sans', 'Noto Sans Devanagari', 'Noto Sans Meetei Mayek', 'Segoe UI', sans-serif;
+  --font-body: 'Noto Sans', 'Noto Sans Devanagari', 'Noto Sans Meetei Mayek', 'Segoe UI', sans-serif;
 }
 
 @layer base {
