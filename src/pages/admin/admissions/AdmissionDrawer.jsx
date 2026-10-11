@@ -118,7 +118,7 @@ export default function AdmissionDrawer({ admission: a, actorName, admissionFeeT
   const closed = ['enrolled', 'rejected', 'withdrawn'].includes(a.status)
 
   return createPortal(
-    <div className="fixed inset-0 z-[60] flex justify-end" role="dialog" aria-modal="true" aria-label={`Application ${a.full_name}`}>
+    <div className="clinic paytm fixed inset-0 z-[60] flex justify-end !bg-transparent" role="dialog" aria-modal="true" aria-label={`Application ${a.full_name}`}>
       <button type="button" className="absolute inset-0 bg-pay-navy/50 backdrop-blur-[2px] cursor-default" onClick={onClose} aria-label="Close" tabIndex={-1} />
       <div className="relative w-full max-w-[560px] h-full bg-pay-bg shadow-2xl flex flex-col animate-[slideIn_.2s_ease-out]">
         {/* Header */}

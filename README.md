@@ -36,6 +36,10 @@ npm run dev
   website enquiries converted in one click; trial booking with coach rating; document checklist;
   admission fee with discounts and part payments posted to Accounts; readiness score; per-application
   timeline; one-click enrolment that creates the student record; printable A4 admission form with QR
+- **Fees**: collection desk (month navigator, collection progress by method, overdue detection after
+  the 10th, quick-pay sheet with receipt, bulk cash collection and waivers, WhatsApp reminders,
+  per-student fee ledger); Fee Dues (all unpaid balances aged 1–30 / 31–60 / 61–90 / 90+ days);
+  Fee Analytics (billed vs collected, collection rate, on-time payment, methods, centres)
 - **Management portal**: every list has search, filters, sorting, Excel (CSV) export and print / PDF;
   Reports & Analytics with charts and a monthly report; Notices; Activity Log (super admin)
 - **Documents**: student ID cards, fee receipts and belt certificates with QR codes, printed at true size

@@ -218,6 +218,7 @@
    Light workspace on warm ivory, navy actions (white text 15:1), gold for highlights;
    the sidebar (.admin-side) is its own navy scope with gold accents. */
 .clinic {
+  --ring-light: #E6C877;
   --gold: #C9A24A;
   --gold-light: #E6C877;
   --gold-text: #8A6A20;
@@ -235,6 +236,8 @@
   --color-muted: #5C6273;
   --color-subtle: #676C7C;
   --status-info: #2D5BD0;
+  --viz-1: #24407F;   /* navy series */
+  --viz-2: #C9A24A;   /* gold series */
   --shadow-card: 0 1px 2px rgba(14, 26, 56, 0.05), 0 10px 30px -12px rgba(14, 26, 56, 0.16);
 }
 :root[data-theme="dark"] .clinic {
@@ -251,6 +254,8 @@
   --color-muted: #A0A9BE;
   --color-subtle: #8D97AD;
   --status-info: #93C5FD;
+  --viz-1: #7D9BE0;
+  --viz-2: #D4AF5A;
   --shadow-card: 0 2px 14px rgba(0, 0, 0, 0.45);
 }
 :root[data-theme="dark"] .clinic .bg-pay-action { color: #0B1530; }

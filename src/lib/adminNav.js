@@ -1,7 +1,7 @@
 import {
   LayoutGrid, Users, Building2, UserCog, CalendarDays, CalendarCheck, Award, TrendingUp,
   Medal, Package, Wallet, PiggyBank, Trophy, Inbox, ScrollText, ShieldCheck,
-  LayoutTemplate, Settings2, BarChart3, Megaphone, History, ClipboardList,
+  LayoutTemplate, Settings2, BarChart3, Megaphone, History, ClipboardList, BellRing, ChartNoAxesCombined,
 } from 'lucide-react'
 
 // Single source for the admin sidebar and the dashboard tiles.
@@ -21,7 +21,9 @@ export const ADMIN_NAV = [
   { group: 'Training', label: 'Achievements', short: 'Achievements', desc: 'Medals & awards', path: '/admin/achievements', icon: Medal },
   { group: 'Training', label: 'Events', short: 'Events', desc: 'Tournaments & seminars', path: '/admin/events', icon: Trophy },
 
-  { group: 'Payments & Operations', label: 'Fee Management', short: 'Collect Fees', desc: 'Monthly dues & receipts', path: '/admin/fees', icon: Wallet },
+  { group: 'Payments & Operations', label: 'Fee Management', short: 'Collect Fees', desc: 'Collection desk & receipts', path: '/admin/fees', icon: Wallet },
+  { group: 'Payments & Operations', label: 'Fee Dues', short: 'Dues', desc: 'Unpaid balances & reminders', path: '/admin/fee-dues', icon: BellRing },
+  { group: 'Payments & Operations', label: 'Fee Analytics', short: 'Fee Trends', desc: 'Collection trends & rates', path: '/admin/fee-analytics', icon: ChartNoAxesCombined },
   { group: 'Payments & Operations', label: 'Fee Setup', short: 'Fee Setup', desc: 'Rates & one-time fees', path: '/admin/fee-setup', icon: Settings2, superAdminOnly: true },
   { group: 'Payments & Operations', label: 'Accounts', short: 'Accounts', desc: 'Income vs expenses', path: '/admin/accounts', icon: PiggyBank },
   { group: 'Payments & Operations', label: 'Equipment Record', short: 'Equipment', desc: 'Uniforms, gear & stock', path: '/admin/equipment', icon: Package },

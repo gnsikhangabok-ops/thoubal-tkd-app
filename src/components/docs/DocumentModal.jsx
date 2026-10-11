@@ -41,8 +41,11 @@ export default function DocumentModal({ title, size = 'a5', onClose, children })
     document.title = prevTitle
   }
 
+  // Opened from the management portal: keep its colour theme (the portal renders outside it)
+  const themed = document.querySelector('.clinic') ? 'clinic paytm !bg-pay-navy/70' : ''
+
   return createPortal(
-    <div className="fixed inset-0 z-[70] flex flex-col bg-pay-navy/70 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={title}>
+    <div className={`${themed} fixed inset-0 z-[70] flex flex-col bg-pay-navy/70 backdrop-blur-sm`} role="dialog" aria-modal="true" aria-label={title}>
       <div className="no-print flex items-center justify-between gap-3 bg-surface px-4 py-3 shadow-card">
         <h2 className="font-bold text-heading truncate normal-case tracking-normal font-body">{title}</h2>
         <div className="flex items-center gap-2 shrink-0">

@@ -23,6 +23,8 @@ const Batches = lazy(() => import('./pages/admin/modules/Batches'))
 const RulesAndRegulations = lazy(() => import('./pages/admin/modules/RulesAndRegulations'))
 const BeltExams = lazy(() => import('./pages/admin/modules/BeltExams'))
 const FeeManagement = lazy(() => import('./pages/admin/modules/FeeManagement'))
+const FeeDues = lazy(() => import('./pages/admin/modules/FeeDues'))
+const FeeAnalytics = lazy(() => import('./pages/admin/modules/FeeAnalytics'))
 const FeeSetup = lazy(() => import('./pages/admin/modules/FeeSetup'))
 const Attendance = lazy(() => import('./pages/admin/modules/Attendance'))
 const Achievements = lazy(() => import('./pages/admin/modules/Achievements'))
@@ -80,6 +82,8 @@ export default function App() {
             <Route path="/admin/rules" element={<Admin allowedRoles={['super_admin', 'coach']}><RulesAndRegulations /></Admin>} />
             <Route path="/admin/belt-exams" element={<Admin allowedRoles={['super_admin', 'coach']}><BeltExams /></Admin>} />
             <Route path="/admin/fees" element={<Admin allowedRoles={['super_admin', 'coach']}><FeeManagement /></Admin>} />
+            <Route path="/admin/fee-dues" element={<Admin allowedRoles={['super_admin', 'coach']}><FeeDues /></Admin>} />
+            <Route path="/admin/fee-analytics" element={<Admin allowedRoles={['super_admin', 'coach']}><FeeAnalytics /></Admin>} />
             <Route path="/admin/fee-setup" element={<Admin allowedRoles={['super_admin']}><FeeSetup /></Admin>} />
             <Route path="/admin/attendance" element={<Admin allowedRoles={['super_admin', 'coach']}><Attendance /></Admin>} />
             <Route path="/admin/achievements" element={<Admin allowedRoles={['super_admin', 'coach']}><Achievements /></Admin>} />
