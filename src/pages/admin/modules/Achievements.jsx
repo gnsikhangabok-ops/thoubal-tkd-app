@@ -4,6 +4,8 @@ import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byText, byDateDesc, opts } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
 import ModuleHeader from '../../../components/ModuleHeader'
+import StatStrip from '../../../components/StatStrip'
+import FormSheet from '../../../components/FormSheet'
 import DataTable from '../../../components/DataTable'
 import { moduleTabs } from '../../../lib/moduleTabs'
 
@@ -145,12 +147,17 @@ export default function Achievements() {
         activeTab={tabs.active}
         onTabChange={tabs.select}
       />
+      <StatStrip loading={loading} items={[
+        { label: 'Medals won', value: achievements.filter((a) => a.medal && a.medal !== 'none').length, sub: `${achievements.length} achievements recorded` },
+        { label: 'Gold', value: achievements.filter((a) => a.medal === 'gold').length, sub: `${achievements.filter((a) => a.medal === 'silver').length} silver · ${achievements.filter((a) => a.medal === 'bronze').length} bronze`, tone: 'gold' },
+        { label: 'State & above', value: achievements.filter((a) => ['state', 'national', 'international'].includes(a.level)).length, sub: 'state, national, international', tone: 'info' },
+        { label: 'This year', value: achievements.filter((a) => (a.achievement_date || '').slice(0, 4) === String(new Date().getFullYear())).length, sub: String(new Date().getFullYear()), tone: 'ok' },
+      ]} />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
       {showForm && (
-        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[520px]">
-          <h3 className="font-semibold text-base text-heading mb-4">{form.id ? 'Edit Achievement' : 'New Achievement'}</h3>
+        <FormSheet title={form.id ? 'Edit Achievement' : 'New Achievement'} subtitle="Achievements" onClose={() => setShowForm(false)}>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <select
               value={form.student_id}
@@ -217,7 +224,7 @@ export default function Achievements() {
               </button>
             </div>
           </form>
-        </div>
+        </FormSheet>
       )}
 
       <ListToolbar

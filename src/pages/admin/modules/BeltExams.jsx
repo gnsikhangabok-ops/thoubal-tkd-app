@@ -8,6 +8,8 @@ import DocumentModal from '../../../components/docs/DocumentModal'
 import BeltCertificate from '../../../components/docs/BeltCertificate'
 import { Award } from 'lucide-react'
 import ModuleHeader from '../../../components/ModuleHeader'
+import StatStrip from '../../../components/StatStrip'
+import FormSheet from '../../../components/FormSheet'
 import DataTable, { StatusPill } from '../../../components/DataTable'
 import { moduleTabs } from '../../../lib/moduleTabs'
 
@@ -174,12 +176,17 @@ export default function BeltExams() {
             activeTab={tabs.active}
             onTabChange={tabs.select}
           />
+          <StatStrip loading={loading} items={[
+            { label: 'Upcoming gradings', value: events.filter((e) => e.exam_date >= new Date().toISOString().slice(0, 10)).length, sub: (() => { const n = events.filter((e) => e.exam_date >= new Date().toISOString().slice(0, 10)).sort((a, b) => a.exam_date.localeCompare(b.exam_date))[0]; return n ? `next: ${n.title} · ${n.exam_date}` : 'none scheduled' })() },
+            { label: 'Gradings held', value: events.filter((e) => e.exam_date && e.exam_date < new Date().toISOString().slice(0, 10)).length, sub: 'past events', tone: 'gold' },
+            { label: 'Results recorded', value: results.length, sub: `${results.filter((r) => r.passed).length} promoted`, tone: 'info' },
+            { label: 'Pass rate', value: results.length ? `${Math.round((results.filter((r) => r.passed).length / results.length) * 100)}%` : '—', sub: 'all recorded results', tone: 'ok' },
+          ]} />
 
           {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
           {showEventForm && (
-            <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[480px]">
-              <h3 className="font-semibold text-base text-heading mb-4">{eventForm.id ? 'Edit Grading Event' : 'New Grading Event'}</h3>
+            <FormSheet title={eventForm.id ? 'Edit Grading Event' : 'New Grading Event'} subtitle="Belt Exams" onClose={() => setShowEventForm(false)}>
               <form onSubmit={handleEventSubmit} className="flex flex-col gap-3">
                 <input
                   type="text" placeholder="Title (e.g. Autumn Grading 2026)" required
@@ -208,7 +215,7 @@ export default function BeltExams() {
                   </button>
                 </div>
               </form>
-            </div>
+            </FormSheet>
           )}
 
           <ListToolbar
@@ -249,8 +256,7 @@ export default function BeltExams() {
           {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
           {showResultForm && (
-            <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[480px]">
-              <h3 className="font-semibold text-base text-heading mb-4">Add Result</h3>
+            <FormSheet title="Add Result" subtitle="Belt Exams" onClose={() => setShowResultForm(false)}>
               <form onSubmit={handleResultSubmit} className="flex flex-col gap-3">
                 <select
                   required
@@ -326,7 +332,7 @@ export default function BeltExams() {
                   </button>
                 </div>
               </form>
-            </div>
+            </FormSheet>
           )}
 
           <DataTable

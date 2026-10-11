@@ -5,6 +5,7 @@ import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byDateDesc, byNumberDesc, opts } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
 import ModuleHeader from '../../../components/ModuleHeader'
+import FormSheet from '../../../components/FormSheet'
 import DataTable, { StatusPill } from '../../../components/DataTable'
 import { moduleTabs } from '../../../lib/moduleTabs'
 
@@ -176,8 +177,7 @@ export default function Accounts() {
 
       <div className="mt-6" />
       {showForm && (
-        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[460px]">
-          <h3 className="font-semibold text-base text-heading mb-4 capitalize">Add {form.type}</h3>
+        <FormSheet title={`Add ${form.type}`} subtitle="Accounts" onClose={() => setShowForm(false)}>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <select
               value={form.category}
@@ -226,7 +226,7 @@ export default function Accounts() {
               </button>
             </div>
           </form>
-        </div>
+        </FormSheet>
       )}
 
       <ListToolbar

@@ -5,6 +5,8 @@ import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byText } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
 import ModuleHeader from '../../../components/ModuleHeader'
+import StatStrip from '../../../components/StatStrip'
+import FormSheet from '../../../components/FormSheet'
 import DataTable, { StatusPill } from '../../../components/DataTable'
 import { moduleTabs } from '../../../lib/moduleTabs'
 import PersonCell from '../../../components/PersonCell'
@@ -152,6 +154,11 @@ export default function Coaches() {
         activeTab={tabs.active}
         onTabChange={tabs.select}
       />
+      <StatStrip loading={loading} items={[
+        { label: 'Active coaches', value: coaches.filter((c) => c.active).length, sub: `${coaches.length} on record` },
+        { label: 'Centres covered', value: new Set(coaches.filter((c) => c.active && c.training_center_id).map((c) => c.training_center_id)).size, sub: `of ${centers.length} centres`, tone: 'gold' },
+        { label: 'Inactive', value: coaches.filter((c) => !c.active).length, sub: 'kept for history', tone: 'warn' },
+      ]} />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -162,8 +169,7 @@ export default function Coaches() {
       )}
 
       {showForm && (
-        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[520px]">
-          <h3 className="font-semibold text-base text-heading mb-4">{form.id ? 'Edit Coach' : 'New Coach'}</h3>
+        <FormSheet title={form.id ? 'Edit Coach' : 'New Coach'} subtitle="Coaches" onClose={() => setShowForm(false)}>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <input
               type="text"
@@ -228,7 +234,7 @@ export default function Coaches() {
               </button>
             </div>
           </form>
-        </div>
+        </FormSheet>
       )}
 
       <ListToolbar

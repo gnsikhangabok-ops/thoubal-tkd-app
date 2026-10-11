@@ -4,6 +4,8 @@ import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byText, byDateDesc, opts } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
 import ModuleHeader from '../../../components/ModuleHeader'
+import StatStrip from '../../../components/StatStrip'
+import FormSheet from '../../../components/FormSheet'
 import DataTable, { StatusPill } from '../../../components/DataTable'
 import { moduleTabs } from '../../../lib/moduleTabs'
 
@@ -183,12 +185,17 @@ export default function Events() {
             activeTab={tabs.active}
             onTabChange={tabs.select}
           />
+          <StatStrip loading={loading} items={[
+            { label: 'Upcoming events', value: events.filter((e) => e.event_date >= new Date().toISOString().slice(0, 10)).length, sub: (() => { const n = events.filter((e) => e.event_date >= new Date().toISOString().slice(0, 10)).sort((a, b) => a.event_date.localeCompare(b.event_date))[0]; return n ? `next: ${n.title} · ${n.event_date}` : 'none scheduled' })() },
+            { label: 'Registrations', value: registrations.length, sub: 'students entered', tone: 'gold' },
+            { label: 'Tournaments', value: events.filter((e) => e.event_type === 'tournament').length, sub: 'all time', tone: 'info' },
+            { label: 'Past events', value: events.filter((e) => e.event_date && e.event_date < new Date().toISOString().slice(0, 10)).length, sub: 'held', tone: 'ok' },
+          ]} />
 
           {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
           {showEventForm && (
-            <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[480px]">
-              <h3 className="font-semibold text-base text-heading mb-4">{eventForm.id ? 'Edit Event' : 'New Event'}</h3>
+            <FormSheet title={eventForm.id ? 'Edit Event' : 'New Event'} subtitle="Events" onClose={() => setShowEventForm(false)}>
               <form onSubmit={handleEventSubmit} className="flex flex-col gap-3">
                 <input
                   type="text" placeholder="Event title" required
@@ -238,7 +245,7 @@ export default function Events() {
                   </button>
                 </div>
               </form>
-            </div>
+            </FormSheet>
           )}
 
           <ListToolbar
@@ -283,8 +290,7 @@ export default function Events() {
           {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
           {showRegForm && (
-            <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[420px]">
-              <h3 className="font-semibold text-base text-heading mb-4">Register Student</h3>
+            <FormSheet title="Register Student" subtitle="Events" onClose={() => setShowRegForm(false)}>
               <form onSubmit={handleRegSubmit} className="flex flex-col gap-3">
                 <select
                   required
@@ -306,7 +312,7 @@ export default function Events() {
                   </button>
                 </div>
               </form>
-            </div>
+            </FormSheet>
           )}
 
           <DataTable

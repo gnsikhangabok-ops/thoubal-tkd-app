@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
-import { btnPrimary, btnOutline } from '../../../lib/adminUi'
+import { btnPrimary, btnOutline, btnSm, inputCls } from '../../../lib/adminUi'
+import { CalendarCheck, Clock, ChevronRight } from 'lucide-react'
 import { useListTools, exportCsv, byText } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
 import ModuleHeader from '../../../components/ModuleHeader'
@@ -45,7 +46,7 @@ export default function Attendance() {
   async function loadBatches() {
     const { data, error } = await supabase
       .from('batches')
-      .select('id, name, training_centers(name)')
+      .select('id, name, schedule_days, start_time, end_time, training_centers(name)')
       .eq('active', true)
       .order('name')
 
@@ -190,44 +191,70 @@ export default function Attendance() {
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
       {message && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{message}</p>}
 
-      <div className="flex gap-4 flex-wrap mb-7">
-        <div>
-          <label className="text-[0.85rem] font-semibold block mb-1.5">Batch</label>
-          <select
-            value={selectedBatch}
-            onChange={(e) => setSelectedBatch(e.target.value)}
-            className="px-2.5 py-2.5 border border-pay-line rounded-xl min-w-[260px]"
-          >
-            <option value="">— Select a batch —</option>
-            {batches.map((b) => (
-              <option key={b.id} value={b.id}>{b.name} ({b.training_centers?.name})</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="text-[0.85rem] font-semibold block mb-1.5">Date</label>
-          <input
-            type="date"
-            value={sessionDate}
-            onChange={(e) => setSessionDate(e.target.value)}
-            className="px-2.5 py-2.5 border border-pay-line rounded-xl"
-          />
-        </div>
+      <div className="flex gap-3 flex-wrap items-end mb-6">
+        {selectedBatch && (
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-semibold text-muted">Batch</span>
+            <select value={selectedBatch} onChange={(e) => setSelectedBatch(e.target.value)} className={`${inputCls} min-w-[260px]`}>
+              {batches.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.training_centers?.name})</option>)}
+            </select>
+          </label>
+        )}
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-semibold text-muted">Date</span>
+          <input type="date" value={sessionDate} onChange={(e) => setSessionDate(e.target.value)} className={inputCls} />
+        </label>
+        {selectedBatch && <button className={`${btnOutline} ${btnSm} mb-1`} onClick={() => setSelectedBatch('')}>All batches</button>}
       </div>
 
       {!selectedBatch ? (
-        <p className="text-charcoal">Select a batch to mark attendance.</p>
+        batches.length === 0 ? <p className="text-muted">No active batches yet.</p> : (
+          <>
+            <p className="text-sm text-muted mb-3">Choose a batch to open its register for {new Date(`${sessionDate}T00:00`).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}.</p>
+            <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
+              {batches.map((b) => {
+                const today = new Date(`${sessionDate}T00:00`).toLocaleDateString('en-US', { weekday: 'short' })
+                const meets = !b.schedule_days?.length || b.schedule_days.some((d) => String(d).slice(0, 3).toLowerCase() === today.toLowerCase())
+                return (
+                  <button key={b.id} type="button" onClick={() => setSelectedBatch(b.id)}
+                    className="group text-left bg-surface rounded-2xl shadow-card p-4 relative overflow-hidden hover:ring-2 hover:ring-pay-sky-2 transition">
+                    <span className="absolute inset-x-0 top-0 h-[3px]" style={{ background: meets ? 'var(--gold, var(--color-pay-action))' : 'var(--color-pay-line)' }} aria-hidden="true" />
+                    <div className="flex items-start gap-3">
+                      <span className="grid place-items-center w-10 h-10 rounded-xl bg-pay-sky text-pay-action shrink-0"><CalendarCheck size={18} /></span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-heading truncate group-hover:text-pay-action">{b.name}</p>
+                        <p className="text-xs text-subtle truncate">{b.training_centers?.name}</p>
+                      </div>
+                      <ChevronRight size={18} className="text-subtle mt-1" />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-3 text-[0.7rem] font-semibold">
+                      {b.start_time && <span className="inline-flex items-center gap-1 rounded-full bg-pay-bg text-muted px-2 py-0.5"><Clock size={11} /> {String(b.start_time).slice(0, 5)}{b.end_time ? `–${String(b.end_time).slice(0, 5)}` : ''}</span>}
+                      {b.schedule_days?.length > 0 && <span className="rounded-full bg-pay-bg text-muted px-2 py-0.5">{b.schedule_days.join(' · ')}</span>}
+                      <span className={`rounded-full px-2 py-0.5 ${meets ? 'bg-emerald-50 text-emerald-700' : 'bg-pay-bg text-subtle'}`}>{meets ? 'Class today' : 'No class today'}</span>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </>
+        )
       ) : loading ? (
         <p className="text-muted">Loading…</p>
       ) : students.length === 0 ? (
-        <p className="text-charcoal">No active students in this batch.</p>
+        <p className="bg-surface rounded-2xl shadow-card px-6 py-10 text-center text-sm text-muted">No active students in this batch.</p>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-            {STAT_TILES.map(([label, n, color]) => (
-              <div key={label} className="bg-surface rounded-xl border border-pay-line px-4 py-3" style={{ borderTopWidth: 3, borderTopColor: color }}>
-                <span className="block text-xs font-semibold uppercase tracking-wide text-muted">{label}</span>
-                <strong className="text-2xl font-bold text-heading tabular-nums">{n}<span className="text-sm font-medium text-subtle"> / {students.length}</span></strong>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+            <div className="pay-stat !p-5 col-span-2 lg:col-span-1">
+              <p className="text-xs text-white/75">Present · {batchName}</p>
+              <strong className="block text-3xl font-bold tabular-nums mt-1">{students.length ? Math.round((presentCount / students.length) * 100) : 0}%</strong>
+              <p className="text-[0.7rem] text-white/70">{presentCount} of {students.length} students</p>
+            </div>
+            {STAT_TILES.slice(1).map(([label, n, color]) => (
+              <div key={label} className="bg-surface rounded-2xl shadow-card p-4 relative overflow-hidden">
+                <span className="absolute left-0 top-4 bottom-4 w-[3px] rounded-r-full" style={{ background: color }} aria-hidden="true" />
+                <p className="text-xs text-muted">{label}</p>
+                <p className="text-2xl font-bold text-heading tabular-nums mt-0.5">{n}<span className="text-sm font-medium text-subtle"> / {students.length}</span></p>
               </div>
             ))}
           </div>

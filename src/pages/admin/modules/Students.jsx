@@ -9,6 +9,8 @@ import DocumentModal from '../../../components/docs/DocumentModal'
 import StudentIdCard from '../../../components/docs/StudentIdCard'
 import { IdCard, Pencil, UserPlus } from 'lucide-react'
 import ModuleHeader from '../../../components/ModuleHeader'
+import StatStrip from '../../../components/StatStrip'
+import FormSheet from '../../../components/FormSheet'
 import DataTable, { StatusPill } from '../../../components/DataTable'
 import PersonCell from '../../../components/PersonCell'
 import { moduleTabs } from '../../../lib/moduleTabs'
@@ -200,6 +202,12 @@ export default function Students() {
         activeTab={tabs.active}
         onTabChange={tabs.select}
       />
+      <StatStrip loading={loading} items={[
+        { label: 'Active students', value: students.filter((s) => s.active).length, sub: `${students.length} registered in all` },
+        { label: 'Joined this month', value: students.filter((s) => (s.created_at || '').slice(0, 7) === new Date().toISOString().slice(0, 7)).length, sub: new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }), tone: 'gold' },
+        { label: 'Rules not signed', value: students.filter((s) => s.active && !s.rules_acknowledged).length, sub: 'active students', tone: 'warn' },
+        { label: 'Centres · batches', value: `${centers.length} · ${batches.length}`, sub: 'active', tone: 'info' },
+      ]} />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -210,8 +218,7 @@ export default function Students() {
       )}
 
       {showForm && (
-        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[560px]">
-          <h3 className="font-semibold text-base text-heading mb-4">{form.id ? 'Edit Student' : 'New Student Registration'}</h3>
+        <FormSheet title={form.id ? 'Edit Student' : 'New Student Registration'} subtitle="Students" onClose={() => setShowForm(false)}>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <input
               type="text" placeholder="Full name" required
@@ -333,7 +340,7 @@ export default function Students() {
               </button>
             </div>
           </form>
-        </div>
+        </FormSheet>
       )}
 
       {!showForm && (

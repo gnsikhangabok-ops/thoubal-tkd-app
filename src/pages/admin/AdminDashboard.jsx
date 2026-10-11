@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../context/AuthContext'
 import { navForRole } from '../../lib/adminNav'
-import { Users, Building2, UserCog, Inbox, AlertCircle, ChevronRight } from 'lucide-react'
+import { Users, Building2, UserCog, Inbox, AlertCircle, ChevronRight, Wallet, BellRing, ClipboardList, CalendarCheck } from 'lucide-react'
+import { balance, monthFirst, monthLabel } from '../../lib/fees'
+import { rupees } from '../../lib/documents'
 
 export default function AdminDashboard() {
   const { profile, role } = useAuth()
@@ -14,6 +16,7 @@ export default function AdminDashboard() {
   })
   const [enquiryCount, setEnquiryCount] = useState(null)
   const [statsError, setStatsError] = useState('')
+  const [pulse, setPulse] = useState(null)
 
   useEffect(() => {
     async function loadStats() {
@@ -31,8 +34,30 @@ export default function AdminDashboard() {
         .eq('status', 'new')
       setEnquiryCount(count ?? 0)
     }
+    // The academy's pulse: this month's fees, dues, admissions and today's attendance.
+    // Each query is independent so a missing table (e.g. admissions not migrated yet) only blanks its card.
+    async function loadPulse() {
+      const today = new Date().toISOString().slice(0, 10)
+      const [month, dues, adm, att] = await Promise.all([
+        supabase.from('fee_payments').select('amount_due, amount_paid, status').eq('period_month', monthFirst()),
+        supabase.from('fee_payments').select('amount_due, amount_paid, status, student_id').not('status', 'in', '(paid,waived)'),
+        supabase.from('admissions').select('status'),
+        supabase.from('attendance').select('status').eq('session_date', today),
+      ])
+      const billed = (month.data || []).filter((p) => p.status !== 'waived').reduce((s, p) => s + Number(p.amount_due || 0), 0)
+      const collected = (month.data || []).reduce((s, p) => s + Number(p.amount_paid || 0), 0)
+      const owing = (dues.data || []).filter((p) => balance(p) > 0)
+      const marks = att.data || []
+      setPulse({
+        fees: month.error ? null : { billed, collected, rate: billed ? Math.round((Math.min(collected, billed) / billed) * 100) : 0 },
+        dues: dues.error ? null : { total: owing.reduce((s, p) => s + balance(p), 0), students: new Set(owing.map((p) => p.student_id)).size },
+        admissions: adm.error ? null : { open: (adm.data || []).filter((a) => ['applied', 'under_review', 'trial', 'approved', 'waitlisted'].includes(a.status)).length, ready: (adm.data || []).filter((a) => a.status === 'approved').length },
+        attendance: att.error ? null : { marked: marks.length, present: marks.filter((m) => m.status === 'present' || m.status === 'late').length },
+      })
+    }
     loadStats()
     loadEnquiries()
+    loadPulse()
   }, [])
 
   const STAT_CARDS = [
@@ -68,6 +93,7 @@ export default function AdminDashboard() {
         <div className="relative flex gap-2.5 mt-5 flex-wrap">
           <Link to="/admin/fees" className="rounded-full bg-surface text-heading text-sm font-semibold px-5 py-2 hover:bg-pay-sky">Collect Fees</Link>
           <Link to="/admin/attendance" className="rounded-full border border-white/60 text-white text-sm font-semibold px-5 py-2 hover:bg-white/10">Mark Attendance</Link>
+          <Link to="/admin/admissions" className="rounded-full border border-white/60 text-white text-sm font-semibold px-5 py-2 hover:bg-white/10">New Admission</Link>
         </div>
       </div>
 
@@ -91,6 +117,31 @@ export default function AdminDashboard() {
                 <strong className="block text-2xl font-bold text-heading leading-none">{s.value === null ? '—' : s.value}</strong>
                 <span className="text-xs text-muted mt-1 block">{s.label}</span>
               </div>
+            </Link>
+          )
+        })}
+      </div>
+
+      {/* Pulse: money, dues, admissions, attendance */}
+      <div className="grid gap-3 md:gap-4 mt-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Link to="/admin/fees" className="pay-stat !p-5 relative overflow-hidden hover:brightness-110 transition">
+          <div className="flex items-center gap-2 text-xs text-white/80"><Wallet size={15} /> Fees · {monthLabel(monthFirst(), { month: 'long' })}</div>
+          <strong className="block text-2xl font-bold tabular-nums mt-2">{pulse?.fees ? rupees(pulse.fees.collected) : '—'}</strong>
+          <p className="text-[0.7rem] text-white/70">{pulse?.fees ? `of ${rupees(pulse.fees.billed)} billed · ${pulse.fees.rate}%` : 'not billed yet'}</p>
+          <div className="h-1.5 rounded-full bg-white/15 mt-3 overflow-hidden"><div className="h-full rounded-full bg-[var(--gold,#fff)]" style={{ width: `${pulse?.fees?.rate || 0}%` }} /></div>
+        </Link>
+        {[
+          { to: '/admin/fee-dues', icon: BellRing, label: 'Outstanding dues', value: pulse?.dues ? rupees(pulse.dues.total) : '—', sub: pulse?.dues ? `${pulse.dues.students} student${pulse.dues.students === 1 ? '' : 's'} owe fees` : '', tone: 'var(--status-bad)' },
+          { to: '/admin/admissions', icon: ClipboardList, label: 'Admissions in progress', value: pulse?.admissions ? pulse.admissions.open : '—', sub: pulse?.admissions ? `${pulse.admissions.ready} ready to enrol` : 'run the admissions migration', tone: 'var(--gold, var(--color-pay-action))' },
+          { to: '/admin/attendance', icon: CalendarCheck, label: 'Attendance today', value: pulse?.attendance?.marked ? `${Math.round((pulse.attendance.present / pulse.attendance.marked) * 100)}%` : '—', sub: pulse?.attendance ? (pulse.attendance.marked ? `${pulse.attendance.present} of ${pulse.attendance.marked} present` : 'no register marked yet') : '', tone: 'var(--status-ok)' },
+        ].map((c) => {
+          const Icon = c.icon
+          return (
+            <Link key={c.label} to={c.to} className="bg-surface rounded-2xl shadow-card p-5 relative overflow-hidden hover:ring-2 hover:ring-pay-sky-2 transition">
+              <span className="absolute left-0 top-5 bottom-5 w-[3px] rounded-r-full" style={{ background: c.tone }} aria-hidden="true" />
+              <div className="flex items-center gap-2 text-xs text-muted"><Icon size={15} className="text-pay-action" /> {c.label}</div>
+              <p className="text-2xl font-bold text-heading tabular-nums mt-2 truncate">{c.value}</p>
+              <p className="text-[0.7rem] text-subtle truncate">{c.sub}</p>
             </Link>
           )
         })}
