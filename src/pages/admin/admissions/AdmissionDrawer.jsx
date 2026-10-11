@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import {
   X, Phone, Mail, MapPin, Pencil, Printer, GraduationCap, CalendarClock, Star, Check, Wallet,
-  ArrowRight, Clock, MessageSquarePlus, Ban, PauseCircle, Undo2, HeartPulse, FileCheck2,
+  ArrowRight, Clock, MessageSquarePlus, Ban, PauseCircle, Undo2, HeartPulse, FileCheck2, Trash2,
 } from 'lucide-react'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
@@ -16,10 +16,15 @@ import {
   readiness, historyEntry, postFeeToAccounts, daysSince, stageSince,
 } from '../../../lib/admissions'
 import ReadinessRing from './ReadinessRing'
+import ConfirmDelete from '../../../components/ConfirmDelete'
+import { deleteError } from '../../../lib/deletes'
+import { useAuth } from '../../../context/AuthContext'
 
 export const ADMISSION_SELECT = '*, training_centers(name), batches(name)'
 
-export default function AdmissionDrawer({ admission: a, actorName, admissionFeeType, onClose, onChanged, onEdit, onPrint }) {
+export default function AdmissionDrawer({ admission: a, actorName, admissionFeeType, onClose, onChanged, onEdit, onPrint, onDeleted }) {
+  const { role } = useAuth()
+  const [deleting, setDeleting] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [panel, setPanel] = useState(null) // 'trial' | 'payment' | 'note' | 'close'
@@ -359,8 +364,27 @@ export default function AdmissionDrawer({ admission: a, actorName, admissionFeeT
               ))}
             </ol>
           </section>
+
+          {/* Enrolled applications stay: the student record was created from them */}
+          {role === 'super_admin' && a.status !== 'enrolled' && (
+            <button type="button" onClick={() => setDeleting(true)} className="self-center inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-red-600 py-2">
+              <Trash2 size={13} /> Delete this application
+            </button>
+          )}
         </div>
       </div>
+      {deleting && (
+        <ConfirmDelete
+          title={`Delete the application for ${a.full_name}?`}
+          message={`For duplicate or test applications. ${Number(a.amount_paid) > 0 ? 'Admission fee income already posted to Accounts is kept.' : ''}`}
+          onConfirm={async () => {
+            const { error } = await supabase.from('admissions').delete().eq('id', a.id)
+            if (error) return deleteError(error)
+            onDeleted(a)
+          }}
+          onClose={() => setDeleting(false)}
+        />
+      )}
     </div>,
     document.body,
   )

@@ -4,6 +4,10 @@ import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byText, byDateDesc, opts } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
 import ModuleHeader from '../../../components/ModuleHeader'
+import ConfirmDelete from '../../../components/ConfirmDelete'
+import { countLinked, deleteError, deleteBtnCls } from '../../../lib/deletes'
+import { useAuth } from '../../../context/AuthContext'
+import { Trash2 } from 'lucide-react'
 import StatStrip from '../../../components/StatStrip'
 import FormSheet from '../../../components/FormSheet'
 import DataTable, { StatusPill } from '../../../components/DataTable'
@@ -75,6 +79,21 @@ export default function Events() {
 
     if (error) setError(error.message)
     else setRegistrations(data)
+  }
+
+  // Delete an event (with its registrations) or a single registration — super admins only
+  const { role } = useAuth()
+  const [del, setDel] = useState(null) // { kind: 'event' | 'reg', row, linked }
+  async function deleteNow() {
+    const { kind, row } = del
+    if (kind === 'event') {
+      const r1 = await supabase.from('event_registrations').delete().eq('event_id', row.id)
+      if (r1.error) return deleteError(r1.error)
+    }
+    const { error } = await supabase.from(kind === 'event' ? 'events' : 'event_registrations').delete().eq('id', row.id)
+    if (error) return deleteError(error)
+    setDel(null)
+    if (kind === 'event') { setSelectedEvent(null); loadEvents() } else loadRegistrations(selectedEvent.id)
   }
 
   function openAddEvent() {
@@ -274,7 +293,12 @@ export default function Events() {
               { key: 'location', header: 'Venue', sortValue: (e) => e.location, render: (e) => e.location || '—' },
               { key: 'when', header: 'Status', render: (e) => (e.event_date >= new Date().toISOString().slice(0, 10) ? <StatusPill tone="info">Upcoming</StatusPill> : <StatusPill>Completed</StatusPill>) },
               ]}
-              actions={(ev) => <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditEvent(ev)}>Edit</button>}
+              actions={(ev) => (
+                <>
+                  <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditEvent(ev)}>Edit</button>
+                  {role === 'super_admin' && <button className={`${btnOutline} ${btnSm} ${deleteBtnCls}`} onClick={async () => setDel({ kind: 'event', row: ev, linked: await countLinked(supabase, ev.id, [['event_registrations', 'event_id', 'Registrations & results']]) })} aria-label={`Delete ${ev.title}`} title="Delete"><Trash2 size={13} /></button>}
+                </>
+              )}
             />
           )}
         </>
@@ -342,8 +366,20 @@ export default function Events() {
                   </select>
                 ) },
             ]}
+            actions={role === 'super_admin' ? (r) => <button className={`${btnOutline} ${btnSm} ${deleteBtnCls}`} onClick={() => setDel({ kind: 'reg', row: r, linked: [] })} aria-label={`Remove ${r.students?.full_name}`} title="Remove registration"><Trash2 size={13} /></button> : undefined}
           />
         </>
+      )}
+      {del && (
+        <ConfirmDelete
+          title={del.kind === 'event' ? `Delete ${del.row.title}?` : `Remove ${del.row.students?.full_name}?`}
+          message={del.kind === 'event' ? 'This permanently removes the event and every registration and result in it.' : 'Removes this student’s registration and result from the event.'}
+          linked={del.linked}
+          confirmText={del.kind === 'event' && del.linked.some((l) => l.n > 0) ? del.row.title : undefined}
+          actionLabel={del.kind === 'event' ? 'Delete event' : 'Remove'}
+          onConfirm={deleteNow}
+          onClose={() => setDel(null)}
+        />
       )}
     </div>
   )

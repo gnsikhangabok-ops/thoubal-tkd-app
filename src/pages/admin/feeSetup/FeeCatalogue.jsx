@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
-import { Plus, Pencil, Sparkles, Users, Power, X, Check } from 'lucide-react'
+import { Plus, Pencil, Sparkles, Users, Power, X, Check, Trash2 } from 'lucide-react'
+import ConfirmDelete from '../../../components/ConfirmDelete'
+import { deleteError, deleteBtnCls } from '../../../lib/deletes'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { rupees } from '../../../lib/documents'
@@ -19,6 +21,7 @@ export default function FeeCatalogue({ items, payments, students, onSaved, onErr
   const [collecting, setCollecting] = useState(null) // { item, student_id, amount, method, receipt, query }
   const [paidFor, setPaidFor] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(null)
 
   const shown = items.filter((i) => !filter || (i.category || 'other') === filter)
   const paidBy = useMemo(() => {
@@ -143,12 +146,33 @@ export default function FeeCatalogue({ items, payments, students, onSaved, onErr
                 <div className="flex gap-1.5 mt-4 pt-3 border-t border-pay-line">
                   {!off && <button className={`${btnPrimary} ${btnSm}`} onClick={() => setCollecting({ item, student_id: '', amount: String(item.amount), method: settings.methods[0] || 'Cash', receipt: '', query: '' })}>Collect</button>}
                   <button className={`${btnOutline} ${btnSm}`} onClick={() => setEditing({ ...emptyItem, ...item, amount: String(item.amount), belt: item.belt || '', description: item.description || '', category: item.category || 'other', frequency: item.frequency || 'one_time' })} aria-label={`Edit ${item.name}`}><Pencil size={12} /> Edit</button>
-                  <button className={`${btnOutline} ${btnSm} ml-auto`} onClick={() => toggleActive(item)} aria-label={off ? `Turn on ${item.name}` : `Turn off ${item.name}`} title={off ? 'Turn on' : 'Turn off'}><Power size={12} /></button>
+                  <button className={`${btnOutline} ${btnSm} ml-auto ${deleteBtnCls}`} onClick={() => setDeleting(item)} aria-label={`Delete ${item.name}`} title="Delete"><Trash2 size={12} /></button>
+                  <button className={`${btnOutline} ${btnSm}`} onClick={() => toggleActive(item)} aria-label={off ? `Turn on ${item.name}` : `Turn off ${item.name}`} title={off ? 'Turn on' : 'Turn off'}><Power size={12} /></button>
                 </div>
               </article>
             )
           })}
         </div>
+      )}
+
+      {deleting && (
+        <ConfirmDelete
+          title={`Delete ${deleting.name}?`}
+          message="Removes this fee from the catalogue."
+          linked={[{ label: 'Payments collected', n: (paidBy[deleting.id] || []).length }]}
+          blocked={(paidBy[deleting.id] || []).length ? 'Students have paid this fee, so it stays for their receipts. Turn it off instead — it disappears from collection and Admissions.' : undefined}
+          onConfirm={async () => {
+            const { error } = await supabase.from('one_time_fee_types').delete().eq('id', deleting.id)
+            if (error) return deleteError(error)
+            const name = deleting.name
+            setDeleting(null)
+            onSaved(`${name} deleted`)
+          }}
+          onClose={() => setDeleting(null)}
+          extra={(paidBy[deleting.id] || []).length > 0 && deleting.active !== false
+            ? <button type="button" className={`${btnOutline} self-start`} onClick={() => { toggleActive(deleting); setDeleting(null) }}><Power size={14} /> Turn it off</button>
+            : null}
+        />
       )}
 
       {/* New / edit fee */}

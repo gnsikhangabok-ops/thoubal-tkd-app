@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ReceiptText, MessageCircle, Sparkles, Wallet, CheckCircle2, Ban, X, CalendarDays } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ReceiptText, MessageCircle, Sparkles, Wallet, CheckCircle2, Ban, X, CalendarDays, Trash2 } from 'lucide-react'
+import ConfirmDelete from '../../../components/ConfirmDelete'
+import { deleteError, deleteBtnCls } from '../../../lib/deletes'
+import { useAuth } from '../../../context/AuthContext'
 import { supabase } from '../../../lib/supabaseClient'
 import { btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byText } from '../../../lib/listTools'
@@ -24,6 +27,8 @@ import { useFeeSettings } from '../../../lib/feeSettings'
 
 export default function FeeManagement() {
   const settings = useFeeSettings()
+  const { role } = useAuth()
+  const [removing, setRemoving] = useState(null) // bills to delete (nothing paid on them)
   const [month, setMonth] = useState(monthFirst())
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
@@ -345,6 +350,7 @@ export default function FeeManagement() {
                 {due > 0 && <button className={`${btnPrimary} ${btnSm}`} onClick={() => setPaying(p)}>Collect</button>}
                 {wa && <a href={wa} target="_blank" rel="noreferrer" className={`${btnOutline} ${btnSm}`} aria-label={`WhatsApp reminder to ${p.students?.full_name}'s guardian`} title="WhatsApp reminder"><MessageCircle size={13} /></a>}
                 {Number(p.amount_paid) > 0 && <button className={`${btnOutline} ${btnSm}`} onClick={() => setReceiptFor(p)} aria-label={`Receipt for ${p.students?.full_name}`} title="Receipt"><ReceiptText size={13} /></button>}
+                {role === 'super_admin' && !(Number(p.amount_paid) > 0) && <button className={`${btnOutline} ${btnSm} ${deleteBtnCls}`} onClick={() => setRemoving([p])} aria-label={`Delete the bill for ${p.students?.full_name}`} title="Delete bill (nothing paid)"><Trash2 size={13} /></button>}
               </>
             )
           }}
@@ -359,6 +365,9 @@ export default function FeeManagement() {
             <button disabled={bulkBusy} onClick={bulkCollect} className="inline-flex items-center gap-1.5 rounded-full bg-white text-pay-navy px-4 py-1.5 text-xs font-bold hover:bg-pay-sky disabled:opacity-60">
               <CheckCircle2 size={14} /> {bulkBusy ? 'Recording…' : `Paid in cash · ${rupees(collectable.reduce((s, p) => s + balance(p), 0))}`}
             </button>
+          )}
+          {role === 'super_admin' && selectedRows.some((p) => !(Number(p.amount_paid) > 0)) && (
+            <button disabled={bulkBusy} onClick={() => setRemoving(selectedRows.filter((p) => !(Number(p.amount_paid) > 0)))} className="inline-flex items-center gap-1.5 rounded-full border border-white/40 px-3 py-1.5 text-xs font-semibold hover:bg-white/10"><Trash2 size={13} /> Delete bills</button>
           )}
           {collectable.length > 0 && <button disabled={bulkBusy} onClick={() => waive(collectable)} className="inline-flex items-center gap-1.5 rounded-full border border-white/40 px-3 py-1.5 text-xs font-semibold hover:bg-white/10"><Ban size={13} /> Waive</button>}
           <button onClick={() => setSelected(new Set())} className="grid place-items-center w-8 h-8 rounded-full hover:bg-white/10" aria-label="Clear selection"><X size={16} /></button>
@@ -399,6 +408,22 @@ export default function FeeManagement() {
         </div>
       )}
 
+      {removing && (
+        <ConfirmDelete
+          title={removing.length === 1 ? `Delete ${removing[0].students?.full_name}'s ${monthLabel(month)} bill?` : `Delete ${removing.length} bills for ${monthLabel(month)}?`}
+          message="For fees billed by mistake (wrong month, wrong student, or a student who left). Only bills with nothing paid can be deleted — paid ones stay for the receipts; waive them instead."
+          actionLabel={removing.length === 1 ? 'Delete bill' : `Delete ${removing.length} bills`}
+          onConfirm={async () => {
+            const { error } = await supabase.from('fee_payments').delete().in('id', removing.map((r) => r.id)).eq('amount_paid', 0)
+            if (error) return deleteError(error)
+            setFlash(`${removing.length} bill${removing.length === 1 ? '' : 's'} deleted`)
+            setRemoving(null)
+            setSelected(new Set())
+            load()
+          }}
+          onClose={() => setRemoving(null)}
+        />
+      )}
       {ledgerFor && (
         <StudentLedger
           studentId={ledgerFor}

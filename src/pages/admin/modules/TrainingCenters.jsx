@@ -4,6 +4,10 @@ import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byText } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
 import ModuleHeader from '../../../components/ModuleHeader'
+import ConfirmDelete from '../../../components/ConfirmDelete'
+import { countLinked, deleteError, deleteBtnCls } from '../../../lib/deletes'
+import { useAuth } from '../../../context/AuthContext'
+import { Trash2 } from 'lucide-react'
 import StatStrip from '../../../components/StatStrip'
 import FormSheet from '../../../components/FormSheet'
 import DataTable, { StatusPill } from '../../../components/DataTable'
@@ -74,6 +78,19 @@ export default function TrainingCenters() {
       setShowForm(false)
       loadCenters()
     }
+  }
+
+  // Delete: super admins only, and only when nothing is linked (otherwise deactivate)
+  const { role } = useAuth()
+  const [deleting, setDeleting] = useState(null) // { row, linked }
+  async function openDelete(row) {
+    setDeleting({ row, linked: await countLinked(supabase, row.id, [['students', 'training_center_id', 'Students'], ['batches', 'training_center_id', 'Batches'], ['coaches', 'training_center_id', 'Coaches'], ['admissions', 'training_center_id', 'Admissions'], ['inventory_items', 'training_center_id', 'Equipment items'], ['accounts_transactions', 'training_center_id', 'Account entries']]) })
+  }
+  async function confirmDelete() {
+    const { error } = await supabase.from('training_centers').delete().eq('id', deleting.row.id)
+    if (error) return deleteError(error)
+    setDeleting(null)
+    loadCenters()
   }
 
   async function toggleActive(center) {
@@ -188,8 +205,19 @@ export default function TrainingCenters() {
             <>
               <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(c)}>Edit</button>
               <button className={`${btnOutline} ${btnSm}`} onClick={() => toggleActive(c)}>{c.active ? 'Deactivate' : 'Activate'}</button>
+              {role === 'super_admin' && <button className={`${btnOutline} ${btnSm} ${deleteBtnCls}`} onClick={() => openDelete(c)} aria-label={`Delete ${c.name}`} title="Delete"><Trash2 size={13} /></button>}
             </>
           )}
+        />
+      )}
+      {deleting && (
+        <ConfirmDelete
+          title={`Delete ${deleting.row.name}?`}
+          message="This permanently removes the centre."
+          linked={deleting.linked}
+          blocked={deleting.linked.some((l) => l.n > 0) ? 'Records still use this centre, so it can’t be deleted. Deactivate it instead — it disappears from lists and forms but its history stays.' : undefined}
+          onConfirm={confirmDelete}
+          onClose={() => setDeleting(null)}
         />
       )}
     </div>

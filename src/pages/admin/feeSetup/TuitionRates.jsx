@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { History, Pencil, Layers } from 'lucide-react'
+import { History, Pencil, Layers, Trash2 } from 'lucide-react'
+import ConfirmDelete from '../../../components/ConfirmDelete'
+import { deleteError } from '../../../lib/deletes'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { rupees, formatDate } from '../../../lib/documents'
@@ -14,6 +16,7 @@ export default function TuitionRates({ batches, structures, students, onSaved, o
   const [editing, setEditing] = useState(null) // { ids, amount, from }
   const [historyFor, setHistoryFor] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(null) // a fee_structures row
 
   const count = (id) => students.filter((s) => s.batch_id === id).length
   const rows = batches.map((b) => ({ ...b, ...ratesFor(structures, b.id), students: count(b.id) }))
@@ -89,6 +92,7 @@ export default function TuitionRates({ batches, structures, students, onSaved, o
                   <span className="text-muted"> from {h.effective_from ? formatDate(h.effective_from) : 'the start'}</span>
                   {h === r.current && <span className="ml-2"><StatusPill tone="ok">current</StatusPill></span>}
                   {h.effective_from > today() && <span className="ml-2"><StatusPill tone="info">scheduled</StatusPill></span>}
+                  <button type="button" onClick={() => setDeleting({ ...h, batch: r.name })} className="ml-2 align-middle inline-grid place-items-center w-6 h-6 rounded-full text-subtle hover:text-red-600 hover:bg-red-50" aria-label={`Delete the ${rupees(h.monthly_amount)} rate`} title="Delete this rate"><Trash2 size={12} /></button>
                 </li>
               ))}
             </ol>
@@ -96,6 +100,21 @@ export default function TuitionRates({ batches, structures, students, onSaved, o
         )
       })()}
 
+      {deleting && (
+        <ConfirmDelete
+          title={`Delete the ${rupees(deleting.monthly_amount)} rate for ${deleting.batch}?`}
+          message={deleting.effective_from > today()
+            ? 'Cancels this scheduled fee revision. The current rate stays in force.'
+            : 'Use this for a rate entered by mistake. Months already billed keep their amounts; future bills use the next most recent rate.'}
+          onConfirm={async () => {
+            const { error } = await supabase.from('fee_structures').delete().eq('id', deleting.id)
+            if (error) return deleteError(error)
+            setDeleting(null)
+            onSaved('Rate deleted')
+          }}
+          onClose={() => setDeleting(null)}
+        />
+      )}
       {editing && (
         <div className="fixed inset-0 z-[60] grid place-items-center bg-pay-navy/55 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-label="Set monthly rate">
           <form onSubmit={save} className="w-full max-w-[420px] bg-surface rounded-3xl shadow-2xl overflow-hidden">

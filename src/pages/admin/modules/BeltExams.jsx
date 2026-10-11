@@ -8,6 +8,10 @@ import DocumentModal from '../../../components/docs/DocumentModal'
 import BeltCertificate from '../../../components/docs/BeltCertificate'
 import { Award } from 'lucide-react'
 import ModuleHeader from '../../../components/ModuleHeader'
+import ConfirmDelete from '../../../components/ConfirmDelete'
+import { countLinked, deleteError, deleteBtnCls } from '../../../lib/deletes'
+import { useAuth } from '../../../context/AuthContext'
+import { Trash2 } from 'lucide-react'
 import StatStrip from '../../../components/StatStrip'
 import FormSheet from '../../../components/FormSheet'
 import DataTable, { StatusPill } from '../../../components/DataTable'
@@ -78,6 +82,22 @@ export default function BeltExams() {
 
     if (error) setError(error.message)
     else setResults(data)
+  }
+
+  // Delete a grading event (with its results) or one wrong result — super admins only.
+  // Students' current belt is not changed by deleting; correct it on their record if needed.
+  const { role } = useAuth()
+  const [del, setDel] = useState(null) // { kind: 'event' | 'result', row, linked }
+  async function deleteNow() {
+    const { kind, row } = del
+    if (kind === 'event') {
+      const r1 = await supabase.from('grading_results').delete().eq('grading_event_id', row.id)
+      if (r1.error) return deleteError(r1.error)
+    }
+    const { error } = await supabase.from(kind === 'event' ? 'grading_events' : 'grading_results').delete().eq('id', row.id)
+    if (error) return deleteError(error)
+    setDel(null)
+    if (kind === 'event') { setSelectedEvent(null); loadEvents() } else loadResults(selectedEvent.id)
   }
 
   function openAddEvent() {
@@ -240,7 +260,12 @@ export default function BeltExams() {
               { key: 'location', header: 'Venue', sortValue: (e) => e.location, render: (e) => e.location || '—' },
               { key: 'when', header: 'Status', render: (e) => (e.exam_date >= new Date().toISOString().slice(0, 10) ? <StatusPill tone="info">Upcoming</StatusPill> : <StatusPill>Completed</StatusPill>) },
               ]}
-              actions={(ev) => <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditEvent(ev)}>Edit</button>}
+              actions={(ev) => (
+                <>
+                  <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditEvent(ev)}>Edit</button>
+                  {role === 'super_admin' && <button className={`${btnOutline} ${btnSm} ${deleteBtnCls}`} onClick={async () => setDel({ kind: 'event', row: ev, linked: await countLinked(supabase, ev.id, [['grading_results', 'grading_event_id', 'Results & certificates']]) })} aria-label={`Delete ${ev.title}`} title="Delete"><Trash2 size={13} /></button>}
+                </>
+              )}
             />
           )}
         </>
@@ -350,6 +375,7 @@ export default function BeltExams() {
               <>
                 {r.certificate_url && <a href={r.certificate_url} target="_blank" rel="noreferrer" className={`${btnOutline} ${btnSm}`}>Uploaded</a>}
                 {r.passed && <button className={`${btnPrimary} ${btnSm}`} onClick={() => setCertificateFor(r)}><Award size={13} /> Certificate</button>}
+                {role === 'super_admin' && <button className={`${btnOutline} ${btnSm} ${deleteBtnCls}`} onClick={() => setDel({ kind: 'result', row: r, linked: [] })} aria-label={`Delete result for ${r.students?.full_name}`} title="Delete result"><Trash2 size={13} /></button>}
               </>
             )}
           />
@@ -359,6 +385,18 @@ export default function BeltExams() {
         <DocumentModal title={`Certificate — ${certificateFor.students?.full_name}`} size="a4-landscape" onClose={() => setCertificateFor(null)}>
           <BeltCertificate result={certificateFor} studentName={certificateFor.students?.full_name} exam={selectedEvent} />
         </DocumentModal>
+      )}
+      {del && (
+        <ConfirmDelete
+          title={del.kind === 'event' ? `Delete ${del.row.title}?` : `Delete ${del.row.students?.full_name}'s result?`}
+          message={del.kind === 'event' ? 'This permanently removes the grading event and all its results; their certificates can no longer be printed.' : 'Use this for a result entered by mistake. Its certificate can no longer be printed.'}
+          linked={del.linked}
+          confirmText={del.kind === 'event' && del.linked.some((l) => l.n > 0) ? del.row.title : undefined}
+          extra={<p className="text-xs text-subtle">Students’ current belt is not changed — correct it on their record if a promotion was wrong.</p>}
+          actionLabel={del.kind === 'event' ? 'Delete grading event' : 'Delete result'}
+          onConfirm={deleteNow}
+          onClose={() => setDel(null)}
+        />
       )}
     </div>
   )

@@ -420,6 +420,7 @@ export default function Admissions() {
           onChanged={handleChanged}
           onEdit={() => editApplication(selected)}
           onPrint={() => setPrinting(selected)}
+          onDeleted={(row) => { setSelectedId(null); setFlash(`Application for ${row.full_name} deleted`); loadData() }}
         />
       )}
 

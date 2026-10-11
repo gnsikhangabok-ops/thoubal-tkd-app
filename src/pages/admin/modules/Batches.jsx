@@ -5,6 +5,10 @@ import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byText, opts } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
 import ModuleHeader from '../../../components/ModuleHeader'
+import ConfirmDelete from '../../../components/ConfirmDelete'
+import { countLinked, deleteError, deleteBtnCls } from '../../../lib/deletes'
+import { useAuth } from '../../../context/AuthContext'
+import { Trash2 } from 'lucide-react'
 import StatStrip from '../../../components/StatStrip'
 import FormSheet from '../../../components/FormSheet'
 import DataTable, { StatusPill } from '../../../components/DataTable'
@@ -129,6 +133,19 @@ export default function Batches() {
       setShowForm(false)
       loadData()
     }
+  }
+
+  // Delete: super admins only, and only when nothing is linked (otherwise deactivate)
+  const { role } = useAuth()
+  const [deleting, setDeleting] = useState(null) // { row, linked }
+  async function openDelete(row) {
+    setDeleting({ row, linked: await countLinked(supabase, row.id, [['students', 'batch_id', 'Students'], ['admissions', 'batch_id', 'Admissions'], ['fee_structures', 'batch_id', 'Fee rates']]) })
+  }
+  async function confirmDelete() {
+    const { error } = await supabase.from('batches').delete().eq('id', deleting.row.id)
+    if (error) return deleteError(error)
+    setDeleting(null)
+    loadData()
   }
 
   async function toggleActive(batch) {
@@ -349,8 +366,19 @@ export default function Batches() {
             <>
               <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(b)}>Edit</button>
               <button className={`${btnOutline} ${btnSm}`} onClick={() => toggleActive(b)}>{b.active ? 'Deactivate' : 'Activate'}</button>
+              {role === 'super_admin' && <button className={`${btnOutline} ${btnSm} ${deleteBtnCls}`} onClick={() => openDelete(b)} aria-label={`Delete ${b.name}`} title="Delete"><Trash2 size={13} /></button>}
             </>
           )}
+        />
+      )}
+      {deleting && (
+        <ConfirmDelete
+          title={`Delete ${deleting.row.name}?`}
+          message="This permanently removes the batch."
+          linked={deleting.linked}
+          blocked={deleting.linked.some((l) => l.n > 0) ? 'Records still use this batch, so it can’t be deleted. Deactivate it instead — it disappears from lists and forms but its history stays.' : undefined}
+          onConfirm={confirmDelete}
+          onClose={() => setDeleting(null)}
         />
       )}
     </div>
