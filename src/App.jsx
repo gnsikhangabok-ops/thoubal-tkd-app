@@ -17,6 +17,7 @@ import ChunkErrorBoundary from './components/ChunkErrorBoundary'
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const TrainingCenters = lazy(() => import('./pages/admin/modules/TrainingCenters'))
 const Coaches = lazy(() => import('./pages/admin/modules/Coaches'))
+const Admissions = lazy(() => import('./pages/admin/modules/Admissions'))
 const Students = lazy(() => import('./pages/admin/modules/Students'))
 const Batches = lazy(() => import('./pages/admin/modules/Batches'))
 const RulesAndRegulations = lazy(() => import('./pages/admin/modules/RulesAndRegulations'))
@@ -72,6 +73,7 @@ export default function App() {
             <Route path="/admin/reports" element={<Admin allowedRoles={['super_admin', 'coach']}><Reports /></Admin>} />
             <Route path="/admin/training-centers" element={<Admin allowedRoles={['super_admin', 'coach']}><TrainingCenters /></Admin>} />
             <Route path="/admin/coaches" element={<Admin allowedRoles={['super_admin', 'coach']}><Coaches /></Admin>} />
+            <Route path="/admin/admissions" element={<Admin allowedRoles={['super_admin', 'coach']}><Admissions /></Admin>} />
             <Route path="/admin/students" element={<Admin allowedRoles={['super_admin', 'coach']}><Students /></Admin>} />
             <Route path="/admin/students/:id" element={<Admin allowedRoles={['super_admin', 'coach']}><StudentFile /></Admin>} />
             <Route path="/admin/batches" element={<Admin allowedRoles={['super_admin', 'coach']}><Batches /></Admin>} />

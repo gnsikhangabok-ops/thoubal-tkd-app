@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { ClipboardPlus } from 'lucide-react'
 import { supabase } from '../../../lib/supabaseClient'
 import { useListTools, exportCsv, byText, byDateDesc } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
 import ModuleHeader from '../../../components/ModuleHeader'
 import DataTable, { StatusPill } from '../../../components/DataTable'
 import { moduleTabs } from '../../../lib/moduleTabs'
+import { btnOutline, btnSm } from '../../../lib/adminUi'
 
 const STATUSES = ['new', 'contacted', 'enrolled', 'closed']
 const STATUS_COLOR = {
@@ -140,6 +143,11 @@ export default function Enquiries() {
                 </label>
               ) },
           ]}
+          actions={(e) => e.status !== 'enrolled' && e.status !== 'closed' && (
+            <Link to={`/admin/admissions?enquiry=${e.id}`} className={`${btnOutline} ${btnSm}`} aria-label={`Start admission for ${e.child_name}`}>
+              <ClipboardPlus size={13} /> Admit
+            </Link>
+          )}
         />
       )}
     </div>

@@ -6,11 +6,12 @@ import { useT } from '../../lib/i18n'
 /**
  * Full-screen preview for a printable document. Printing hides everything except
  * the document (see .printing-doc rules in tailwind.css). `size` sets the page:
- * 'a4-landscape' | 'a5' | 'card'.
+ * 'a4' | 'a4-landscape' | 'a5' | 'card'.
  */
 // Paper size per document, applied only while printing
 const PAGE_CSS = {
   'a4-landscape': '@page { size: A4 landscape; margin: 10mm; }',
+  a4: '@page { size: A4; margin: 0; }',
   a5: '@page { size: A5; margin: 0; }',
   card: '@page { size: A4; margin: 15mm; }',
 }

@@ -31,6 +31,11 @@ npm run dev
 - **Public site**: homepage with quick services, admission enquiry form, rules page; English / Hindi / Manipuri
 - **Student & parent portal**: attendance, fees with downloadable receipts, belt progress, printable
   certificates and ID card, notices with a notification bell
+- **Admissions**: application pipeline (applied → review → trial class → approved → enrolled, plus
+  waitlist / rejected / withdrawn) as a drag-and-drop board or table; six-step application wizard;
+  website enquiries converted in one click; trial booking with coach rating; document checklist;
+  admission fee with discounts and part payments posted to Accounts; readiness score; per-application
+  timeline; one-click enrolment that creates the student record; printable A4 admission form with QR
 - **Management portal**: every list has search, filters, sorting, Excel (CSV) export and print / PDF;
   Reports & Analytics with charts and a monthly report; Notices; Activity Log (super admin)
 - **Documents**: student ID cards, fee receipts and belt certificates with QR codes, printed at true size
@@ -57,3 +62,6 @@ Run these in the Supabase SQL editor, in order, after checking them against your
    prevents users from choosing their own role.
 2. `supabase/migrations/20261005_notices_and_activity_log.sql`: the activity log (table, triggers,
    super-admin-only read access) and notices read/write policies.
+3. `supabase/migrations/20261011_admissions.sql`: the admissions table (staff-only access, Activity Log
+   trigger). Name a one-time fee type "Admission fee" in Fee Setup to pre-fill the fee and have
+   enrolled students' payments show against it.
