@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   IdCard, Pencil, Printer, AlertTriangle, CalendarCheck, Wallet, Award, TrendingUp, Medal, Trophy,
-  FileText, UserRound, LayoutDashboard, ReceiptText, Power, Camera,
+  FileText, UserRound, LayoutDashboard, ReceiptText, Power, Camera, Trash2,
 } from 'lucide-react'
+import DeleteStudentDialog from '../../components/DeleteStudentDialog'
+import { useAuth } from '../../context/AuthContext'
 import StudentPhotoEditor from '../../components/StudentPhotoEditor'
 import { useStudentPhotos } from '../../lib/studentPhotos'
 import { supabase } from '../../lib/supabaseClient'
@@ -41,6 +43,8 @@ const RATING_TONE = { Excellent: 'ok', Good: 'info', Satisfactory: 'warn', 'Need
 export default function StudentFile() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { role } = useAuth()
+  const [deleting, setDeleting] = useState(false)
   const [params, setParams] = useSearchParams()
   const tab = TABS.some((t) => t.value === params.get('tab')) ? params.get('tab') : 'overview'
   const setTab = (value) => setParams(value === 'overview' ? {} : { tab: value }, { replace: true })
@@ -126,6 +130,7 @@ export default function StudentFile() {
         actions={
           <>
             <button className={btnOutline} onClick={() => navigate(`/admin/students?edit=${id}`)}><Pencil size={15} /> Edit</button>
+            {role === 'super_admin' && <button className={`${btnOutline} !border-red-300 !text-red-600 hover:!bg-red-50`} onClick={() => setDeleting(true)}><Trash2 size={15} /> Delete</button>}
             <button className={btnOutline} onClick={() => setDoc({ type: 'id' })}><IdCard size={16} /> ID card</button>
             <button className={btnPrimary} onClick={() => window.print()}><Printer size={16} /> Print file</button>
           </>
@@ -376,6 +381,14 @@ export default function StudentFile() {
         <Link to="/admin/students" className="hover:text-pay-action hover:underline">← Back to all students</Link>
       </p>
 
+      {deleting && (
+        <DeleteStudentDialog
+          student={student}
+          onClose={() => setDeleting(false)}
+          onDeleted={() => navigate('/admin/students', { state: { flash: `${student.full_name} was deleted` } })}
+          onDeactivate={async () => { setDeleting(false); await toggleActive() }}
+        />
+      )}
       {editingPhoto && (
         <StudentPhotoEditor student={student} currentUrl={photoUrl} onClose={() => setEditingPhoto(false)} onSaved={() => load()} />
       )}

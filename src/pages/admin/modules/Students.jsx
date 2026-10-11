@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { BELT_RANKS, BELT_LABELS, beltLabel } from '../../../lib/belts'
@@ -7,7 +7,9 @@ import { useListTools, exportCsv, byText, byDateDesc, opts } from '../../../lib/
 import ListToolbar from '../../../components/ListToolbar'
 import DocumentModal from '../../../components/docs/DocumentModal'
 import StudentIdCard from '../../../components/docs/StudentIdCard'
-import { IdCard, Pencil, UserPlus, Camera } from 'lucide-react'
+import { IdCard, Pencil, UserPlus, Camera, Trash2, CheckCircle2 } from 'lucide-react'
+import DeleteStudentDialog from '../../../components/DeleteStudentDialog'
+import { useAuth } from '../../../context/AuthContext'
 import StudentPhotoEditor from '../../../components/StudentPhotoEditor'
 import { useStudentPhotos } from '../../../lib/studentPhotos'
 import ModuleHeader from '../../../components/ModuleHeader'
@@ -49,6 +51,19 @@ export default function Students() {
   const [saving, setSaving] = useState(false)
   const [idCardFor, setIdCardFor] = useState(null)
   const [photoFor, setPhotoFor] = useState(null)
+  const [deleteFor, setDeleteFor] = useState(null)
+  const { role } = useAuth()
+  const location = useLocation()
+  // A message passed from the student file (e.g. after deleting); cleared from history so it shows once
+  const [flash, setFlash] = useState(() => {
+    if (location.state?.flash) window.history.replaceState({ ...window.history.state, usr: null }, '')
+    return location.state?.flash || ''
+  })
+  useEffect(() => {
+    if (!flash) return
+    const t = setTimeout(() => setFlash(''), 3500)
+    return () => clearTimeout(t)
+  }, [flash])
   const photos = useStudentPhotos(students)
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -427,9 +442,28 @@ export default function Students() {
               <button className={`${btnOutline} ${btnSm}`} onClick={() => setPhotoFor(s)} aria-label={`Photo for ${s.full_name}`} title={s.photo_path ? 'Change photo' : 'Add photo'}><Camera size={13} /></button>
               <button className={`${btnOutline} ${btnSm}`} onClick={() => setIdCardFor(s)} aria-label={`ID card for ${s.full_name}`}><IdCard size={14} /> ID</button>
               <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(s)} aria-label={`Edit ${s.full_name}`}><Pencil size={13} /> Edit</button>
+              {role === 'super_admin' && <button className={`${btnOutline} ${btnSm} !border-red-300 !text-red-600 hover:!bg-red-50`} onClick={() => setDeleteFor(s)} aria-label={`Delete ${s.full_name}`} title="Delete"><Trash2 size={13} /></button>}
             </>
           )}
         />
+      )}
+      {deleteFor && (
+        <DeleteStudentDialog
+          student={deleteFor}
+          onClose={() => setDeleteFor(null)}
+          onDeleted={(st) => { setDeleteFor(null); setFlash(`${st.full_name} was deleted`); loadData() }}
+          onDeactivate={async (st) => {
+            const { error } = await supabase.from('students').update({ active: false }).eq('id', st.id)
+            setDeleteFor(null)
+            if (error) setError(error.message)
+            else { setFlash(`${st.full_name} marked inactive`); loadData() }
+          }}
+        />
+      )}
+      {flash && (
+        <div role="status" className="fixed top-5 left-1/2 -translate-x-1/2 z-[80] rounded-full bg-pay-navy text-white text-sm font-semibold px-5 py-2.5 shadow-2xl inline-flex items-center gap-2">
+          <CheckCircle2 size={16} /> {flash}
+        </div>
       )}
       {photoFor && (
         <StudentPhotoEditor student={photoFor} currentUrl={photos[photoFor.id]} onClose={() => setPhotoFor(null)} onSaved={() => loadData()} />
