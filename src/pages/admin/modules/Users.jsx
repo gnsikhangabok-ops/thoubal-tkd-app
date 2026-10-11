@@ -4,6 +4,7 @@ import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byText, opts } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
 import ModuleHeader from '../../../components/ModuleHeader'
+import StatStrip from '../../../components/StatStrip'
 import DataTable, { StatusPill } from '../../../components/DataTable'
 import { moduleTabs } from '../../../lib/moduleTabs'
 import PersonCell from '../../../components/PersonCell'
@@ -120,6 +121,12 @@ export default function Users() {
         activeTab={tabs.active}
         onTabChange={tabs.select}
       />
+      <StatStrip loading={loading} items={[
+        { label: 'Accounts', value: profiles.length, sub: 'people who have signed up' },
+        { label: 'Staff', value: profiles.filter((p) => p.role === 'super_admin' || p.role === 'coach').length, sub: `${profiles.filter((p) => p.role === 'super_admin').length} super admin · ${profiles.filter((p) => p.role === 'coach').length} coach`, tone: 'gold' },
+        { label: 'Student logins', value: profiles.filter((p) => p.role === 'student').length, sub: 'portal accounts', tone: 'info' },
+        { label: 'Not linked', value: profiles.filter((p) => p.role === 'student' && !students.some((s) => s.profile_id === p.id)).length, sub: 'link them to a student record', tone: 'warn' },
+      ]} />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 

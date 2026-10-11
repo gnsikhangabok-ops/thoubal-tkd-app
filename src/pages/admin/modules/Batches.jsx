@@ -5,6 +5,12 @@ import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byText, opts } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
 import ModuleHeader from '../../../components/ModuleHeader'
+import ConfirmDelete from '../../../components/ConfirmDelete'
+import { countLinked, deleteError, deleteBtnCls } from '../../../lib/deletes'
+import { useAuth } from '../../../context/AuthContext'
+import { Trash2 } from 'lucide-react'
+import StatStrip from '../../../components/StatStrip'
+import FormSheet from '../../../components/FormSheet'
 import DataTable, { StatusPill } from '../../../components/DataTable'
 import { moduleTabs } from '../../../lib/moduleTabs'
 
@@ -129,6 +135,19 @@ export default function Batches() {
     }
   }
 
+  // Delete: super admins only, and only when nothing is linked (otherwise deactivate)
+  const { role } = useAuth()
+  const [deleting, setDeleting] = useState(null) // { row, linked }
+  async function openDelete(row) {
+    setDeleting({ row, linked: await countLinked(supabase, row.id, [['students', 'batch_id', 'Students'], ['admissions', 'batch_id', 'Admissions'], ['fee_structures', 'batch_id', 'Fee rates']]) })
+  }
+  async function confirmDelete() {
+    const { error } = await supabase.from('batches').delete().eq('id', deleting.row.id)
+    if (error) return deleteError(error)
+    setDeleting(null)
+    loadData()
+  }
+
   async function toggleActive(batch) {
     const { error } = await supabase
       .from('batches')
@@ -181,6 +200,12 @@ export default function Batches() {
         activeTab={tabs.active}
         onTabChange={tabs.select}
       />
+      <StatStrip loading={loading} items={[
+        { label: 'Active batches', value: batches.filter((b) => b.active).length, sub: `${batches.length} in all` },
+        { label: 'Total capacity', value: batches.filter((b) => b.active).reduce((s, b) => s + (Number(b.capacity) || 0), 0), sub: 'seats across active batches', tone: 'gold' },
+        { label: 'Coaches assigned', value: new Set(batches.filter((b) => b.active && b.coach_id).map((b) => b.coach_id)).size, sub: `of ${coaches.length} coaches`, tone: 'info' },
+        { label: 'Centres', value: new Set(batches.filter((b) => b.active).map((b) => b.training_center_id)).size, sub: 'with active batches', tone: 'ok' },
+      ]} />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -191,8 +216,7 @@ export default function Batches() {
       )}
 
       {showForm && (
-        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[520px]">
-          <h3 className="font-semibold text-base text-heading mb-4">{form.id ? 'Edit Batch' : 'New Batch'}</h3>
+        <FormSheet title={form.id ? 'Edit Batch' : 'New Batch'} subtitle="Batches" onClose={() => setShowForm(false)}>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <input
               type="text" placeholder="Batch name (e.g. Little Dragons - Morning)" required
@@ -295,7 +319,7 @@ export default function Batches() {
               </button>
             </div>
           </form>
-        </div>
+        </FormSheet>
       )}
 
       <ListToolbar
@@ -342,8 +366,19 @@ export default function Batches() {
             <>
               <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(b)}>Edit</button>
               <button className={`${btnOutline} ${btnSm}`} onClick={() => toggleActive(b)}>{b.active ? 'Deactivate' : 'Activate'}</button>
+              {role === 'super_admin' && <button className={`${btnOutline} ${btnSm} ${deleteBtnCls}`} onClick={() => openDelete(b)} aria-label={`Delete ${b.name}`} title="Delete"><Trash2 size={13} /></button>}
             </>
           )}
+        />
+      )}
+      {deleting && (
+        <ConfirmDelete
+          title={`Delete ${deleting.row.name}?`}
+          message="This permanently removes the batch."
+          linked={deleting.linked}
+          blocked={deleting.linked.some((l) => l.n > 0) ? 'Records still use this batch, so it can’t be deleted. Deactivate it instead — it disappears from lists and forms but its history stays.' : undefined}
+          onConfirm={confirmDelete}
+          onClose={() => setDeleting(null)}
         />
       )}
     </div>

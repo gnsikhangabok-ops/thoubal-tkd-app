@@ -6,6 +6,8 @@ import { useListTools, exportCsv, byDateDesc } from '../../../lib/listTools'
 import { formatDate } from '../../../lib/documents'
 import ListToolbar from '../../../components/ListToolbar'
 import ModuleHeader from '../../../components/ModuleHeader'
+import StatStrip from '../../../components/StatStrip'
+import FormSheet from '../../../components/FormSheet'
 import { moduleTabs } from '../../../lib/moduleTabs'
 
 const emptyForm = { id: null, title: '', body: '', pinned: false }
@@ -101,12 +103,16 @@ export default function Notices() {
         activeTab={tabs.active}
         onTabChange={tabs.select}
       />
+      <StatStrip loading={loading} items={[
+        { label: 'Notices', value: notices.length, sub: 'shown in the student portal' },
+        { label: 'Pinned', value: notices.filter((n) => n.pinned).length, sub: 'stay at the top', tone: 'gold' },
+        { label: 'This month', value: notices.filter((n) => (n.created_at || '').slice(0, 7) === new Date().toISOString().slice(0, 7)).length, sub: 'posted', tone: 'info' },
+      ]} />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
       {showForm && (
-        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[620px]">
-          <h3 className="font-semibold text-base text-heading mb-4">{form.id ? 'Edit Notice' : 'New Notice'}</h3>
+        <FormSheet title={form.id ? 'Edit Notice' : 'New Notice'} subtitle="Notices" onClose={() => setShowForm(false)}>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <input
               type="text" placeholder="Title (e.g. Belt grading on 20 October)" required maxLength={120}
@@ -129,7 +135,7 @@ export default function Notices() {
               <button type="button" className={btnOutline} onClick={() => setShowForm(false)}>Cancel</button>
             </div>
           </form>
-        </div>
+        </FormSheet>
       )}
 
       {!showForm && (

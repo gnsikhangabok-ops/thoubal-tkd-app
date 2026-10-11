@@ -96,7 +96,7 @@ export default function AdminLayout({ children }) {
   return (
     <div className="paytm clinic flex min-h-screen font-body">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-64 shrink-0 bg-surface flex-col border-r border-pay-line sticky top-0 h-screen z-30">
+      <aside className="admin-side hidden md:flex w-64 shrink-0 bg-surface flex-col border-r border-pay-line sticky top-0 h-screen z-30">
         {sidebarContent}
       </aside>
 
@@ -116,7 +116,7 @@ export default function AdminLayout({ children }) {
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-pay-navy/40" onClick={() => setMobileOpen(false)} />
-          <aside className="relative w-72 max-w-[82vw] bg-surface flex flex-col h-full overflow-y-auto rounded-r-2xl">
+          <aside className="admin-side relative w-72 max-w-[82vw] bg-surface flex flex-col h-full overflow-y-auto rounded-r-2xl">
             {sidebarContent}
           </aside>
         </div>

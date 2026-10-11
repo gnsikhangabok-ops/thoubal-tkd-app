@@ -4,6 +4,8 @@ import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byText, byNumberDesc, opts } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
 import ModuleHeader from '../../../components/ModuleHeader'
+import StatStrip from '../../../components/StatStrip'
+import FormSheet from '../../../components/FormSheet'
 import DataTable, { StatusPill } from '../../../components/DataTable'
 import { moduleTabs } from '../../../lib/moduleTabs'
 
@@ -198,6 +200,12 @@ export default function EquipmentRecord() {
             crumbs={[{ label: viewingHistory.name }]}
             actions={<button className={btnOutline} onClick={() => setViewingHistory(null)}>← All equipment</button>}
           />
+          <StatStrip loading={loading} items={[
+            { label: 'Stock value', value: `₹${items.reduce((s, i) => s + (Number(i.stock_qty) || 0) * (Number(i.unit_price) || 0), 0).toLocaleString('en-IN')}`, sub: `${items.reduce((s, i) => s + (Number(i.stock_qty) || 0), 0)} pieces in stock` },
+            { label: 'Items', value: items.length, sub: 'in the catalogue', tone: 'gold' },
+            { label: 'Out of stock', value: items.filter((i) => !(i.stock_qty > 0)).length, sub: 'reorder these', tone: 'bad' },
+            { label: 'Centres', value: centers.length, sub: 'holding stock', tone: 'info' },
+          ]} />
 
           <DataTable
             caption="Issuance history"
@@ -225,8 +233,7 @@ export default function EquipmentRecord() {
           {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
           {showItemForm && (
-            <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[460px]">
-              <h3 className="font-semibold text-base text-heading mb-4">{itemForm.id ? 'Edit Item' : 'New Inventory Item'}</h3>
+            <FormSheet title={itemForm.id ? 'Edit Item' : 'New Inventory Item'} subtitle="Equipment" onClose={() => setShowItemForm(false)}>
               <form onSubmit={handleItemSubmit} className="flex flex-col gap-3">
                 <input
                   type="text" placeholder="Item name (e.g. Dobok - Size M)" required
@@ -274,7 +281,7 @@ export default function EquipmentRecord() {
                   </button>
                 </div>
               </form>
-            </div>
+            </FormSheet>
           )}
 
           {issuingFor && (

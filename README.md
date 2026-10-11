@@ -31,6 +31,22 @@ npm run dev
 - **Public site**: homepage with quick services, admission enquiry form, rules page; English / Hindi / Manipuri
 - **Student & parent portal**: attendance, fees with downloadable receipts, belt progress, printable
   certificates and ID card, notices with a notification bell
+- **Admissions**: application pipeline (applied → review → trial class → approved → enrolled, plus
+  waitlist / rejected / withdrawn) as a drag-and-drop board or table; six-step application wizard;
+  website enquiries converted in one click; trial booking with coach rating; document checklist;
+  admission fee with discounts and part payments posted to Accounts; readiness score; per-application
+  timeline; one-click enrolment that creates the student record; printable A4 admission form with QR
+- **Fees**: collection desk (month navigator, collection progress by method, overdue detection after
+  the 10th, quick-pay sheet with receipt, bulk cash collection and waivers, WhatsApp reminders,
+  per-student fee ledger); Fee Dues (all unpaid balances aged 1–30 / 31–60 / 61–90 / 90+ days);
+  Fee Analytics (billed vs collected, collection rate, on-time payment, methods, centres);
+  Fee Setup (monthly rates per batch with effective dates and history, a fee catalogue for
+  admission / annual / uniform / belt grading / event fees, sibling discount, late fee and grace
+  period, due day, payment methods, UPI scan-to-pay QR, bank details, receipt prefix and note)
+- **Student photos**: upload, drag-and-drop or take a photo; position it in a passport frame
+  (zoom, rotate, face guide); it is cropped to 4:5, resized to 480×600 and compressed to WebP in the
+  browser before upload (typically 30–80 KB). Stored in a private bucket and shown through
+  short-lived signed links on the student list, student file, ID card and the student's portal
 - **Management portal**: every list has search, filters, sorting, Excel (CSV) export and print / PDF;
   Reports & Analytics with charts and a monthly report; Notices; Activity Log (super admin)
 - **Documents**: student ID cards, fee receipts and belt certificates with QR codes, printed at true size
@@ -57,3 +73,10 @@ Run these in the Supabase SQL editor, in order, after checking them against your
    prevents users from choosing their own role.
 2. `supabase/migrations/20261005_notices_and_activity_log.sql`: the activity log (table, triggers,
    super-admin-only read access) and notices read/write policies.
+3. `supabase/migrations/20261011_admissions.sql`: the admissions table (staff-only access, Activity Log
+   trigger). Name a one-time fee type "Admission fee" in Fee Setup to pre-fill the fee and have
+   enrolled students' payments show against it.
+4. `supabase/migrations/20261012_fee_setup.sql`: fee settings (readable by signed-in users, changed by
+   super admins) and catalogue fields on one-time fee types.
+5. `supabase/migrations/20261013_student_photos.sql`: `students.photo_path` and the private
+   `student-photos` storage bucket (staff manage photos; a student can view only their own).

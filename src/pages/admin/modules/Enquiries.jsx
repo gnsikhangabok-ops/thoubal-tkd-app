@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { ClipboardPlus, Trash2 } from 'lucide-react'
+import ConfirmDelete from '../../../components/ConfirmDelete'
+import { deleteError, deleteBtnCls } from '../../../lib/deletes'
 import { supabase } from '../../../lib/supabaseClient'
 import { useListTools, exportCsv, byText, byDateDesc } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
 import ModuleHeader from '../../../components/ModuleHeader'
 import DataTable, { StatusPill } from '../../../components/DataTable'
 import { moduleTabs } from '../../../lib/moduleTabs'
+import { btnOutline, btnSm } from '../../../lib/adminUi'
 
 const STATUSES = ['new', 'contacted', 'enrolled', 'closed']
 const STATUS_COLOR = {
@@ -16,6 +21,7 @@ export default function Enquiries() {
   const [enquiries, setEnquiries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [deleting, setDeleting] = useState(null)
 
   async function loadEnquiries() {
     const { data, error } = await supabase
@@ -140,6 +146,29 @@ export default function Enquiries() {
                 </label>
               ) },
           ]}
+          actions={(e) => (
+            <>
+              {e.status !== 'enrolled' && e.status !== 'closed' && (
+                <Link to={`/admin/admissions?enquiry=${e.id}`} className={`${btnOutline} ${btnSm}`} aria-label={`Start admission for ${e.child_name}`}>
+                  <ClipboardPlus size={13} /> Admit
+                </Link>
+              )}
+              <button className={`${btnOutline} ${btnSm} ${deleteBtnCls}`} onClick={() => setDeleting(e)} aria-label={`Delete enquiry from ${e.child_name}`} title="Delete (spam or duplicate)"><Trash2 size={13} /></button>
+            </>
+          )}
+        />
+      )}
+      {deleting && (
+        <ConfirmDelete
+          title={`Delete the enquiry from ${deleting.child_name}?`}
+          message="For spam or duplicate enquiries. Any admission already started from it is kept."
+          onConfirm={async () => {
+            const { error } = await supabase.from('enquiries').delete().eq('id', deleting.id)
+            if (error) return deleteError(error)
+            setDeleting(null)
+            loadEnquiries()
+          }}
+          onClose={() => setDeleting(null)}
         />
       )}
     </div>

@@ -213,43 +213,92 @@
 :root[data-theme="dark"] .text-\[\#6B4300\] { color: #FCD9A0; }
 
 
-/* ---------- Clinical palette: management portal only (AdminLayout adds .clinic) ----------
+/* ---------- Midnight & Gold: management portal only (AdminLayout adds .clinic) ----------
    Same token names as the app-wide palette, so every module picks it up without changes.
-   Teal action colour keeps white button text at 5:1 contrast. */
+   Light workspace on warm ivory, navy actions (white text 15:1), gold for highlights;
+   the sidebar (.admin-side) is its own navy scope with gold accents. */
 .clinic {
-  --color-pay-navy: #0B4F4E;
-  --color-pay-blue: #2BB5A8;
-  --color-pay-stat-mid: #0E7C7B;
-  --color-pay-action: #0E7C7B;
-  --color-pay-action-dark: #0A6160;
-  --color-pay-sky: #E2F3F1;
-  --color-pay-sky-2: #CBE8E4;
-  --color-pay-bg: #F3F7F7;
-  --color-pay-line: #DCE7E6;
-  --color-heading: #0B3B3A;
-  --color-body: #3F5654;
-  --color-muted: #557170;
-  --color-subtle: #6F8A88;
-  --status-info: #0E7C7B;
-  --shadow-card: 0 1px 3px rgba(11, 59, 58, 0.06), 0 4px 14px rgba(11, 59, 58, 0.06);
+  --ring-light: #E6C877;
+  --gold: #C9A24A;
+  --gold-light: #E6C877;
+  --gold-text: #8A6A20;
+  --color-pay-navy: #0B1530;
+  --color-pay-stat-mid: #16244D;
+  --color-pay-blue: #24386E;
+  --color-pay-action: #13224A;
+  --color-pay-action-dark: #0B1530;
+  --color-pay-sky: #F3EEDF;
+  --color-pay-sky-2: #E9DFC2;
+  --color-pay-bg: #F8F7F3;
+  --color-pay-line: #E9E5DA;
+  --color-heading: #0E1A38;
+  --color-body: #454B5C;
+  --color-muted: #5C6273;
+  --color-subtle: #676C7C;
+  --status-info: #2D5BD0;
+  --viz-1: #24407F;   /* navy series */
+  --viz-2: #C9A24A;   /* gold series */
+  --shadow-card: 0 1px 2px rgba(14, 26, 56, 0.05), 0 10px 30px -12px rgba(14, 26, 56, 0.16);
 }
 :root[data-theme="dark"] .clinic {
-  --color-pay-navy: #0B4F4E;
-  --color-pay-blue: #2BB5A8;
-  --color-pay-action: #0F8C86;
-  --color-pay-action-dark: #0C7470;
-  --color-pay-sky: #123C3A;
-  --color-pay-sky-2: #18504D;
-  --color-pay-bg: #0A1413;
-  --color-pay-line: #21403E;
-  --color-surface: #11201F;
-  --color-heading: #E3F1F0;
-  --color-body: #B5CCCA;
-  --color-muted: #94B1AE;
-  --color-subtle: #7E9C99;
-  --status-info: #2BB5A8;
+  --gold-text: #E6C877;
+  --color-pay-action: #C9A24A;   /* gold buttons with navy text in dark mode */
+  --color-pay-action-dark: #B38C38;
+  --color-pay-sky: #1A2440;
+  --color-pay-sky-2: #233057;
+  --color-pay-bg: #080D1C;
+  --color-pay-line: #1F2A47;
+  --color-surface: #0F1A33;
+  --color-heading: #F2EEE3;
+  --color-body: #B9C1D3;
+  --color-muted: #A0A9BE;
+  --color-subtle: #8D97AD;
+  --status-info: #93C5FD;
+  --viz-1: #7D9BE0;
+  --viz-2: #D4AF5A;
   --shadow-card: 0 2px 14px rgba(0, 0, 0, 0.45);
 }
+:root[data-theme="dark"] .clinic .bg-pay-action { color: #0B1530; }
+:root[data-theme="dark"] .clinic .text-pay-action { color: var(--gold-light); }
+
+/* Sidebar: navy panel, gold brand mark and active item */
+.clinic .admin-side {
+  --color-surface: #0B1530;
+  --color-heading: #F5F1E6;
+  --color-body: #B9C1D3;
+  --color-muted: #A0A9BE;
+  --color-subtle: #8E98AF;
+  --color-pay-bg: #13204A;
+  --color-pay-sky: rgba(212, 175, 90, 0.14);
+  --color-pay-line: #1B2748;
+  --color-pay-action: #D4AF5A;
+  --color-pay-action-dark: #C9A24A;
+  --color-pay-blue: #D4AF5A;
+  --color-pay-navy: #B8913A;
+  background: linear-gradient(180deg, #0B1530 0%, #0A1229 100%);
+  color: var(--color-body);
+}
+:root[data-theme="dark"] .clinic .admin-side { background: linear-gradient(180deg, #070C1A 0%, #060A16 100%); --color-surface: #070C1A; }
+.clinic .admin-side .bg-pay-action { color: #0B1530; background: linear-gradient(135deg, #E6C877, #B8913A); }
+.clinic .admin-side a[aria-current="page"] { box-shadow: inset 3px 0 0 #D4AF5A; background: linear-gradient(90deg, rgba(212, 175, 90, 0.2), rgba(212, 175, 90, 0.03)); }
+.clinic .admin-side .from-pay-navy { color: #0B1530; }
+
+/* Gold underline and count on the active module tab */
+.clinic [role="tab"][aria-selected="true"] .bg-pay-action { background: var(--gold); color: #0B1530; }
+.clinic [role="tab"][aria-selected="true"] { color: var(--color-heading); }
+
+/* Primary buttons: navy with a hairline gold edge */
+.clinic main .rounded-full.bg-pay-action:not([role="tab"] *) { box-shadow: inset 0 0 0 1px rgba(212, 175, 90, 0.85), 0 8px 20px -10px rgba(11, 21, 48, 0.6); }
+
+/* Metric cards: navy with a gold top edge, gold glow and gold figures */
+.clinic .pay-stat {
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(212, 175, 90, 0.22) 0%, transparent 55%),
+    linear-gradient(140deg, #0B1530 0%, #16244D 70%, #1F3366 100%);
+  border-top: 2px solid #D4AF5A;
+  box-shadow: 0 14px 30px -16px rgba(11, 21, 48, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.clinic .pay-stat strong { color: #F1D58F; }
 
 /* ---------- Print / Save as PDF ---------- */
 @media print {
@@ -282,6 +331,11 @@
 }
 @page { margin: 10mm; }
 
+
+@keyframes slideIn {
+  from { transform: translateX(24px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
 
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.98); }

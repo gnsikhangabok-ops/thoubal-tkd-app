@@ -8,6 +8,12 @@ import DocumentModal from '../../../components/docs/DocumentModal'
 import BeltCertificate from '../../../components/docs/BeltCertificate'
 import { Award } from 'lucide-react'
 import ModuleHeader from '../../../components/ModuleHeader'
+import ConfirmDelete from '../../../components/ConfirmDelete'
+import { countLinked, deleteError, deleteBtnCls } from '../../../lib/deletes'
+import { useAuth } from '../../../context/AuthContext'
+import { Trash2 } from 'lucide-react'
+import StatStrip from '../../../components/StatStrip'
+import FormSheet from '../../../components/FormSheet'
 import DataTable, { StatusPill } from '../../../components/DataTable'
 import { moduleTabs } from '../../../lib/moduleTabs'
 
@@ -76,6 +82,22 @@ export default function BeltExams() {
 
     if (error) setError(error.message)
     else setResults(data)
+  }
+
+  // Delete a grading event (with its results) or one wrong result — super admins only.
+  // Students' current belt is not changed by deleting; correct it on their record if needed.
+  const { role } = useAuth()
+  const [del, setDel] = useState(null) // { kind: 'event' | 'result', row, linked }
+  async function deleteNow() {
+    const { kind, row } = del
+    if (kind === 'event') {
+      const r1 = await supabase.from('grading_results').delete().eq('grading_event_id', row.id)
+      if (r1.error) return deleteError(r1.error)
+    }
+    const { error } = await supabase.from(kind === 'event' ? 'grading_events' : 'grading_results').delete().eq('id', row.id)
+    if (error) return deleteError(error)
+    setDel(null)
+    if (kind === 'event') { setSelectedEvent(null); loadEvents() } else loadResults(selectedEvent.id)
   }
 
   function openAddEvent() {
@@ -174,12 +196,17 @@ export default function BeltExams() {
             activeTab={tabs.active}
             onTabChange={tabs.select}
           />
+          <StatStrip loading={loading} items={[
+            { label: 'Upcoming gradings', value: events.filter((e) => e.exam_date >= new Date().toISOString().slice(0, 10)).length, sub: (() => { const n = events.filter((e) => e.exam_date >= new Date().toISOString().slice(0, 10)).sort((a, b) => a.exam_date.localeCompare(b.exam_date))[0]; return n ? `next: ${n.title} · ${n.exam_date}` : 'none scheduled' })() },
+            { label: 'Gradings held', value: events.filter((e) => e.exam_date && e.exam_date < new Date().toISOString().slice(0, 10)).length, sub: 'past events', tone: 'gold' },
+            { label: 'Results recorded', value: results.length, sub: `${results.filter((r) => r.passed).length} promoted`, tone: 'info' },
+            { label: 'Pass rate', value: results.length ? `${Math.round((results.filter((r) => r.passed).length / results.length) * 100)}%` : '—', sub: 'all recorded results', tone: 'ok' },
+          ]} />
 
           {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
           {showEventForm && (
-            <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[480px]">
-              <h3 className="font-semibold text-base text-heading mb-4">{eventForm.id ? 'Edit Grading Event' : 'New Grading Event'}</h3>
+            <FormSheet title={eventForm.id ? 'Edit Grading Event' : 'New Grading Event'} subtitle="Belt Exams" onClose={() => setShowEventForm(false)}>
               <form onSubmit={handleEventSubmit} className="flex flex-col gap-3">
                 <input
                   type="text" placeholder="Title (e.g. Autumn Grading 2026)" required
@@ -208,7 +235,7 @@ export default function BeltExams() {
                   </button>
                 </div>
               </form>
-            </div>
+            </FormSheet>
           )}
 
           <ListToolbar
@@ -233,7 +260,12 @@ export default function BeltExams() {
               { key: 'location', header: 'Venue', sortValue: (e) => e.location, render: (e) => e.location || '—' },
               { key: 'when', header: 'Status', render: (e) => (e.exam_date >= new Date().toISOString().slice(0, 10) ? <StatusPill tone="info">Upcoming</StatusPill> : <StatusPill>Completed</StatusPill>) },
               ]}
-              actions={(ev) => <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditEvent(ev)}>Edit</button>}
+              actions={(ev) => (
+                <>
+                  <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditEvent(ev)}>Edit</button>
+                  {role === 'super_admin' && <button className={`${btnOutline} ${btnSm} ${deleteBtnCls}`} onClick={async () => setDel({ kind: 'event', row: ev, linked: await countLinked(supabase, ev.id, [['grading_results', 'grading_event_id', 'Results & certificates']]) })} aria-label={`Delete ${ev.title}`} title="Delete"><Trash2 size={13} /></button>}
+                </>
+              )}
             />
           )}
         </>
@@ -249,8 +281,7 @@ export default function BeltExams() {
           {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
           {showResultForm && (
-            <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[480px]">
-              <h3 className="font-semibold text-base text-heading mb-4">Add Result</h3>
+            <FormSheet title="Add Result" subtitle="Belt Exams" onClose={() => setShowResultForm(false)}>
               <form onSubmit={handleResultSubmit} className="flex flex-col gap-3">
                 <select
                   required
@@ -326,7 +357,7 @@ export default function BeltExams() {
                   </button>
                 </div>
               </form>
-            </div>
+            </FormSheet>
           )}
 
           <DataTable
@@ -344,6 +375,7 @@ export default function BeltExams() {
               <>
                 {r.certificate_url && <a href={r.certificate_url} target="_blank" rel="noreferrer" className={`${btnOutline} ${btnSm}`}>Uploaded</a>}
                 {r.passed && <button className={`${btnPrimary} ${btnSm}`} onClick={() => setCertificateFor(r)}><Award size={13} /> Certificate</button>}
+                {role === 'super_admin' && <button className={`${btnOutline} ${btnSm} ${deleteBtnCls}`} onClick={() => setDel({ kind: 'result', row: r, linked: [] })} aria-label={`Delete result for ${r.students?.full_name}`} title="Delete result"><Trash2 size={13} /></button>}
               </>
             )}
           />
@@ -353,6 +385,18 @@ export default function BeltExams() {
         <DocumentModal title={`Certificate — ${certificateFor.students?.full_name}`} size="a4-landscape" onClose={() => setCertificateFor(null)}>
           <BeltCertificate result={certificateFor} studentName={certificateFor.students?.full_name} exam={selectedEvent} />
         </DocumentModal>
+      )}
+      {del && (
+        <ConfirmDelete
+          title={del.kind === 'event' ? `Delete ${del.row.title}?` : `Delete ${del.row.students?.full_name}'s result?`}
+          message={del.kind === 'event' ? 'This permanently removes the grading event and all its results; their certificates can no longer be printed.' : 'Use this for a result entered by mistake. Its certificate can no longer be printed.'}
+          linked={del.linked}
+          confirmText={del.kind === 'event' && del.linked.some((l) => l.n > 0) ? del.row.title : undefined}
+          extra={<p className="text-xs text-subtle">Students’ current belt is not changed — correct it on their record if a promotion was wrong.</p>}
+          actionLabel={del.kind === 'event' ? 'Delete grading event' : 'Delete result'}
+          onConfirm={deleteNow}
+          onClose={() => setDel(null)}
+        />
       )}
     </div>
   )

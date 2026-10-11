@@ -156,18 +156,19 @@ export default function WebsiteContent() {
       {loading ? (
         <p className="text-muted">Loading…</p>
       ) : (
-        <div className="flex flex-col gap-12">
+        <div className="flex flex-col gap-5">
           {FIELD_GROUPS.map((group) => (
-            <div key={group.label}>
-              <div className="flex items-center gap-3 mb-4">
-                <h2 className="text-sm font-bold text-heading">{group.label}</h2>
+            <section key={group.label} className="bg-surface rounded-2xl shadow-card p-5 md:p-6 relative overflow-hidden">
+              <span className="absolute inset-x-0 top-0 h-[3px] bg-[var(--gold,var(--color-pay-action))]" aria-hidden="true" />
+              <div className="flex items-center gap-3 mb-5">
+                <h2 className="text-base font-bold text-heading">{group.label}</h2>
                 <div className="h-px flex-1 bg-pay-line" />
               </div>
 
               <div className="flex flex-col gap-5">
                 {group.fields.map((field) => (
                   <div key={field.key}>
-                    <label className="text-[0.85rem] font-semibold text-ink block mb-1.5">
+                    <label className="text-xs font-semibold text-muted block mb-1.5">
                       {field.label}
                     </label>
 
@@ -203,7 +204,7 @@ export default function WebsiteContent() {
                           onChange={(e) => handleTextChange(field.key, e.target.value)}
                           onBlur={() => handleTextBlur(field.key)}
                           placeholder={field.placeholder}
-                          className={`${inputCls} font-body`}
+                          className={`${inputCls} font-body w-full`}
                         />
                         {savingKey === field.key && <span className="absolute top-2 right-2 text-[0.7rem] text-charcoal">Saving…</span>}
                         {savedKey === field.key && <span className="absolute top-2 right-2 text-[0.7rem] text-pay-action flex items-center gap-1"><Check size={12} /> Saved</span>}
@@ -216,7 +217,7 @@ export default function WebsiteContent() {
                           onChange={(e) => handleTextChange(field.key, e.target.value)}
                           onBlur={() => handleTextBlur(field.key)}
                           placeholder={field.placeholder}
-                          className={inputCls}
+                          className={`${inputCls} w-full`}
                         />
                         {savingKey === field.key && <span className="absolute top-1/2 -translate-y-1/2 right-3 text-[0.7rem] text-charcoal">Saving…</span>}
                         {savedKey === field.key && <span className="absolute top-1/2 -translate-y-1/2 right-3 text-[0.7rem] text-pay-action flex items-center gap-1"><Check size={12} /> Saved</span>}
@@ -225,7 +226,7 @@ export default function WebsiteContent() {
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           ))}
         </div>
       )}

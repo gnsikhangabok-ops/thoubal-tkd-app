@@ -4,6 +4,12 @@ import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byText } from '../../../lib/listTools'
 import ListToolbar from '../../../components/ListToolbar'
 import ModuleHeader from '../../../components/ModuleHeader'
+import ConfirmDelete from '../../../components/ConfirmDelete'
+import { countLinked, deleteError, deleteBtnCls } from '../../../lib/deletes'
+import { useAuth } from '../../../context/AuthContext'
+import { Trash2 } from 'lucide-react'
+import StatStrip from '../../../components/StatStrip'
+import FormSheet from '../../../components/FormSheet'
 import DataTable, { StatusPill } from '../../../components/DataTable'
 import { moduleTabs } from '../../../lib/moduleTabs'
 
@@ -74,6 +80,19 @@ export default function TrainingCenters() {
     }
   }
 
+  // Delete: super admins only, and only when nothing is linked (otherwise deactivate)
+  const { role } = useAuth()
+  const [deleting, setDeleting] = useState(null) // { row, linked }
+  async function openDelete(row) {
+    setDeleting({ row, linked: await countLinked(supabase, row.id, [['students', 'training_center_id', 'Students'], ['batches', 'training_center_id', 'Batches'], ['coaches', 'training_center_id', 'Coaches'], ['admissions', 'training_center_id', 'Admissions'], ['inventory_items', 'training_center_id', 'Equipment items'], ['accounts_transactions', 'training_center_id', 'Account entries']]) })
+  }
+  async function confirmDelete() {
+    const { error } = await supabase.from('training_centers').delete().eq('id', deleting.row.id)
+    if (error) return deleteError(error)
+    setDeleting(null)
+    loadCenters()
+  }
+
   async function toggleActive(center) {
     const { error } = await supabase
       .from('training_centers')
@@ -115,12 +134,16 @@ export default function TrainingCenters() {
         activeTab={tabs.active}
         onTabChange={tabs.select}
       />
+      <StatStrip loading={loading} items={[
+        { label: 'Active centres', value: centers.filter((c) => c.active).length, sub: 'under the association' },
+        { label: 'All centres', value: centers.length, sub: 'including inactive', tone: 'gold' },
+        { label: 'Inactive', value: centers.filter((c) => !c.active).length, sub: 'kept for history', tone: 'warn' },
+      ]} />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
       {showForm && (
-        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[480px]">
-          <h3 className="font-semibold text-base text-heading mb-4">{form.id ? 'Edit Center' : 'New Training Center'}</h3>
+        <FormSheet title={form.id ? 'Edit Center' : 'New Training Center'} subtitle="Training Centres" onClose={() => setShowForm(false)}>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <input
               type="text"
@@ -154,7 +177,7 @@ export default function TrainingCenters() {
               </button>
             </div>
           </form>
-        </div>
+        </FormSheet>
       )}
 
       <ListToolbar
@@ -182,8 +205,19 @@ export default function TrainingCenters() {
             <>
               <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(c)}>Edit</button>
               <button className={`${btnOutline} ${btnSm}`} onClick={() => toggleActive(c)}>{c.active ? 'Deactivate' : 'Activate'}</button>
+              {role === 'super_admin' && <button className={`${btnOutline} ${btnSm} ${deleteBtnCls}`} onClick={() => openDelete(c)} aria-label={`Delete ${c.name}`} title="Delete"><Trash2 size={13} /></button>}
             </>
           )}
+        />
+      )}
+      {deleting && (
+        <ConfirmDelete
+          title={`Delete ${deleting.row.name}?`}
+          message="This permanently removes the centre."
+          linked={deleting.linked}
+          blocked={deleting.linked.some((l) => l.n > 0) ? 'Records still use this centre, so it can’t be deleted. Deactivate it instead — it disappears from lists and forms but its history stays.' : undefined}
+          onConfirm={confirmDelete}
+          onClose={() => setDeleting(null)}
         />
       )}
     </div>

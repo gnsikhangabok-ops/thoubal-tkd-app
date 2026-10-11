@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../../lib/supabaseClient'
 import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { BELT_RANKS, BELT_LABELS, beltLabel } from '../../../lib/belts'
@@ -7,8 +7,14 @@ import { useListTools, exportCsv, byText, byDateDesc, opts } from '../../../lib/
 import ListToolbar from '../../../components/ListToolbar'
 import DocumentModal from '../../../components/docs/DocumentModal'
 import StudentIdCard from '../../../components/docs/StudentIdCard'
-import { IdCard, Pencil, UserPlus } from 'lucide-react'
+import { IdCard, Pencil, UserPlus, Camera, Trash2, CheckCircle2 } from 'lucide-react'
+import DeleteStudentDialog from '../../../components/DeleteStudentDialog'
+import { useAuth } from '../../../context/AuthContext'
+import StudentPhotoEditor from '../../../components/StudentPhotoEditor'
+import { useStudentPhotos } from '../../../lib/studentPhotos'
 import ModuleHeader from '../../../components/ModuleHeader'
+import StatStrip from '../../../components/StatStrip'
+import FormSheet from '../../../components/FormSheet'
 import DataTable, { StatusPill } from '../../../components/DataTable'
 import PersonCell from '../../../components/PersonCell'
 import { moduleTabs } from '../../../lib/moduleTabs'
@@ -44,6 +50,21 @@ export default function Students() {
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [idCardFor, setIdCardFor] = useState(null)
+  const [photoFor, setPhotoFor] = useState(null)
+  const [deleteFor, setDeleteFor] = useState(null)
+  const { role } = useAuth()
+  const location = useLocation()
+  // A message passed from the student file (e.g. after deleting); cleared from history so it shows once
+  const [flash, setFlash] = useState(() => {
+    if (location.state?.flash) window.history.replaceState({ ...window.history.state, usr: null }, '')
+    return location.state?.flash || ''
+  })
+  useEffect(() => {
+    if (!flash) return
+    const t = setTimeout(() => setFlash(''), 3500)
+    return () => clearTimeout(t)
+  }, [flash])
+  const photos = useStudentPhotos(students)
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const editId = searchParams.get('edit') // set by the Edit button on a student's file
@@ -138,9 +159,9 @@ export default function Students() {
       rules_acknowledged_on: form.rules_acknowledged ? new Date().toISOString() : null,
     }
 
-    const { error } = form.id
-      ? await supabase.from('students').update(payload).eq('id', form.id)
-      : await supabase.from('students').insert(payload)
+    const { data: saved, error } = form.id
+      ? await supabase.from('students').update(payload).eq('id', form.id).select().single()
+      : await supabase.from('students').insert(payload).select().single()
 
     setSaving(false)
     if (error) {
@@ -148,6 +169,7 @@ export default function Students() {
     } else {
       setShowForm(false)
       loadData()
+      if (!form.id && saved) setPhotoFor(saved) // straight on to the photo for a new registration
     }
   }
 
@@ -200,6 +222,12 @@ export default function Students() {
         activeTab={tabs.active}
         onTabChange={tabs.select}
       />
+      <StatStrip loading={loading} items={[
+        { label: 'Active students', value: students.filter((s) => s.active).length, sub: `${students.length} registered in all` },
+        { label: 'Joined this month', value: students.filter((s) => (s.created_at || '').slice(0, 7) === new Date().toISOString().slice(0, 7)).length, sub: new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }), tone: 'gold' },
+        { label: 'Rules not signed', value: students.filter((s) => s.active && !s.rules_acknowledged).length, sub: 'active students', tone: 'warn' },
+        { label: 'Centres · batches', value: `${centers.length} · ${batches.length}`, sub: 'active', tone: 'info' },
+      ]} />
 
       {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">{error}</p>}
 
@@ -210,8 +238,25 @@ export default function Students() {
       )}
 
       {showForm && (
-        <div className="bg-surface rounded-2xl shadow-card p-6 mb-7 max-w-[560px]">
-          <h3 className="font-semibold text-base text-heading mb-4">{form.id ? 'Edit Student' : 'New Student Registration'}</h3>
+        <FormSheet title={form.id ? 'Edit Student' : 'New Student Registration'} subtitle="Students" onClose={() => setShowForm(false)}>
+          {/* Photo: change it here when editing; a new student goes straight to the photo step after saving */}
+          {(() => {
+            const current = form.id ? students.find((x) => x.id === form.id) : null
+            return (
+              <div className="flex items-center gap-4 rounded-2xl bg-pay-bg p-3 mb-4">
+                <span className="w-[56px] h-[70px] rounded-xl overflow-hidden bg-pay-sky grid place-items-center shrink-0 ring-1 ring-pay-line">
+                  {current && photos[current.id]
+                    ? <img src={photos[current.id]} alt="" className="w-full h-full object-cover" />
+                    : <Camera size={20} className="text-pay-action" />}
+                </span>
+                <div className="min-w-0 flex-1 text-sm">
+                  <p className="font-semibold text-heading">Student photo</p>
+                  <p className="text-xs text-muted">{current ? 'Used on the ID card and student file.' : 'You can add a photo right after saving.'}</p>
+                </div>
+                {current && <button type="button" className={`${btnOutline} ${btnSm}`} onClick={() => setPhotoFor(current)}>{current.photo_path ? 'Change' : 'Add photo'}</button>}
+              </div>
+            )
+          })()}
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <input
               type="text" placeholder="Full name" required
@@ -333,7 +378,7 @@ export default function Students() {
               </button>
             </div>
           </form>
-        </div>
+        </FormSheet>
       )}
 
       {!showForm && (
@@ -365,7 +410,7 @@ export default function Students() {
           empty={list.total === 0 ? 'No students registered yet.' : 'No students match this view, search or filters.'}
           columns={[
             { key: 'name', header: 'Student', primary: true, width: '26%', sortValue: (s) => s.full_name,
-              render: (s) => <PersonCell name={s.full_name} sub={studentIdNo(s)} /> },
+              render: (s) => <PersonCell name={s.full_name} sub={studentIdNo(s)} photo={photos[s.id]} /> },
             { key: 'belt', header: 'Belt', sortValue: (s) => BELT_RANKS.indexOf(s.current_belt),
               render: (s) => (
                 <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
@@ -394,15 +439,38 @@ export default function Students() {
           ]}
           actions={(s) => (
             <>
+              <button className={`${btnOutline} ${btnSm}`} onClick={() => setPhotoFor(s)} aria-label={`Photo for ${s.full_name}`} title={s.photo_path ? 'Change photo' : 'Add photo'}><Camera size={13} /></button>
               <button className={`${btnOutline} ${btnSm}`} onClick={() => setIdCardFor(s)} aria-label={`ID card for ${s.full_name}`}><IdCard size={14} /> ID</button>
               <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditForm(s)} aria-label={`Edit ${s.full_name}`}><Pencil size={13} /> Edit</button>
+              {role === 'super_admin' && <button className={`${btnOutline} ${btnSm} !border-red-300 !text-red-600 hover:!bg-red-50`} onClick={() => setDeleteFor(s)} aria-label={`Delete ${s.full_name}`} title="Delete"><Trash2 size={13} /></button>}
             </>
           )}
         />
       )}
+      {deleteFor && (
+        <DeleteStudentDialog
+          student={deleteFor}
+          onClose={() => setDeleteFor(null)}
+          onDeleted={(st) => { setDeleteFor(null); setFlash(`${st.full_name} was deleted`); loadData() }}
+          onDeactivate={async (st) => {
+            const { error } = await supabase.from('students').update({ active: false }).eq('id', st.id)
+            setDeleteFor(null)
+            if (error) setError(error.message)
+            else { setFlash(`${st.full_name} marked inactive`); loadData() }
+          }}
+        />
+      )}
+      {flash && (
+        <div role="status" className="fixed top-5 left-1/2 -translate-x-1/2 z-[80] rounded-full bg-pay-navy text-white text-sm font-semibold px-5 py-2.5 shadow-2xl inline-flex items-center gap-2">
+          <CheckCircle2 size={16} /> {flash}
+        </div>
+      )}
+      {photoFor && (
+        <StudentPhotoEditor student={photoFor} currentUrl={photos[photoFor.id]} onClose={() => setPhotoFor(null)} onSaved={() => loadData()} />
+      )}
       {idCardFor && (
         <DocumentModal title={`ID Card — ${idCardFor.full_name}`} size="card" onClose={() => setIdCardFor(null)}>
-          <StudentIdCard student={idCardFor} />
+          <StudentIdCard student={{ ...idCardFor, photo_url: photos[idCardFor.id] || idCardFor.photo_url }} />
         </DocumentModal>
       )}
     </div>
