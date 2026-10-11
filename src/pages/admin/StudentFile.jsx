@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   IdCard, Pencil, Printer, AlertTriangle, CalendarCheck, Wallet, Award, TrendingUp, Medal, Trophy,
-  FileText, UserRound, LayoutDashboard, ReceiptText, Power,
+  FileText, UserRound, LayoutDashboard, ReceiptText, Power, Camera,
 } from 'lucide-react'
+import StudentPhotoEditor from '../../components/StudentPhotoEditor'
+import { useStudentPhotos } from '../../lib/studentPhotos'
 import { supabase } from '../../lib/supabaseClient'
 import { btnPrimary, btnOutline, btnSm } from '../../lib/adminUi'
 import { beltLabel, BELT_COLORS } from '../../lib/belts'
@@ -48,6 +50,8 @@ export default function StudentFile() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [doc, setDoc] = useState(null) // { type: 'id' | 'receipt' | 'certificate', data }
+  const [editingPhoto, setEditingPhoto] = useState(false)
+  const photoUrl = useStudentPhotos(student ? [student] : [])[student?.id]
 
   const load = useCallback(async () => {
     const [s, att, fees, grading, perf, ach, ev] = await Promise.all([
@@ -133,9 +137,12 @@ export default function StudentFile() {
       {/* Summary banner — the "patient banner": identical on every tab */}
       <section aria-label="Student summary" className="bg-surface rounded-2xl shadow-card overflow-hidden">
         <div className="flex flex-wrap items-center gap-5 p-5 md:p-6 border-l-4" style={{ borderLeftColor: student.active ? 'var(--status-ok)' : 'var(--color-pay-line)' }}>
-          <span className="grid place-items-center w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-pay-sky text-pay-action text-2xl font-bold shrink-0" aria-hidden="true">
-            {initials(student.full_name)}
-          </span>
+          <button type="button" onClick={() => setEditingPhoto(true)} className="no-print group relative w-16 h-20 md:w-20 md:h-[100px] rounded-2xl overflow-hidden bg-pay-sky text-pay-action text-2xl font-bold shrink-0 grid place-items-center ring-2 ring-[var(--gold,var(--color-pay-sky))] ring-offset-2 ring-offset-surface" aria-label={photoUrl ? 'Change photo' : 'Add photo'}>
+            {photoUrl ? <img src={photoUrl} alt={`Photo of ${student.full_name}`} className="w-full h-full object-cover" /> : initials(student.full_name)}
+            <span className="absolute inset-0 grid place-items-center bg-pay-navy/60 text-white opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity">
+              <span className="flex flex-col items-center gap-0.5 text-[0.65rem] font-semibold"><Camera size={18} />{photoUrl ? 'Change' : 'Add photo'}</span>
+            </span>
+          </button>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-xl md:text-2xl font-bold text-heading">{student.full_name}</h2>
@@ -369,13 +376,16 @@ export default function StudentFile() {
         <Link to="/admin/students" className="hover:text-pay-action hover:underline">← Back to all students</Link>
       </p>
 
+      {editingPhoto && (
+        <StudentPhotoEditor student={student} currentUrl={photoUrl} onClose={() => setEditingPhoto(false)} onSaved={() => load()} />
+      )}
       {doc && (
         <DocumentModal
           title={{ id: `ID Card — ${student.full_name}`, receipt: `Fee receipt — ${student.full_name}`, certificate: `Certificate — ${student.full_name}` }[doc.type]}
           size={{ id: 'card', receipt: 'a5', certificate: 'a4-landscape' }[doc.type]}
           onClose={() => setDoc(null)}
         >
-          {doc.type === 'id' && <StudentIdCard student={student} />}
+          {doc.type === 'id' && <StudentIdCard student={{ ...student, photo_url: photoUrl || student.photo_url }} />}
           {doc.type === 'receipt' && <FeeReceipt payment={doc.data} studentName={student.full_name} />}
           {doc.type === 'certificate' && <BeltCertificate result={doc.data} studentName={student.full_name} exam={doc.data.grading_events} />}
         </DocumentModal>

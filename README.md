@@ -43,6 +43,10 @@ npm run dev
   Fee Setup (monthly rates per batch with effective dates and history, a fee catalogue for
   admission / annual / uniform / belt grading / event fees, sibling discount, late fee and grace
   period, due day, payment methods, UPI scan-to-pay QR, bank details, receipt prefix and note)
+- **Student photos**: upload, drag-and-drop or take a photo; position it in a passport frame
+  (zoom, rotate, face guide); it is cropped to 4:5, resized to 480×600 and compressed to WebP in the
+  browser before upload (typically 30–80 KB). Stored in a private bucket and shown through
+  short-lived signed links on the student list, student file, ID card and the student's portal
 - **Management portal**: every list has search, filters, sorting, Excel (CSV) export and print / PDF;
   Reports & Analytics with charts and a monthly report; Notices; Activity Log (super admin)
 - **Documents**: student ID cards, fee receipts and belt certificates with QR codes, printed at true size
@@ -74,3 +78,5 @@ Run these in the Supabase SQL editor, in order, after checking them against your
    enrolled students' payments show against it.
 4. `supabase/migrations/20261012_fee_setup.sql`: fee settings (readable by signed-in users, changed by
    super admins) and catalogue fields on one-time fee types.
+5. `supabase/migrations/20261013_student_photos.sql`: `students.photo_path` and the private
+   `student-photos` storage bucket (staff manage photos; a student can view only their own).

@@ -10,6 +10,7 @@ import NotificationBell from '../../components/NotificationBell'
 import { timeAgo } from '../../lib/adminNotifications'
 import DocumentModal from '../../components/docs/DocumentModal'
 import StudentIdCard from '../../components/docs/StudentIdCard'
+import { useStudentPhotos } from '../../lib/studentPhotos'
 import FeeReceipt from '../../components/docs/FeeReceipt'
 import BeltCertificate from '../../components/docs/BeltCertificate'
 import {
@@ -34,6 +35,7 @@ export default function StudentPortal() {
   const belt = (b) => t(BELT_LABELS[b] || b || '')
   const dateLocale = lang === 'hi' ? 'hi-IN' : 'en-IN'
   const [student, setStudent] = useState(null)
+  const photoUrl = useStudentPhotos(student ? [student] : [])[student?.id]
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('Overview')
@@ -163,8 +165,8 @@ export default function StudentPortal() {
             {/* Profile card */}
             <div className="pay-stat relative overflow-hidden flex flex-wrap items-center gap-4 !p-5 md:!p-6">
               <div className="absolute -right-12 -top-16 w-52 h-52 rounded-full bg-white/10" aria-hidden="true" />
-              <span className="relative grid place-items-center w-14 h-14 rounded-full bg-surface text-heading text-lg font-bold shrink-0">
-                {student.full_name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
+              <span className="relative grid place-items-center w-14 h-14 rounded-full bg-surface text-heading text-lg font-bold shrink-0 overflow-hidden ring-2 ring-white/70">
+                {photoUrl ? <img src={photoUrl} alt="" className="w-full h-full object-cover object-top" /> : student.full_name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
               </span>
               <div className="relative min-w-0 flex-1">
                 <h1 className="!text-white text-xl md:text-2xl font-bold truncate">{student.full_name}</h1>
@@ -395,7 +397,7 @@ export default function StudentPortal() {
           size={{ id: 'card', receipt: 'a5', certificate: 'a4-landscape' }[doc.type]}
           onClose={() => setDoc(null)}
         >
-          {doc.type === 'id' && <StudentIdCard student={student} />}
+          {doc.type === 'id' && <StudentIdCard student={{ ...student, photo_url: photoUrl || student.photo_url }} />}
           {doc.type === 'receipt' && <FeeReceipt payment={doc.data} studentName={student.full_name} />}
           {doc.type === 'certificate' && <BeltCertificate result={doc.data} studentName={student.full_name} exam={doc.data.grading_events} />}
         </DocumentModal>
