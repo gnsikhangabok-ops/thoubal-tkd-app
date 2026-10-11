@@ -213,42 +213,53 @@
 :root[data-theme="dark"] .text-\[\#6B4300\] { color: #FCD9A0; }
 
 
-/* ---------- Clinical palette: management portal only (AdminLayout adds .clinic) ----------
+/* ---------- Sapphire palette: management portal only (AdminLayout adds .clinic) ----------
    Same token names as the app-wide palette, so every module picks it up without changes.
-   Teal action colour keeps white button text at 5:1 contrast. */
+   Midnight → royal → bright blue; the action blue keeps white button text at 6.7:1 contrast. */
 .clinic {
-  --color-pay-navy: #0B4F4E;
-  --color-pay-blue: #2BB5A8;
-  --color-pay-stat-mid: #0E7C7B;
-  --color-pay-action: #0E7C7B;
-  --color-pay-action-dark: #0A6160;
-  --color-pay-sky: #E2F3F1;
-  --color-pay-sky-2: #CBE8E4;
-  --color-pay-bg: #F3F7F7;
-  --color-pay-line: #DCE7E6;
-  --color-heading: #0B3B3A;
-  --color-body: #3F5654;
-  --color-muted: #557170;
-  --color-subtle: #6F8A88;
-  --status-info: #0E7C7B;
-  --shadow-card: 0 1px 3px rgba(11, 59, 58, 0.06), 0 4px 14px rgba(11, 59, 58, 0.06);
+  --color-pay-navy: #0A1A3F;
+  --color-pay-blue: #3B82F6;
+  --color-pay-stat-mid: #1E40AF;
+  --color-pay-action: #1D4ED8;
+  --color-pay-action-dark: #1E3A8A;
+  --color-pay-sky: #E8EFFE;
+  --color-pay-sky-2: #D3E0FC;
+  --color-pay-bg: #F4F7FC;
+  --color-pay-line: #DFE6F3;
+  --color-heading: #0B1B3F;
+  --color-body: #3E4C66;
+  --color-muted: #56637C;
+  --color-subtle: #66728A;
+  --status-info: #1D4ED8;
+  --shadow-card: 0 1px 3px rgba(11, 27, 63, 0.06), 0 6px 18px rgba(29, 78, 216, 0.07);
 }
 :root[data-theme="dark"] .clinic {
-  --color-pay-navy: #0B4F4E;
-  --color-pay-blue: #2BB5A8;
-  --color-pay-action: #0F8C86;
-  --color-pay-action-dark: #0C7470;
-  --color-pay-sky: #123C3A;
-  --color-pay-sky-2: #18504D;
-  --color-pay-bg: #0A1413;
-  --color-pay-line: #21403E;
-  --color-surface: #11201F;
-  --color-heading: #E3F1F0;
-  --color-body: #B5CCCA;
-  --color-muted: #94B1AE;
-  --color-subtle: #7E9C99;
-  --status-info: #2BB5A8;
+  --color-pay-navy: #0A1A3F;
+  --color-pay-blue: #3B82F6;
+  --color-pay-stat-mid: #1E40AF;
+  --color-pay-action: #3D6FE3;
+  --color-pay-action-dark: #2F5FD0;
+  --color-pay-sky: #13254A;
+  --color-pay-sky-2: #1A3163;
+  --color-pay-bg: #0A1020;
+  --color-pay-line: #22314F;
+  --color-surface: #111A2E;
+  --color-heading: #E6ECF8;
+  --color-body: #B4C0D6;
+  --color-muted: #96A4BE;
+  --color-subtle: #8090AA;
+  --status-info: #93C5FD;
   --shadow-card: 0 2px 14px rgba(0, 0, 0, 0.45);
+}
+/* Blue text on dark surfaces needs a lighter blue than the button fill to stay readable */
+:root[data-theme="dark"] .clinic .text-pay-action { color: #93C5FD; }
+
+/* Metric cards: a soft highlight over the gradient for a richer, polished finish */
+.clinic .pay-stat {
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(147, 197, 253, 0.28) 0%, transparent 55%),
+    linear-gradient(135deg, var(--color-pay-navy) 0%, var(--color-pay-stat-mid) 58%, var(--color-pay-blue) 135%);
+  box-shadow: 0 10px 28px -12px rgba(29, 78, 216, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 /* ---------- Print / Save as PDF ---------- */
