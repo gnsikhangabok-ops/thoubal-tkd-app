@@ -1,427 +1,182 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { CheckCircle2, X, AlertTriangle, Save } from 'lucide-react'
 import { supabase } from '../../../lib/supabaseClient'
-import { Wallet, Repeat, CircleDollarSign, Check } from 'lucide-react'
-import { inputCls, btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
+import { rupees } from '../../../lib/documents'
+import { ratesFor, ordinal } from '../../../lib/fees'
+import { useFeeSettings, saveFeeSettings, feeSettingsMissing } from '../../../lib/feeSettings'
 import ModuleHeader from '../../../components/ModuleHeader'
+import TuitionRates from '../feeSetup/TuitionRates'
+import FeeCatalogue from '../feeSetup/FeeCatalogue'
+import FeePolicies from '../feeSetup/FeePolicies'
 
-
-const emptyMonthlyForm = { batch_id: '', monthly_amount: '' }
-const emptyOneTimeForm = { id: null, name: '', amount: '' }
-const emptyCollectForm = { student_id: '', amount_paid: '', payment_method: 'Cash', receipt_no: '' }
+const clean = (d) => ({
+  ...d,
+  due_day: Math.min(31, Math.max(1, Number(d.due_day) || 10)),
+  grace_days: Math.max(0, Number(d.grace_days) || 0),
+  late_fee: { ...d.late_fee, amount: Math.max(0, Number(d.late_fee.amount) || 0) },
+  sibling: { ...d.sibling, percent: Math.min(100, Math.max(0, Number(d.sibling.percent) || 0)) },
+})
 
 export default function FeeSetup() {
+  const settings = useFeeSettings()
+  const [tab, setTab] = useState('tuition')
   const [batches, setBatches] = useState([])
-  const [feeStructures, setFeeStructures] = useState([])
-  const [oneTimeFees, setOneTimeFees] = useState([])
+  const [structures, setStructures] = useState([])
+  const [items, setItems] = useState([])
   const [students, setStudents] = useState([])
-  const [payments, setPayments] = useState([]) // one_time_fee_payments
+  const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [flash, setFlash] = useState('')
+  const [draft, setDraft] = useState(settings)
+  const [savingSettings, setSavingSettings] = useState(false)
 
-  const [monthlyForm, setMonthlyForm] = useState(emptyMonthlyForm)
-  const [showMonthlyForm, setShowMonthlyForm] = useState(false)
-  const [savingMonthly, setSavingMonthly] = useState(false)
+  // Start editing from the stored settings once they arrive
+  // oxlint-disable-next-line react/set-state-in-effect -- sync the draft when the stored settings load
+  useEffect(() => { setDraft(settings) }, [settings])
 
-  const [oneTimeForm, setOneTimeForm] = useState(emptyOneTimeForm)
-  const [showOneTimeForm, setShowOneTimeForm] = useState(false)
-  const [savingOneTime, setSavingOneTime] = useState(false)
-
-  const [collectingFor, setCollectingFor] = useState(null) // fee type being collected
-  const [collectForm, setCollectForm] = useState(emptyCollectForm)
-  const [savingCollect, setSavingCollect] = useState(false)
-  const [viewingPaidFor, setViewingPaidFor] = useState(null) // fee type whose paid-list is shown
-
-  useEffect(() => {
-    loadData()
-  }, [])
-
-  async function loadData() {
-    setLoading(true)
-    const [batchRes, structRes, oneTimeRes, studentRes, paymentRes] = await Promise.all([
-      supabase.from('batches').select('id, name, training_centers(name)').eq('active', true).order('name'),
-      supabase.from('fee_structures').select('*, batches(name)').order('effective_from', { ascending: false }),
+  async function load() {
+    const [b, f, o, s, p] = await Promise.all([
+      supabase.from('batches').select('id, name, training_center_id, training_centers(name)').eq('active', true).order('name'),
+      supabase.from('fee_structures').select('*').order('effective_from', { ascending: false }),
       supabase.from('one_time_fee_types').select('*').order('created_at', { ascending: true }),
-      supabase.from('students').select('id, full_name, training_center_id').eq('active', true).order('full_name'),
-      supabase.from('one_time_fee_payments').select('*, students(full_name)'),
+      supabase.from('students').select('id, full_name, batch_id, training_center_id, guardian_phone').eq('active', true).order('full_name'),
+      supabase.from('one_time_fee_payments').select('*'),
     ])
-
-    if (batchRes.error) setError(batchRes.error.message)
-    else setBatches(batchRes.data)
-
-    if (structRes.error) setError((prev) => prev || structRes.error.message)
-    else setFeeStructures(structRes.data)
-
-    if (oneTimeRes.error) setError((prev) => prev || oneTimeRes.error.message)
-    else setOneTimeFees(oneTimeRes.data)
-
-    if (studentRes.error) setError((prev) => prev || studentRes.error.message)
-    else setStudents(studentRes.data)
-
-    if (paymentRes.error) setError((prev) => prev || paymentRes.error.message)
-    else setPayments(paymentRes.data)
-
+    const err = [b, f, o, s, p].find((r) => r.error)?.error
+    if (err) setError(err.message)
+    setBatches(b.data || [])
+    setStructures(f.data || [])
+    setItems(o.data || [])
+    setStudents(s.data || [])
+    setPayments(p.data || [])
     setLoading(false)
   }
 
-  function currentRateForBatch(batchId) {
-    const rows = feeStructures.filter((f) => f.batch_id === batchId)
-    if (rows.length === 0) return null
-    return rows[0]
-  }
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- state is only set after the awaited fetch
+    load()
+  }, [])
 
-  function openAddMonthly(batchId) {
-    const existing = currentRateForBatch(batchId)
-    setMonthlyForm({ batch_id: batchId, monthly_amount: existing?.monthly_amount ?? '' })
-    setShowMonthlyForm(true)
-  }
+  useEffect(() => {
+    if (!flash) return
+    const t = setTimeout(() => setFlash(''), 3500)
+    return () => clearTimeout(t)
+  }, [flash])
 
-  async function handleMonthlySubmit(e) {
-    e.preventDefault()
-    setSavingMonthly(true)
+  function saved(message) {
+    setFlash(message)
     setError('')
-
-    const { error } = await supabase.from('fee_structures').insert({
-      batch_id: monthlyForm.batch_id,
-      monthly_amount: parseFloat(monthlyForm.monthly_amount),
-    })
-
-    setSavingMonthly(false)
-    if (error) {
-      setError(error.message)
-    } else {
-      setShowMonthlyForm(false)
-      loadData()
-    }
+    load()
   }
 
-  function openAddOneTime() {
-    setOneTimeForm(emptyOneTimeForm)
-    setShowOneTimeForm(true)
-  }
-
-  function openEditOneTime(fee) {
-    setOneTimeForm({ id: fee.id, name: fee.name, amount: fee.amount })
-    setShowOneTimeForm(true)
-  }
-
-  async function handleOneTimeSubmit(e) {
-    e.preventDefault()
-    setSavingOneTime(true)
+  async function saveSettings() {
+    setSavingSettings(true)
+    const { error } = await saveFeeSettings(clean(draft))
+    setSavingSettings(false)
+    if (error) return setError(/fee_settings/.test(error.message) ? `${error.message} — run supabase/migrations/20261012_fee_setup.sql first.` : error.message)
+    setFlash('Fee settings saved')
     setError('')
+  }
 
-    const payload = { name: oneTimeForm.name, amount: parseFloat(oneTimeForm.amount) }
+  const dirty = JSON.stringify(clean(draft)) !== JSON.stringify(clean(settings))
 
-    const { error } = oneTimeForm.id
-      ? await supabase.from('one_time_fee_types').update(payload).eq('id', oneTimeForm.id)
-      : await supabase.from('one_time_fee_types').insert(payload)
-
-    setSavingOneTime(false)
-    if (error) {
-      setError(error.message)
-    } else {
-      setShowOneTimeForm(false)
-      loadData()
+  const figures = useMemo(() => {
+    const priced = batches.filter((b) => ratesFor(structures, b.id).current)
+    const projected = batches.reduce((sum, b) => {
+      const rate = ratesFor(structures, b.id).current
+      return sum + (rate ? Number(rate.monthly_amount) * students.filter((s) => s.batch_id === b.id).length : 0)
+    }, 0)
+    // Worked examples use the rate of the batch with the most students
+    const busiest = [...priced].sort((a, b) => students.filter((s) => s.batch_id === b.id).length - students.filter((s) => s.batch_id === a.id).length)[0]
+    const phones = {}
+    students.forEach((s) => { const k = String(s.guardian_phone || '').replace(/\D/g, '').slice(-10); if (k.length === 10) phones[k] = (phones[k] || 0) + 1 })
+    return {
+      priced: priced.length,
+      projected,
+      sampleFee: busiest ? Number(ratesFor(structures, busiest.id).current.monthly_amount) : 1000,
+      siblingGroups: Object.values(phones).filter((n) => n > 1).length,
+      activeItems: items.filter((i) => i.active !== false).length,
     }
-  }
+  }, [batches, structures, students, items])
 
-  async function toggleOneTimeActive(fee) {
-    const { error } = await supabase
-      .from('one_time_fee_types')
-      .update({ active: !fee.active })
-      .eq('id', fee.id)
+  const TABS = [
+    { value: 'tuition', label: 'Monthly tuition', count: batches.length },
+    { value: 'catalogue', label: 'Fee catalogue', count: items.length },
+    { value: 'discounts', label: 'Discounts & late fees' },
+    { value: 'payments', label: 'Payments & receipts' },
+  ]
 
-    if (error) setError(error.message)
-    else loadData()
-  }
-
-  function studentsPaidFor(feeTypeId) {
-    return new Set(payments.filter((p) => p.fee_type_id === feeTypeId).map((p) => p.student_id))
-  }
-
-  function openCollectForm(feeType) {
-    setCollectingFor(feeType)
-    setCollectForm({ student_id: '', amount_paid: feeType.amount, payment_method: 'Cash', receipt_no: '' })
-  }
-
-  async function handleCollectSubmit(e) {
-    e.preventDefault()
-    setSavingCollect(true)
-    setError('')
-
-    const student = students.find((s) => s.id === collectForm.student_id)
-    const amount = parseFloat(collectForm.amount_paid)
-
-    const { error: payError } = await supabase.from('one_time_fee_payments').insert({
-      fee_type_id: collectingFor.id,
-      student_id: collectForm.student_id,
-      amount_paid: amount,
-      payment_method: collectForm.payment_method,
-      receipt_no: collectForm.receipt_no || null,
-    })
-
-    if (payError) {
-      setError(payError.message)
-      setSavingCollect(false)
-      return
-    }
-
-    // Post to Accounts as income, same pattern as monthly fee collection.
-    const { error: acctError } = await supabase.from('accounts_transactions').insert({
-      type: 'income',
-      category: 'student_fee',
-      amount,
-      transaction_date: new Date().toISOString().slice(0, 10),
-      training_center_id: student?.training_center_id || null,
-      related_student_id: collectForm.student_id,
-      description: `${collectingFor.name} — ${student?.full_name}`,
-    })
-
-    setSavingCollect(false)
-    if (acctError) {
-      setError(`Payment recorded, but failed to post to Accounts: ${acctError.message}`)
-    }
-    setCollectingFor(null)
-    loadData()
-  }
-
-  const unpaidStudentsFor = (feeTypeId) => {
-    const paidIds = studentsPaidFor(feeTypeId)
-    return students.filter((s) => !paidIds.has(s.id))
-  }
+  const policyLine = [
+    `Due ${ordinal(settings.due_day)}`,
+    settings.late_fee.enabled ? `late fee ${settings.late_fee.type === 'percent' ? `${settings.late_fee.amount}%` : rupees(settings.late_fee.amount)}` : 'no late fee',
+    settings.sibling.enabled ? `sibling ${settings.sibling.percent}% off` : 'no sibling discount',
+  ].join(' · ')
 
   return (
-    <div className="p-8 max-md:p-4 max-w-[1240px] mx-auto">
+    <div className="p-8 max-md:p-4 max-w-[1320px] mx-auto pb-28">
       <ModuleHeader
         title="Fee Setup"
-        description={<>
-          Define monthly rates per batch and one-time fees (admission, form). Monthly rates feed{' '}
-          <Link to="/admin/fees" className="underline">Fee Management</Link>; collected payments post to{' '}
-          <Link to="/admin/accounts" className="underline">Accounts</Link>.
-        </>}
+        description={<>Every fee the academy charges and the rules for collecting them. Monthly rates feed the <Link to="/admin/fees" className="underline">collection desk</Link>; catalogue fees are collected here and in Admissions.</>}
+        tabs={TABS}
+        activeTab={tab}
+        onTabChange={setTab}
       />
 
-      {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm">{error}</p>}
+      {feeSettingsMissing() && (
+        <p className="flex gap-2 items-start bg-amber-50 text-amber-800 rounded-xl px-4 py-3 mb-4 text-sm">
+          <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+          Settings can't be saved yet. Run <code className="font-semibold">supabase/migrations/20261012_fee_setup.sql</code> in the Supabase SQL editor; until then the defaults below are used.
+        </p>
+      )}
+      {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm flex justify-between gap-3">{error}<button onClick={() => setError('')} aria-label="Dismiss"><X size={16} /></button></p>}
 
-      {loading ? (
-        <p className="text-muted">Loading…</p>
-      ) : (
-        <div className="flex flex-col gap-12">
-          {/* MONTHLY RATES PER BATCH */}
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <Repeat size={16} className="text-pay-action" />
-              <h2 className="text-sm font-bold text-heading">Monthly Rates by Batch</h2>
-              <div className="h-px flex-1 bg-pay-line" />
-            </div>
-
-            {batches.length === 0 ? (
-              <p className="text-charcoal text-sm">No active batches yet — add one in the Batches module first.</p>
-            ) : (
-              <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-                {batches.map((b) => {
-                  const rate = currentRateForBatch(b.id)
-                  return (
-                    <div
-                      key={b.id}
-                      className="bg-surface rounded-2xl shadow-card p-6"
-                      style={{ borderLeftWidth: 4, borderLeftColor: rate ? 'var(--status-ok)' : '#ccc' }}
-                    >
-                      <h3 className="font-semibold text-base text-heading mb-1.5">{b.name}</h3>
-                      <p className="text-sm text-charcoal">{b.training_centers?.name}</p>
-                      <p className="text-2xl font-display text-pay-action mt-2.5">
-                        {rate ? `₹${Number(rate.monthly_amount).toLocaleString('en-IN')}` : '— Not set —'}
-                      </p>
-                      <p className="text-[0.75rem] text-charcoal mt-1">per month</p>
-                      <button className={`${btnOutline} ${btnSm} mt-3`} onClick={() => openAddMonthly(b.id)}>
-                        {rate ? 'Update Rate' : 'Set Rate'}
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {showMonthlyForm && (
-              <div className="bg-surface rounded-2xl shadow-card p-6 mt-6 max-w-[420px]">
-                <h3 className="font-semibold text-base text-heading mb-1.5">
-                  Set rate for {batches.find((b) => b.id === monthlyForm.batch_id)?.name}
-                </h3>
-                <p className="text-[0.85rem] mb-4 text-charcoal">
-                  This becomes the new current rate. Past months already generated keep their original amount.
-                </p>
-                <form onSubmit={handleMonthlySubmit} className="flex flex-col gap-3">
-                  <input
-                    type="number" placeholder="Monthly amount (₹)" required step="0.01"
-                    value={monthlyForm.monthly_amount}
-                    onChange={(e) => setMonthlyForm({ ...monthlyForm, monthly_amount: e.target.value })}
-                    className={inputCls}
-                  />
-                  <div className="flex gap-2.5">
-                    <button type="submit" className={btnPrimary} disabled={savingMonthly}>
-                      {savingMonthly ? 'Saving…' : 'Save Rate'}
-                    </button>
-                    <button type="button" className={btnOutline} onClick={() => setShowMonthlyForm(false)}>
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
+      {/* Overview */}
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4 mb-6">
+        <div className="pay-stat !p-5 col-span-2 lg:col-span-1">
+          <p className="text-xs text-white/75">Projected monthly billing</p>
+          <strong className="block text-2xl md:text-3xl font-bold tabular-nums mt-1">{loading ? '…' : rupees(figures.projected)}</strong>
+          <p className="text-[0.7rem] text-white/70 mt-0.5">{students.length} active students at current rates</p>
+        </div>
+        {[
+          ['Batches priced', loading ? '…' : `${figures.priced}/${batches.length}`, figures.priced < batches.length ? `${batches.length - figures.priced} without a rate` : 'all batches have a rate', figures.priced < batches.length ? 'var(--status-warn)' : 'var(--status-ok)'],
+          ['Catalogue fees', loading ? '…' : figures.activeItems, `${items.length - figures.activeItems} turned off`, 'var(--gold, var(--color-pay-action))'],
+          ['Fee rules', ordinal(settings.due_day), policyLine.split(' · ').slice(1).join(' · '), 'var(--color-pay-action)'],
+        ].map(([k, v, sub, c]) => (
+          <div key={k} className="bg-surface rounded-2xl shadow-card p-4 relative overflow-hidden">
+            <span className="absolute left-0 top-4 bottom-4 w-[3px] rounded-r-full" style={{ background: c }} aria-hidden="true" />
+            <p className="text-xs text-muted">{k}</p>
+            <p className="text-2xl font-bold text-heading tabular-nums mt-0.5">{v}</p>
+            <p className="text-[0.7rem] text-subtle truncate">{sub}</p>
           </div>
+        ))}
+      </div>
 
-          {/* ONE-TIME FEES */}
-          <div>
-            <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-              <div className="flex items-center gap-3">
-                <CircleDollarSign size={16} className="text-pay-action" />
-                <h2 className="text-sm font-bold text-heading">One-Time Fees</h2>
-              </div>
-              <button className={`${btnPrimary} ${btnSm}`} onClick={openAddOneTime}>+ Add Fee Type</button>
-            </div>
-            <div className="h-px bg-black/10 mb-4" />
+      {loading ? <p className="text-muted">Loading…</p> : (
+        <>
+          {tab === 'tuition' && <TuitionRates batches={batches} structures={structures} students={students} onSaved={saved} onError={setError} />}
+          {tab === 'catalogue' && <FeeCatalogue items={items} payments={payments} students={students} onSaved={saved} onError={setError} />}
+          {(tab === 'discounts' || tab === 'payments') && (
+            <FeePolicies section={tab} draft={draft} setDraft={setDraft} siblingGroups={figures.siblingGroups} sampleFee={figures.sampleFee} />
+          )}
+        </>
+      )}
 
-            {showOneTimeForm && (
-              <div className="bg-surface rounded-2xl shadow-card p-6 mb-6 max-w-[420px]">
-                <h3 className="font-semibold text-base text-heading mb-4">{oneTimeForm.id ? 'Edit Fee Type' : 'New One-Time Fee'}</h3>
-                <form onSubmit={handleOneTimeSubmit} className="flex flex-col gap-3">
-                  <input
-                    type="text" placeholder="Fee name (e.g. Admission Fee)" required
-                    value={oneTimeForm.name}
-                    onChange={(e) => setOneTimeForm({ ...oneTimeForm, name: e.target.value })}
-                    className={inputCls}
-                  />
-                  <input
-                    type="number" placeholder="Amount (₹)" required step="0.01"
-                    value={oneTimeForm.amount}
-                    onChange={(e) => setOneTimeForm({ ...oneTimeForm, amount: e.target.value })}
-                    className={inputCls}
-                  />
-                  <div className="flex gap-2.5">
-                    <button type="submit" className={btnPrimary} disabled={savingOneTime}>
-                      {savingOneTime ? 'Saving…' : 'Save'}
-                    </button>
-                    <button type="button" className={btnOutline} onClick={() => setShowOneTimeForm(false)}>
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
+      {/* Unsaved settings */}
+      {dirty && (
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 md:ml-32 z-40 flex items-center gap-2 rounded-full bg-pay-navy text-white pl-5 pr-2 py-2 shadow-2xl">
+          <span className="text-sm font-semibold whitespace-nowrap">Unsaved fee settings</span>
+          <button onClick={() => setDraft(settings)} className="rounded-full border border-white/40 px-3 py-1.5 text-xs font-semibold hover:bg-white/10">Discard</button>
+          <button onClick={saveSettings} disabled={savingSettings} className="inline-flex items-center gap-1.5 rounded-full bg-white text-pay-navy px-4 py-1.5 text-xs font-bold hover:bg-pay-sky disabled:opacity-60">
+            <Save size={14} /> {savingSettings ? 'Saving…' : 'Save settings'}
+          </button>
+        </div>
+      )}
 
-            {collectingFor && (
-              <div className="bg-surface rounded-2xl shadow-card p-6 mb-6 max-w-[420px]">
-                <h3 className="font-semibold text-base text-heading mb-1.5">Collect: {collectingFor.name}</h3>
-                <p className="text-[0.85rem] mb-4 text-charcoal">Standard amount: ₹{Number(collectingFor.amount).toLocaleString('en-IN')}</p>
-                <form onSubmit={handleCollectSubmit} className="flex flex-col gap-3">
-                  <select
-                    required
-                    value={collectForm.student_id}
-                    onChange={(e) => setCollectForm({ ...collectForm, student_id: e.target.value })}
-                    className={inputCls}
-                  >
-                    <option value="">— Select student —</option>
-                    {unpaidStudentsFor(collectingFor.id).map((s) => (
-                      <option key={s.id} value={s.id}>{s.full_name}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="number" placeholder="Amount paid (₹)" required step="0.01"
-                    value={collectForm.amount_paid}
-                    onChange={(e) => setCollectForm({ ...collectForm, amount_paid: e.target.value })}
-                    className={inputCls}
-                  />
-                  <select
-                    value={collectForm.payment_method}
-                    onChange={(e) => setCollectForm({ ...collectForm, payment_method: e.target.value })}
-                    className={inputCls}
-                  >
-                    <option>Cash</option>
-                    <option>UPI</option>
-                    <option>Bank Transfer</option>
-                    <option>Other</option>
-                  </select>
-                  <input
-                    type="text" placeholder="Receipt number (optional)"
-                    value={collectForm.receipt_no}
-                    onChange={(e) => setCollectForm({ ...collectForm, receipt_no: e.target.value })}
-                    className={inputCls}
-                  />
-                  <p className="text-[0.75rem] text-charcoal">This will also be recorded as income in Accounts.</p>
-                  <div className="flex gap-2.5">
-                    <button type="submit" className={btnPrimary} disabled={savingCollect}>
-                      {savingCollect ? 'Saving…' : 'Record Collection'}
-                    </button>
-                    <button type="button" className={btnOutline} onClick={() => setCollectingFor(null)}>
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {viewingPaidFor && (
-              <div className="bg-surface rounded-2xl shadow-card border-l-4 border-l-pay-blue p-6 mb-6 max-w-[420px]">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-semibold text-base text-heading">Paid: {viewingPaidFor.name}</h3>
-                  <button className="text-[0.75rem] underline text-charcoal" onClick={() => setViewingPaidFor(null)}>Close</button>
-                </div>
-                {payments.filter((p) => p.fee_type_id === viewingPaidFor.id).length === 0 ? (
-                  <p className="text-sm text-charcoal">No one has paid this yet.</p>
-                ) : (
-                  <ul className="flex flex-col gap-2">
-                    {payments.filter((p) => p.fee_type_id === viewingPaidFor.id).map((p) => (
-                      <li key={p.id} className="text-sm flex justify-between items-center border-b border-pay-line pb-2">
-                        <span className="flex items-center gap-1.5"><Check size={14} className="text-pay-action" />{p.students?.full_name}</span>
-                        <span className="text-charcoal">₹{Number(p.amount_paid).toLocaleString('en-IN')}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
-
-            {oneTimeFees.length === 0 ? (
-              <p className="text-charcoal text-sm">No one-time fees set up yet. Add "Admission Fee" and "Form Fee" to match your registration form.</p>
-            ) : (
-              <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-                {oneTimeFees.map((fee) => {
-                  const paidCount = studentsPaidFor(fee.id).size
-                  return (
-                    <div
-                      key={fee.id}
-                      className="bg-surface rounded-2xl shadow-card p-6"
-                      style={{ borderLeftWidth: 4, borderLeftColor: fee.active ? 'var(--status-ok)' : '#ccc' }}
-                    >
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <Wallet size={16} className="text-pay-action" />
-                        <h3 className="font-semibold text-base text-heading">{fee.name}</h3>
-                      </div>
-                      <p className="text-2xl font-display text-pay-action">₹{Number(fee.amount).toLocaleString('en-IN')}</p>
-                      <button
-                        className="text-[0.8rem] text-charcoal underline mt-1 block"
-                        onClick={() => setViewingPaidFor(fee)}
-                      >
-                        {paidCount} student{paidCount === 1 ? '' : 's'} paid
-                      </button>
-                      <p className="text-[0.8rem] mt-1.5" style={{ color: fee.active ? 'var(--status-ok)' : '#999' }}>
-                        {fee.active ? 'Active' : 'Inactive'}
-                      </p>
-                      <div className="flex gap-2 mt-3 flex-wrap">
-                        {fee.active && (
-                          <button className={`${btnPrimary} ${btnSm}`} onClick={() => openCollectForm(fee)}>Collect</button>
-                        )}
-                        <button className={`${btnOutline} ${btnSm}`} onClick={() => openEditOneTime(fee)}>Edit</button>
-                        <button className={`${btnOutline} ${btnSm}`} onClick={() => toggleOneTimeActive(fee)}>
-                          {fee.active ? 'Deactivate' : 'Activate'}
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
+      {flash && (
+        <div role="status" className="fixed top-5 left-1/2 -translate-x-1/2 z-[80] rounded-full bg-pay-navy text-white text-sm font-semibold px-5 py-2.5 shadow-2xl inline-flex items-center gap-2">
+          <CheckCircle2 size={16} /> {flash}
         </div>
       )}
     </div>

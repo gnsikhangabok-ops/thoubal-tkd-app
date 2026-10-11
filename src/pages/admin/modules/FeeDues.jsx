@@ -9,6 +9,7 @@ import { rupees } from '../../../lib/documents'
 import { FEE_SELECT, balance, daysOverdue, dueDate, shortMonth, reminderLink } from '../../../lib/fees'
 import ListToolbar from '../../../components/ListToolbar'
 import ModuleHeader from '../../../components/ModuleHeader'
+import { useFeeSettings } from '../../../lib/feeSettings'
 import DataTable, { StatusPill } from '../../../components/DataTable'
 import PersonCell from '../../../components/PersonCell'
 import DocumentModal from '../../../components/docs/DocumentModal'
@@ -28,6 +29,7 @@ const BUCKET = Object.fromEntries(BUCKETS.map((b) => [b.key, b]))
 const bucketFor = (days) => BUCKETS.find((b) => b.test(days)).key
 
 export default function FeeDues() {
+  const settings = useFeeSettings() // due day decides what counts as overdue
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -70,7 +72,9 @@ export default function FeeDues() {
       const days = daysOverdue(d.oldest)
       return { ...d, days, bucket: bucketFor(late ? Math.max(1, days) : 0) }
     })
-  }, [rows])
+  // settings: the fee helpers read the due day from the settings store, so recompute when it loads
+  // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, settings])
 
   const ageing = BUCKETS.map((b) => ({ ...b, amount: debtors.filter((d) => d.bucket === b.key).reduce((s, d) => s + d.total, 0), count: debtors.filter((d) => d.bucket === b.key).length }))
   const total = debtors.reduce((s, d) => s + d.total, 0)

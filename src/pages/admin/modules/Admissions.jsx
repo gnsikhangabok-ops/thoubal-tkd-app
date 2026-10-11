@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { ClipboardPlus, KanbanSquare, Table2, Inbox, ArrowRight, Clock, CalendarClock, IndianRupee, Phone, CheckCircle2 } from 'lucide-react'
 import { supabase } from '../../../lib/supabaseClient'
 import { useAuth } from '../../../context/AuthContext'
+import { useFeeSettings } from '../../../lib/feeSettings'
 import { btnPrimary, btnOutline, btnSm } from '../../../lib/adminUi'
 import { useListTools, exportCsv, byText, byDateDesc } from '../../../lib/listTools'
 import { moduleTabs } from '../../../lib/moduleTabs'
@@ -30,6 +31,7 @@ const monthStart = () => { const d = new Date(); return new Date(d.getFullYear()
 export default function Admissions() {
   const { profile } = useAuth()
   const actorName = profile?.full_name || null
+  useFeeSettings() // payment methods offered in the wizard and drawer
   const [admissions, setAdmissions] = useState([])
   const [centers, setCenters] = useState([])
   const [batches, setBatches] = useState([])
@@ -76,7 +78,7 @@ export default function Admissions() {
     return () => clearTimeout(t)
   }, [flash])
 
-  const admissionFeeType = feeTypes.find((f) => /admission|registration/i.test(f.name))
+  const admissionFeeType = feeTypes.find((f) => f.active !== false && f.category === 'admission') || feeTypes.find((f) => f.active !== false && /admission|registration/i.test(f.name))
   const monthlyRate = (batchId) => rates.find((r) => r.batch_id === batchId)?.monthly_amount ?? null
   const selected = admissions.find((a) => a.id === selectedId)
 

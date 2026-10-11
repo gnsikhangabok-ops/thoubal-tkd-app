@@ -1,9 +1,11 @@
 import logo from '../../assets/logo.png'
 import QrCode from './QrCode'
+import { useFeeSettings } from '../../lib/feeSettings'
 import { ACADEMY, receiptNo, formatDate, formatMonth, rupees, amountInWords, receiptQrText } from '../../lib/documents'
 
 // A5 fee receipt. Fixed light colours: it is a printed document.
 export default function FeeReceipt({ payment, studentName }) {
+  const settings = useFeeSettings() // receipt prefix and note
   const balance = Math.max(0, (payment.amount_due || 0) - (payment.amount_paid || 0))
   const stamp = { paid: ['PAID', '#047857'], waived: ['WAIVED', '#5B6B82'] }[payment.status] || ['PART PAID', '#B45309']
 
@@ -34,6 +36,7 @@ export default function FeeReceipt({ payment, studentName }) {
             ['Received from', studentName],
             ['Towards', `Monthly training fee — ${formatMonth(payment.period_month)}`],
             ['Payment method', payment.payment_method || '—'],
+            ...(payment.notes ? [['Note', payment.notes]] : []),
           ].map(([k, v]) => (
             <tr key={k} className="border-b border-[#E3EAF3]">
               <td className="py-[2.2mm] text-[#5B6B82] w-[38mm]">{k}</td>
@@ -68,6 +71,7 @@ export default function FeeReceipt({ payment, studentName }) {
       </div>
 
       <p className="absolute bottom-[7mm] inset-x-[9mm] text-center text-[2.6mm] text-[#5B6B82]">
+        {settings.receipt_note && <span className="block mb-[1mm] text-[#0B2350]">{settings.receipt_note}</span>}
         This is a computer-generated receipt. Scan the QR code to read the payment details.
       </p>
     </div>

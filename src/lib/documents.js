@@ -1,5 +1,6 @@
 import { REGISTRATION_NO } from './siteContent'
 import { beltLabel } from './belts'
+import { feeConfig } from './feeSettings'
 
 export const ACADEMY = {
   name: 'Thoubal Taekwondo Academy',
@@ -11,7 +12,7 @@ export const ACADEMY = {
 // Short, stable reference numbers derived from database ids
 const shortId = (id) => String(id || '').replace(/-/g, '').slice(0, 8).toUpperCase()
 export const studentIdNo = (student) => `TTA-S-${shortId(student.id)}`
-export const receiptNo = (payment) => payment.receipt_no || `TTA-R-${String(payment.period_month || '').slice(0, 7).replace('-', '')}-${shortId(payment.id)}`
+export const receiptNo = (payment) => payment.receipt_no || `${feeConfig().receipt_prefix || 'TTA-R'}-${String(payment.period_month || '').slice(0, 7).replace('-', '')}-${shortId(payment.id)}`
 export const certificateNo = (result) => `TTA-C-${shortId(result.id)}`
 
 // The academic year runs April–March; ID cards are valid until 31 March of the current one.

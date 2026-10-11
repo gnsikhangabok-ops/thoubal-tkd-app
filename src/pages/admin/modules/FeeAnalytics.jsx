@@ -7,6 +7,7 @@ import { rupees } from '../../../lib/documents'
 import { compact } from '../../../lib/chartUtils'
 import { balance, dueDate, monthFirst, shiftMonth, shortMonth, monthLabel } from '../../../lib/fees'
 import ModuleHeader from '../../../components/ModuleHeader'
+import { useFeeSettings } from '../../../lib/feeSettings'
 import StackedColumns from '../../../components/charts/StackedColumns'
 import LineChart from '../../../components/charts/LineChart'
 import BarList from '../../../components/charts/BarList'
@@ -14,6 +15,7 @@ import BarList from '../../../components/charts/BarList'
 const RANGES = [[6, '6 months'], [12, '12 months'], [24, '24 months']]
 
 export default function FeeAnalytics() {
+  const settings = useFeeSettings() // due day decides what counts as on time
   const [range, setRange] = useState(12)
   const [rows, setRows] = useState([])
   const [oneTime, setOneTime] = useState([])
@@ -72,7 +74,9 @@ export default function FeeAnalytics() {
       centres: Object.entries(centres).map(([label, v]) => ({ label: `${label} · ${v.billed ? Math.round((Math.min(v.collected, v.billed) / v.billed) * 100) : 0}%`, value: v.collected })).sort((x, y) => y.value - x.value),
       otTypes: Object.entries(otTypes).map(([label, value]) => ({ label, value })).sort((x, y) => y.value - x.value),
     }
-  }, [rows, oneTime, range, start])
+  // settings: the fee helpers read the due day from the settings store, so recompute when it loads
+  // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, oneTime, range, start, settings])
 
   const KPIS = [
     { icon: IndianRupee, label: 'Collected', value: rupees(a.collected), sub: `of ${rupees(a.billed)} billed` },

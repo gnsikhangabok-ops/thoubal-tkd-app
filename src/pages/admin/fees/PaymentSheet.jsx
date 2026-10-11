@@ -3,16 +3,22 @@ import { createPortal } from 'react-dom'
 import { X, CheckCircle2, ReceiptText, Banknote, Smartphone, Landmark, FileText } from 'lucide-react'
 import { inputCls, btnPrimary, btnOutline } from '../../../lib/adminUi'
 import { rupees, amountInWords } from '../../../lib/documents'
-import { METHODS, STATUS_TONE, balance, collectFee, monthLabel, feeStatus } from '../../../lib/fees'
+import { STATUS_TONE, balance, collectFee, monthLabel, feeStatus, daysOverdue } from '../../../lib/fees'
+import { useFeeSettings, lateFeeFor, upiLink } from '../../../lib/feeSettings'
+import QrCode from '../../../components/docs/QrCode'
 import { StatusPill } from '../../../components/DataTable'
 
 const METHOD_ICON = { Cash: Banknote, UPI: Smartphone, 'Bank Transfer': Landmark, Cheque: FileText }
 
 /** Quick payment sheet for one monthly fee: amount presets, method chips, then a receipt. */
 export default function PaymentSheet({ payment, onClose, onPaid, onReceipt }) {
-  const due = balance(payment)
-  const [amount, setAmount] = useState(String(due))
-  const [method, setMethod] = useState('Cash')
+  const settings = useFeeSettings()
+  const late = lateFeeFor(payment, daysOverdue(payment))
+  const [addLate, setAddLate] = useState(true)
+  const lateFee = late && addLate ? late : 0
+  const due = balance(payment) + lateFee
+  const [amount, setAmount] = useState(String(balance(payment) + late))
+  const [method, setMethod] = useState(settings.methods[0] || 'Cash')
   const [receipt, setReceipt] = useState('')
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
@@ -32,7 +38,7 @@ export default function PaymentSheet({ payment, onClose, onPaid, onReceipt }) {
     if (value > due) return setError(`Only ${rupees(due)} is due for this month.`)
     setSaving(true)
     setError('')
-    const res = await collectFee(payment, { amount: value, method, receipt, notes })
+    const res = await collectFee(payment, { amount: value, method, receipt, notes, lateFee })
     setSaving(false)
     if (res.error) return setError(res.error.message)
     setDone(res.data)
@@ -49,7 +55,7 @@ export default function PaymentSheet({ payment, onClose, onPaid, onReceipt }) {
           <p className="text-xs text-white/75">{monthLabel(payment.period_month)} · {payment.students?.batches?.name || 'Monthly fee'}</p>
           <h2 className="!text-white text-xl font-bold mt-0.5 pr-10 truncate">{name}</h2>
           <div className="grid grid-cols-3 gap-2 mt-4 text-center">
-            {[['Billed', (done || payment).amount_due], ['Paid', (done || payment).amount_paid], ['Balance', balance(done || payment)]].map(([k, v]) => (
+            {[['Billed', (done || payment).amount_due], ['Paid', (done || payment).amount_paid], ['Balance', done ? balance(done) : due]].map(([k, v]) => (
               <div key={k} className="rounded-xl bg-white/10 py-2">
                 <div className="text-[0.65rem] uppercase tracking-wider text-white/70">{k}</div>
                 <strong className="block text-lg tabular-nums">{rupees(v)}</strong>
@@ -88,11 +94,22 @@ export default function PaymentSheet({ payment, onClose, onPaid, onReceipt }) {
               </div>
             </div>
 
+            {late > 0 && (
+              <label className="flex items-center justify-between gap-3 rounded-xl border border-pay-line bg-pay-bg px-3.5 py-2.5 text-sm">
+                <span>
+                  <span className="font-semibold text-heading">Late fee {rupees(late)}</span>
+                  <span className="block text-xs text-subtle">{daysOverdue(payment)} days past the due date{settings.grace_days ? ` (grace ${settings.grace_days} days)` : ''}</span>
+                </span>
+                <input type="checkbox" className="w-5 h-5 accent-[var(--color-pay-action)]" checked={addLate}
+                  onChange={(e) => { setAddLate(e.target.checked); setAmount(String(balance(payment) + (e.target.checked ? late : 0))) }} />
+              </label>
+            )}
+
             <div>
               <span className="text-xs font-semibold text-muted">Method</span>
               <div className="grid grid-cols-4 gap-2 mt-1.5" role="group" aria-label="Payment method">
-                {METHODS.map((m) => {
-                  const Icon = METHOD_ICON[m]
+                {settings.methods.map((m) => {
+                  const Icon = METHOD_ICON[m] || Banknote
                   const on = method === m
                   return (
                     <button key={m} type="button" aria-pressed={on} onClick={() => setMethod(m)}
@@ -103,6 +120,21 @@ export default function PaymentSheet({ payment, onClose, onPaid, onReceipt }) {
                 })}
               </div>
             </div>
+
+            {method === 'UPI' && upiLink(Number(amount) || due, `${monthLabel(payment.period_month)} fee`) && (
+              <div className="flex items-center gap-4 rounded-2xl border border-pay-line bg-pay-bg p-3">
+                <div className="rounded-xl bg-white p-1.5 shrink-0"><QrCode value={upiLink(Number(amount) || due, `${monthLabel(payment.period_month)} fee ${name}`)} size={104} /></div>
+                <div className="text-sm min-w-0">
+                  <p className="font-semibold text-heading">Scan to pay {rupees(Number(amount) || 0)}</p>
+                  <p className="text-xs text-muted mt-0.5 break-all">{settings.upi_id}</p>
+                  <p className="text-xs text-subtle mt-1">Any UPI app. Enter the UPI reference below once paid.</p>
+                </div>
+              </div>
+            )}
+
+            {method === 'Bank Transfer' && settings.bank_details && (
+              <p className="rounded-2xl border border-pay-line bg-pay-bg p-3 text-sm text-body whitespace-pre-line">{settings.bank_details}</p>
+            )}
 
             <div className="grid grid-cols-2 gap-2">
               <input className={inputCls} placeholder={method === 'UPI' ? 'UPI ref / receipt no.' : 'Receipt no. (auto if blank)'} value={receipt} onChange={(e) => setReceipt(e.target.value)} />

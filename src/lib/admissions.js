@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient'
 import { ACADEMY, formatDate, rupees } from './documents'
+import { feeConfig } from './feeSettings'
 
 // Pipeline order. `open` stages still need action; the rest are outcomes.
 export const STAGES = [
@@ -48,7 +49,7 @@ export const emptyApplication = {
 }
 
 export const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
-export const PAYMENT_METHODS = ['Cash', 'UPI', 'Bank transfer', 'Cheque']
+export const paymentMethods = () => feeConfig().methods
 
 const year = (a) => new Date(a.created_at || Date.now()).getFullYear()
 export const applicationNo = (a) => `TTA-A-${year(a)}-${String(a.seq ?? 0).padStart(4, '0')}`

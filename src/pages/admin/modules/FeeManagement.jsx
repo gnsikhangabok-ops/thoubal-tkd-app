@@ -7,8 +7,8 @@ import { useListTools, exportCsv, byText } from '../../../lib/listTools'
 import { moduleTabs } from '../../../lib/moduleTabs'
 import { rupees } from '../../../lib/documents'
 import {
-  FEE_SELECT, STATUS_TONE, STATUS_COLOR, DUE_DAY, balance, feeStatus, daysOverdue, collectFee,
-  monthFirst, shiftMonth, monthLabel, shortMonth, reminderLink,
+  FEE_SELECT, STATUS_TONE, STATUS_COLOR, balance, feeStatus, daysOverdue, collectFee,
+  monthFirst, shiftMonth, monthLabel, shortMonth, reminderLink, ordinal,
 } from '../../../lib/fees'
 import ListToolbar from '../../../components/ListToolbar'
 import ModuleHeader from '../../../components/ModuleHeader'
@@ -19,8 +19,11 @@ import FeeReceipt from '../../../components/docs/FeeReceipt'
 import PaymentSheet from '../fees/PaymentSheet'
 import StudentLedger from '../fees/StudentLedger'
 import ReadinessRing from '../admissions/ReadinessRing'
+import { useFeeSettings } from '../../../lib/feeSettings'
+
 
 export default function FeeManagement() {
+  const settings = useFeeSettings()
   const [month, setMonth] = useState(monthFirst())
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
@@ -64,22 +67,38 @@ export default function FeeManagement() {
   async function buildPreview(periodMonth) {
     setGen({ month: periodMonth, preview: null, busy: false })
     const [studentRes, existingRes, structRes] = await Promise.all([
-      supabase.from('students').select('id, full_name, batch_id').eq('active', true).order('full_name'),
+      supabase.from('students').select('id, full_name, batch_id, guardian_phone, created_at').eq('active', true).order('created_at'),
       supabase.from('fee_payments').select('student_id').eq('period_month', periodMonth),
       supabase.from('fee_structures').select('*').order('effective_from', { ascending: false }),
     ])
     const err = studentRes.error || existingRes.error || structRes.error
     if (err) { setError(err.message); setGen(null); return }
     const existing = new Set(existingRes.data.map((p) => p.student_id))
+    // The rate in force for this month: the latest one that started on or before the month's end
+    const monthEnd = shiftMonth(periodMonth, 1)
     const rate = {}
-    structRes.data.forEach((r) => { if (!(r.batch_id in rate)) rate[r.batch_id] = r.monthly_amount })
+    structRes.data.forEach((r) => {
+      if (r.effective_from && r.effective_from >= monthEnd) return
+      if (!(r.batch_id in rate)) rate[r.batch_id] = r.monthly_amount
+    })
+    // Sibling discount: the 2nd and later active child of the same guardian phone
+    const sib = settings.sibling
+    const childNo = {}
+    const phoneKey = (s) => String(s.guardian_phone || '').replace(/\D/g, '').slice(-10)
     const toCreate = [], noRate = [], noBatch = []
-    studentRes.data.filter((s) => !existing.has(s.id)).forEach((s) => {
+    let siblingCount = 0, siblingOff = 0
+    studentRes.data.forEach((s) => {
+      const key = phoneKey(s)
+      const n = key.length === 10 ? (childNo[key] = (childNo[key] || 0) + 1) : 1
+      if (existing.has(s.id)) return
       if (!s.batch_id) return noBatch.push(s)
       if (rate[s.batch_id] === undefined) return noRate.push(s)
-      toCreate.push({ student_id: s.id, period_month: periodMonth, amount_due: rate[s.batch_id], status: 'pending' })
+      const full = Number(rate[s.batch_id])
+      const off = sib.enabled && n > 1 ? Math.round((full * Number(sib.percent || 0)) / 100) : 0
+      if (off) { siblingCount++; siblingOff += off }
+      toCreate.push({ student_id: s.id, period_month: periodMonth, amount_due: full - off, status: 'pending', ...(off ? { notes: `Sibling discount ${sib.percent}% (−₹${off})` } : {}) })
     })
-    setGen({ month: periodMonth, busy: false, preview: { toCreate, noRate, noBatch, total: toCreate.reduce((s, r) => s + Number(r.amount_due), 0) } })
+    setGen({ month: periodMonth, busy: false, preview: { toCreate, noRate, noBatch, siblingCount, siblingOff, total: toCreate.reduce((s, r) => s + Number(r.amount_due), 0) } })
   }
 
   async function generate() {
@@ -141,7 +160,9 @@ export default function FeeManagement() {
       today: payments.filter((p) => p.paid_on === today).reduce((s, p) => s + Number(p.amount_paid || 0), 0),
       methods: Object.entries(methods).sort((a, b) => b[1] - a[1]),
     }
-  }, [payments])
+  // settings: the fee helpers read the due day from the settings store, so recompute when it loads
+  // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, [payments, settings])
 
   const centers = useMemo(() => [...new Map(payments.filter((p) => p.students?.training_center_id).map((p) => [p.students.training_center_id, p.students.training_centers?.name])).entries()], [payments])
   const batches = useMemo(() => [...new Map(payments.filter((p) => p.students?.batch_id).map((p) => [p.students.batch_id, p.students.batches?.name])).entries()], [payments])
@@ -190,7 +211,7 @@ export default function FeeManagement() {
     <div className="p-8 max-md:p-4 max-w-[1320px] mx-auto pb-28">
       <ModuleHeader
         title="Fee Management"
-        description={<>Collection desk for monthly fees. Rates come from <Link to="/admin/fee-setup" className="underline">Fee Setup</Link>; every payment posts to <Link to="/admin/accounts" className="underline">Accounts</Link>. Fees fall due on the {DUE_DAY}th.</>}
+        description={<>Collection desk for monthly fees. Rates come from <Link to="/admin/fee-setup" className="underline">Fee Setup</Link>; every payment posts to <Link to="/admin/accounts" className="underline">Accounts</Link>. Fees fall due on the {ordinal(settings.due_day)}.</>}
         actions={<>
           <Link to="/admin/fee-dues" className={btnOutline}>Dues & reminders</Link>
           <button className={btnPrimary} onClick={() => buildPreview(month)}><Sparkles size={16} /> Bill {shortMonth(month)}</button>
@@ -248,7 +269,7 @@ export default function FeeManagement() {
             ['Outstanding', rupees(stats.outstanding), `${payments.filter((p) => balance(p) > 0).length} students`, 'var(--status-warn)'],
             ['Overdue', stats.overdue.length, stats.overdue.length ? `${rupees(stats.overdue.reduce((s, p) => s + balance(p), 0))} past due` : 'none past due', 'var(--status-bad)'],
             ['Collected today', rupees(stats.today), new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }), 'var(--status-ok)'],
-            ['Collection rate', `${stats.rate}%`, isCurrent ? `due ${DUE_DAY} ${monthLabel(month, { month: 'short' })}` : 'final', 'var(--color-pay-action)'],
+            ['Collection rate', `${stats.rate}%`, isCurrent ? `due ${settings.due_day} ${monthLabel(month, { month: 'short' })}` : 'final', 'var(--color-pay-action)'],
           ].map(([k, v, sub, c]) => (
             <div key={k} className="bg-surface rounded-2xl shadow-card p-4 relative overflow-hidden">
               <span className="absolute left-0 top-4 bottom-4 w-[3px] rounded-r-full" style={{ background: c }} aria-hidden="true" />
@@ -363,6 +384,7 @@ export default function FeeManagement() {
                     <div className="rounded-xl bg-pay-bg p-3"><p className="text-xs text-muted">Students to bill</p><p className="text-2xl font-bold text-heading">{gen.preview.toCreate.length}</p></div>
                     <div className="rounded-xl bg-pay-bg p-3"><p className="text-xs text-muted">Total to bill</p><p className="text-2xl font-bold text-heading tabular-nums">{rupees(gen.preview.total)}</p></div>
                   </div>
+                  {gen.preview.siblingCount > 0 && <p className="mt-3 text-[color:var(--status-ok)]">Includes {gen.preview.siblingCount} sibling discount{gen.preview.siblingCount === 1 ? '' : 's'} (−{rupees(gen.preview.siblingOff)}).</p>}
                   {gen.preview.noRate.length > 0 && <p className="mt-3 text-[color:var(--status-warn)]">{gen.preview.noRate.length} skipped — their batch has no rate in <Link to="/admin/fee-setup" className="underline">Fee Setup</Link>.</p>}
                   {gen.preview.noBatch.length > 0 && <p className="mt-2 text-[color:var(--status-warn)]">{gen.preview.noBatch.length} skipped — not assigned to a batch.</p>}
                   {gen.preview.toCreate.length === 0 && !gen.preview.noRate.length && !gen.preview.noBatch.length && <p className="mt-3 text-muted">Every active student already has a fee for this month.</p>}

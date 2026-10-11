@@ -12,7 +12,7 @@ import { ageFrom } from '../../../lib/people'
 import { formatDate, rupees } from '../../../lib/documents'
 import { StatusPill } from '../../../components/DataTable'
 import {
-  STAGE, FUNNEL, NEXT_STEP, SOURCE_LABEL, DOCUMENTS, PAYMENT_METHODS, applicationNo, netFee, balanceDue,
+  STAGE, FUNNEL, NEXT_STEP, SOURCE_LABEL, DOCUMENTS, paymentMethods, applicationNo, netFee, balanceDue,
   readiness, historyEntry, postFeeToAccounts, daysSince, stageSince,
 } from '../../../lib/admissions'
 import ReadinessRing from './ReadinessRing'
@@ -269,7 +269,7 @@ export default function AdmissionDrawer({ admission: a, actorName, admissionFeeT
             {panel === 'payment' && (
               <div className="mt-3 grid sm:grid-cols-3 gap-2">
                 <input type="number" min="0" className={inputCls} value={pay.amount} onChange={(e) => setPay({ ...pay, amount: e.target.value })} aria-label="Amount" />
-                <select className={inputCls} value={pay.method} onChange={(e) => setPay({ ...pay, method: e.target.value })} aria-label="Method">{PAYMENT_METHODS.map((m) => <option key={m}>{m}</option>)}</select>
+                <select className={inputCls} value={pay.method} onChange={(e) => setPay({ ...pay, method: e.target.value })} aria-label="Method">{paymentMethods().map((m) => <option key={m}>{m}</option>)}</select>
                 <input className={inputCls} placeholder="Receipt no." value={pay.receipt} onChange={(e) => setPay({ ...pay, receipt: e.target.value })} />
                 <div className="sm:col-span-3 flex gap-2">
                   <button className={btnPrimary} onClick={recordPayment} disabled={busy}>Save payment</button>

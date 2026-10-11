@@ -1,9 +1,16 @@
 import { supabase } from './supabaseClient'
 import { ACADEMY, rupees } from './documents'
+import { feeConfig } from './feeSettings'
 
-// Monthly fees fall due on this day of the billed month; unpaid after that they show as overdue.
-export const DUE_DAY = 10
-export const METHODS = ['Cash', 'UPI', 'Bank Transfer', 'Cheque']
+// Monthly fees fall due on the due day set in Fee Setup; unpaid after that they show as overdue.
+export const dueDay = () => feeConfig().due_day
+
+/** 1 → 1st, 2 → 2nd, 11 → 11th, 22 → 22nd */
+export function ordinal(n) {
+  const suffix = n % 100 >= 11 && n % 100 <= 13 ? 'th' : { 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th'
+  return `${n}${suffix}`
+}
+export const paymentMethods = () => feeConfig().methods
 
 export const monthFirst = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
 export function shiftMonth(first, delta) {
@@ -13,7 +20,11 @@ export function shiftMonth(first, delta) {
 export const monthLabel = (first, opts = { month: 'long', year: 'numeric' }) => new Date(`${first.slice(0, 10)}T00:00:00`).toLocaleDateString('en-IN', opts)
 export const shortMonth = (first) => monthLabel(first, { month: 'short', year: '2-digit' })
 
-export const dueDate = (p) => new Date(`${p.period_month.slice(0, 7)}-${String(DUE_DAY).padStart(2, '0')}T23:59:59`)
+export function dueDate(p) {
+  const [y, m] = p.period_month.slice(0, 7).split('-').map(Number)
+  const last = new Date(y, m, 0).getDate() // a due day of 31 means the month's last day
+  return new Date(y, m - 1, Math.min(dueDay(), last), 23, 59, 59)
+}
 export const balance = (p) => (p.status === 'waived' ? 0 : Math.max(0, Number(p.amount_due || 0) - Number(p.amount_paid || 0)))
 
 /** Status as shown: pending fees past the due date count as overdue, partly paid ones as partial. */
@@ -31,18 +42,21 @@ export const daysOverdue = (p) => Math.max(0, Math.ceil((Date.now() - dueDate(p)
  * Record money received against a monthly fee row and post it to Accounts as income.
  * Returns { data, warning } or { error }.
  */
-export async function collectFee(payment, { amount, method, receipt, notes }) {
+export async function collectFee(payment, { amount, method, receipt, notes, lateFee = 0 }) {
   const newPaid = Number(payment.amount_paid || 0) + amount
-  const status = newPaid >= Number(payment.amount_due) ? 'paid' : 'pending'
+  const newDue = Number(payment.amount_due) + lateFee
+  const status = newPaid >= newDue ? 'paid' : 'pending'
+  const lateNote = lateFee ? `Late fee ${rupees(lateFee)}` : ''
   const { data, error } = await supabase
     .from('fee_payments')
     .update({
+      ...(lateFee ? { amount_due: newDue } : {}),
       amount_paid: newPaid,
       status,
       paid_on: new Date().toISOString().slice(0, 10),
       payment_method: method,
       receipt_no: receipt || payment.receipt_no || null,
-      notes: notes || payment.notes || null,
+      notes: [payment.notes, lateNote, notes].filter(Boolean).join(' · ') || null,
     })
     .eq('id', payment.id)
     .select(FEE_SELECT)
@@ -71,7 +85,18 @@ export function reminderLink(student, amount, months) {
   const text = [
     `Namaste${student.guardian_name ? ` ${student.guardian_name}` : ''},`,
     `This is a gentle reminder from ${ACADEMY.name} that ${student.full_name}'s training fee of ${rupees(amount)}${months?.length ? ` for ${months.join(', ')}` : ''} is due.`,
-    'Please pay at the academy or by UPI at your earliest convenience. Thank you!',
+    feeConfig().upi_id ? `You can pay by UPI to ${feeConfig().upi_id}, or at the academy office.` : 'Please pay at the academy office at your earliest convenience.',
+    'Thank you!',
   ].join('\n')
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`
+}
+
+const today = () => new Date().toISOString().slice(0, 10)
+
+/** Rate in force today and any scheduled future rate for a batch (rows newest first). */
+export function ratesFor(structures, batchId) {
+  const rows = structures.filter((r) => r.batch_id === batchId)
+  const current = rows.find((r) => !r.effective_from || r.effective_from <= today())
+  const upcoming = rows.filter((r) => r.effective_from > today()).pop()
+  return { current, upcoming, history: rows }
 }

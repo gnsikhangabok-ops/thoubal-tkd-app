@@ -5,7 +5,7 @@ import { inputCls, btnPrimary, btnOutline } from '../../../lib/adminUi'
 import { BELT_RANKS, BELT_LABELS, beltLabel } from '../../../lib/belts'
 import { ageFrom } from '../../../lib/people'
 import { rupees } from '../../../lib/documents'
-import { SOURCES, SOURCE_LABEL, DOCUMENTS, BLOOD_GROUPS, PAYMENT_METHODS, historyEntry, postFeeToAccounts } from '../../../lib/admissions'
+import { SOURCES, SOURCE_LABEL, DOCUMENTS, BLOOD_GROUPS, paymentMethods, historyEntry, postFeeToAccounts } from '../../../lib/admissions'
 
 const STEPS = [
   { key: 'applicant', label: 'Applicant', icon: User },
@@ -279,7 +279,7 @@ export default function AdmissionWizard({ initial, centers, batches, monthlyRate
                     <div className="grid sm:grid-cols-3 gap-3 mt-3">
                       <Field label="Amount (₹)"><input type="number" min="0" className={inputCls} value={form.collect_now} onChange={(e) => set({ collect_now: e.target.value })} /></Field>
                       <Field label="Method">
-                        <select className={inputCls} value={form.payment_method} onChange={(e) => set({ payment_method: e.target.value })}>{PAYMENT_METHODS.map((m) => <option key={m}>{m}</option>)}</select>
+                        <select className={inputCls} value={form.payment_method} onChange={(e) => set({ payment_method: e.target.value })}>{paymentMethods().map((m) => <option key={m}>{m}</option>)}</select>
                       </Field>
                       <Field label="Receipt no."><input className={inputCls} value={form.receipt_no} onChange={(e) => set({ receipt_no: e.target.value })} /></Field>
                     </div>
